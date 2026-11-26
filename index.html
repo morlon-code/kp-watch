@@ -4,12 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#0f0f13">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0e0f13">
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="KP Watch">
     <title>KP Watch — КиноПоиск Зеркало</title>
+
+    <!-- Inline URL-encoded SVG favicon (orange film/play badge, no base64) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff5500'/%3E%3Crect x='10' y='14' width='6' height='8' rx='2' fill='%230e0f13' fill-opacity='0.35'/%3E%3Crect x='10' y='28' width='6' height='8' rx='2' fill='%230e0f13' fill-opacity='0.35'/%3E%3Crect x='10' y='42' width='6' height='8' rx='2' fill='%230e0f13' fill-opacity='0.35'/%3E%3Crect x='48' y='14' width='6' height='8' rx='2' fill='%230e0f13' fill-opacity='0.35'/%3E%3Crect x='48' y='28' width='6' height='8' rx='2' fill='%230e0f13' fill-opacity='0.35'/%3E%3Crect x='48' y='42' width='6' height='8' rx='2' fill='%230e0f13' fill-opacity='0.35'/%3E%3Cpolygon points='26,20 46,32 26,44' fill='%23ffffff'/%3E%3C/svg%3E">
 
     <!-- Inter Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -27,13 +30,13 @@
                     },
                     colors: {
                         cinema: {
-                            bg: '#0f0f13',
-                            surface: '#1a1a22',
-                            surfaceHover: '#23232f',
-                            input: '#13131a',
-                            border: '#2a2a36',
+                            bg: '#0e0f13',
+                            surface: '#181a20',
+                            elevated: '#20232c',
+                            input: '#121319',
+                            border: '#262934',
                             accent: '#ff5500',
-                            accentHover: '#ff6a1f'
+                            accentLight: '#ff6b1a'
                         }
                     }
                 }
@@ -42,25 +45,45 @@
     </script>
 
     <style>
-        /* Minimal safe-area and scrollbar utilities */
+        /* Core dark cinema theme, safe-area insets, and mobile touch polish */
         html, body {
-            background-color: #0f0f13;
-            color: #f5f5f7;
+            background-color: #0e0f13;
+            color: #f3f4f6;
             -webkit-tap-highlight-color: transparent;
             overflow-x: hidden;
+            overscroll-behavior-y: none;
         }
         .safe-pb {
             padding-bottom: env(safe-area-inset-bottom, 0px);
         }
         .app-pb {
-            padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+            padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
         }
         .toast-bottom {
-            bottom: calc(82px + env(safe-area-inset-bottom, 0px));
+            bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .line-clamp-1 {
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
         .line-clamp-2 {
             display: -webkit-box;
             -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .line-clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
@@ -70,230 +93,433 @@
         .spinner-anim {
             animation: spin 0.75s linear infinite;
         }
+        @keyframes slideUp {
+            from { transform: translateY(24px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .sheet-anim {
+            animation: slideUp 0.2s ease-out;
+        }
+        /* Native dark select styling */
+        select {
+            color-scheme: dark;
+        }
     </style>
 </head>
-<body class="font-sans antialiased min-h-screen bg-cinema-bg text-[#f5f5f7] selection:bg-cinema-accent/30">
+<body class="font-sans antialiased min-h-screen bg-cinema-bg text-gray-100 selection:bg-cinema-accent/30">
 
 <!-- =========================================
-     MAIN APP CONTAINER
+     STICKY TOP HEADER
      ========================================= -->
-<div class="max-w-xl mx-auto min-h-screen px-3.5 pt-4 app-pb">
-
-    <!-- Preview / Sandbox Iframe Warning Banner -->
-    <div id="iframeBanner" class="hidden mb-3.5 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-3.5 text-amber-200 shadow-lg">
-        <div class="flex items-start gap-3">
-            <div class="shrink-0 mt-0.5 text-amber-400">
-                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                    <line x1="12" y1="9" x2="12" y2="13"/>
-                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+<header class="sticky top-0 z-30 bg-cinema-bg/92 backdrop-blur-lg border-b border-cinema-border/80">
+    <div class="max-w-xl mx-auto px-3.5 h-14 flex items-center justify-between gap-2">
+        <!-- Brand Logo -->
+        <div class="flex items-center gap-2.5 min-w-0">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-[#ff5500] to-[#ff7a1a] flex items-center justify-center shadow-lg shadow-orange-600/25 shrink-0">
+                <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5.14v14l11-7-11-7z"/>
                 </svg>
             </div>
-            <p class="text-xs sm:text-[13px] leading-relaxed flex-1">
-                Окно предпросмотра (Preview) часто блокирует переход на внешние сайты. Если кнопка «Смотреть» не открывается — скопируйте ссылку кнопкой рядом или откройте этот файл напрямую в браузере (Brave / Firefox).
-            </p>
+            <div class="min-w-0">
+                <div class="flex items-center gap-1.5">
+                    <span class="text-[16px] font-extrabold tracking-tight leading-none text-white">KP Watch</span>
+                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-cinema-elevated border border-cinema-border text-gray-400">v2</span>
+                </div>
+                <span id="headerSubStatus" class="text-[11px] text-gray-400 block truncate mt-0.5">Каталог Кинопоиска</span>
+            </div>
+        </div>
+
+        <!-- Right Header Controls: Active Mirror Badge + Random Picker Shortcut -->
+        <div class="flex items-center gap-1.5 shrink-0">
             <button
                 type="button"
-                id="dismissIframeBannerBtn"
-                class="shrink-0 w-9 h-9 -mr-1.5 -mt-1.5 rounded-xl flex items-center justify-center text-amber-300 hover:bg-amber-500/20 active:scale-95 transition"
-                aria-label="Скрыть предупреждение"
+                id="headerMirrorBtn"
+                class="min-h-[38px] px-2.5 rounded-xl bg-cinema-surface border border-cinema-border text-xs font-semibold text-gray-200 hover:border-cinema-accent/50 inline-flex items-center gap-1 active:scale-95 transition"
+                title="Сменить зеркало"
             >
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
-                    <line x1="18" y1="6" x2="6" y2="18"/>
-                    <line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></span>
+                <span id="headerMirrorBadge" class="max-w-[78px] truncate">.cx</span>
+            </button>
+            <button
+                type="button"
+                id="headerRandomBtn"
+                class="min-h-[38px] px-3 rounded-xl bg-cinema-accent/15 border border-cinema-accent/40 text-cinema-accentLight text-xs font-bold inline-flex items-center gap-1 hover:bg-cinema-accent/25 active:scale-95 transition"
+                title="Выбрать случайный фильм на вечер"
+            >
+                <span>🎲</span>
+                <span>На вечер</span>
+            </button>
+        </div>
+    </div>
+</header>
+
+<!-- =========================================
+     MAIN CONTENT WRAPPER
+     ========================================= -->
+<main class="max-w-xl mx-auto px-3.5 pt-3.5 app-pb">
+
+    <!-- Preview / Sandboxed Iframe Warning Banner -->
+    <div id="iframeBanner" class="hidden mb-3.5 rounded-2xl border border-amber-500/35 bg-amber-500/10 p-3 text-amber-200">
+        <div class="flex items-start gap-2.5">
+            <span class="text-amber-400 text-base leading-none mt-0.5 shrink-0">⚠️</span>
+            <p class="text-xs leading-relaxed flex-1">
+                Вы открыли приложение в окне предпросмотра (Preview), где внешние ссылки могут блокироваться. Используйте кнопку копирования 📋 или откройте сайт в <strong>Brave / Firefox</strong>.
+            </p>
+            <button type="button" id="dismissIframeBannerBtn" class="w-8 h-8 -mr-1 -mt-1 rounded-lg flex items-center justify-center text-amber-300 hover:bg-amber-500/20 shrink-0" aria-label="Скрыть">
+                ✕
             </button>
         </div>
     </div>
 
-    <!-- App Header -->
-    <header class="flex items-center justify-between gap-2 mb-4 px-0.5">
-        <div class="flex items-center gap-2.5">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#ff5500] to-[#ff8800] flex items-center justify-center font-extrabold text-sm text-white tracking-tight shadow-lg shadow-orange-600/30">
-                KP
-            </div>
+    <!-- Missing API Key Banner (Friendly Prompt + Demo Mode) -->
+    <div id="noKeyBanner" class="hidden mb-3.5 rounded-2xl bg-cinema-surface border border-cinema-border p-3.5">
+        <div class="flex items-start justify-between gap-2 mb-2">
             <div>
-                <h1 class="text-lg font-bold tracking-tight leading-none">KP Watch</h1>
-                <span class="text-xs text-[#9c9cab] block mt-0.5">КиноПоиск → Зеркало</span>
+                <h2 class="text-sm font-bold text-white flex items-center gap-1.5">
+                    <span class="text-cinema-accent">🔑</span>
+                    <span id="noKeyBannerTitle">Подключите бесплатный API-ключ</span>
+                </h2>
+                <p id="noKeyBannerText" class="text-xs text-gray-400 leading-relaxed mt-1">
+                    Чтобы загружать живые подборки, фильтры и поиск Кинопоиска, вставьте ключ с <a href="https://kinopoiskapiunofficial.tech/" target="_blank" rel="noopener noreferrer" class="text-cinema-accentLight underline underline-offset-2">kinopoiskapiunofficial.tech</a> в настройках. Сейчас можно сразу проверить интерфейс в демо-режиме.
+                </p>
             </div>
         </div>
-        <button
-            type="button"
-            id="headerMirrorBtn"
-            class="min-h-[44px] px-3.5 rounded-full bg-cinema-accent/15 border border-cinema-accent/35 text-cinema-accent text-xs font-semibold inline-flex items-center gap-1.5 active:scale-95 transition"
-            title="Настроить зеркало"
-        >
-            <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="2" y1="12" x2="22" y2="12"/>
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-            </svg>
-            <span id="headerMirrorLabel" class="truncate max-w-[130px]">kinopoisk.cx</span>
-        </button>
-    </header>
+        <div class="flex flex-wrap gap-2 mt-2.5">
+            <button type="button" id="bannerOpenSettingsBtn" class="flex-1 min-w-[130px] min-h-[40px] px-3 rounded-xl bg-cinema-accent hover:bg-cinema-accentLight text-white font-semibold text-xs active:scale-95 transition">
+                Ввести API-ключ
+            </button>
+            <button type="button" id="bannerToggleDemoBtn" class="flex-1 min-w-[130px] min-h-[40px] px-3 rounded-xl bg-cinema-elevated border border-cinema-border text-white font-semibold text-xs active:scale-95 transition">
+                🎬 Включить Демо-режим
+            </button>
+        </div>
+    </div>
 
     <!-- =========================================
-         TAB 1: ПОИСК
+         TAB 1: ПОДБОРКИ (DISCOVERY FOR THE EVENING)
          ========================================= -->
-    <section id="tab-search" class="tab-view block">
-        <!-- Sticky Search Bar -->
-        <form id="searchForm" class="flex gap-2 mb-3.5 sticky top-2 z-20 bg-cinema-bg/90 backdrop-blur-md py-1.5 rounded-2xl" autocomplete="off">
-            <div class="relative flex-1 flex items-center">
-                <span class="absolute left-3.5 text-[#6e6e7d] pointer-events-none">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"/>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                    </svg>
-                </span>
-                <input
-                    type="text"
-                    id="searchInput"
-                    placeholder="Название, ссылка КП или ID..."
-                    enterkeyhint="search"
-                    class="w-full min-h-[46px] bg-cinema-surface border border-cinema-border rounded-2xl pl-10 pr-10 py-2.5 text-[15px] text-white placeholder-[#6e6e7d] focus:outline-none focus:border-cinema-accent focus:ring-2 focus:ring-cinema-accent/20 transition"
-                >
-                <button
-                    type="button"
-                    id="clearSearchBtn"
-                    class="hidden absolute right-1.5 w-9 h-9 rounded-full items-center justify-center text-[#9c9cab] hover:bg-white/10 active:scale-95 transition"
-                    aria-label="Очистить поиск"
-                >
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                        <line x1="18" y1="6" x2="6" y2="18"/>
-                        <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                </button>
+    <section id="tab-collections" class="tab-view block">
+        <!-- Kinopoisk v2.2 Collections Chips -->
+        <div class="mb-2.5">
+            <div class="flex items-center justify-between mb-1.5 px-0.5">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-gray-400">Подборки Кинопоиска</span>
+                <!-- View Layout Toggle (List vs 2-Col Grid) -->
+                <div class="inline-flex rounded-lg bg-cinema-surface border border-cinema-border p-0.5" role="group" aria-label="Вид списка">
+                    <button type="button" data-view-mode="list" class="view-mode-btn px-2 py-1 rounded-md text-[11px] font-semibold transition">Список</button>
+                    <button type="button" data-view-mode="grid" class="view-mode-btn px-2 py-1 rounded-md text-[11px] font-semibold transition">Сетка</button>
+                </div>
             </div>
-            <button
-                type="submit"
-                class="min-h-[46px] px-4 rounded-2xl bg-cinema-accent hover:bg-cinema-accentHover text-white font-semibold text-sm active:scale-95 transition shrink-0"
-            >
-                Найти
-            </button>
-        </form>
-
-        <!-- Direct URL / ID Ready-to-Watch Card -->
-        <div id="directCardWrap" class="hidden mb-4"></div>
-
-        <!-- Setup / Demo Card (shown when no API key and no search results) -->
-        <div id="apiSetupCard" class="hidden rounded-2xl bg-cinema-surface border border-cinema-border p-4 mb-4">
-            <h2 class="text-[15px] font-bold mb-1.5 flex items-center gap-2">
-                <svg class="w-4 h-4 text-cinema-accent shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
-                </svg>
-                Подключите поиск по каталогу
-            </h2>
-            <p class="text-[13px] text-[#9c9cab] leading-relaxed mb-3.5">
-                Для поиска по названию добавьте бесплатный API-ключ с
-                <a href="https://kinopoiskapiunofficial.tech/" target="_blank" rel="noopener noreferrer" class="text-cinema-accent underline underline-offset-2">kinopoiskapiunofficial.tech</a>
-                в настройках. Или просто вставьте в поиск прямую ссылку с Кинопоиска / цифровой ID.
-            </p>
-            <div class="flex flex-wrap gap-2">
-                <button type="button" id="goToSettingsBtn" class="flex-1 min-w-[135px] min-h-[44px] px-4 rounded-xl bg-cinema-accent hover:bg-cinema-accentHover text-white font-semibold text-sm active:scale-95 transition">
-                    В настройки
-                </button>
-                <button type="button" id="demoSearchBtn" class="flex-1 min-w-[135px] min-h-[44px] px-4 rounded-xl bg-cinema-surfaceHover border border-cinema-border text-white font-semibold text-sm active:scale-95 transition">
-                    Демо-поиск
-                </button>
+            <div id="collectionChips" class="flex gap-2 overflow-x-auto no-scrollbar pb-1 -mx-3.5 px-3.5">
+                <button type="button" data-col="TOP_POPULAR_ALL" class="col-chip shrink-0 min-h-[40px] px-3.5 rounded-full text-xs font-semibold border transition">🔥 Популярное</button>
+                <button type="button" data-col="TOP_POPULAR_MOVIES" class="col-chip shrink-0 min-h-[40px] px-3.5 rounded-full text-xs font-semibold border transition">🎥 Хиты кино</button>
+                <button type="button" data-col="TOP_250_MOVIES" class="col-chip shrink-0 min-h-[40px] px-3.5 rounded-full text-xs font-semibold border transition">🏆 Топ-250 фильмов</button>
+                <button type="button" data-col="TOP_250_TV_SHOWS" class="col-chip shrink-0 min-h-[40px] px-3.5 rounded-full text-xs font-semibold border transition">📺 Топ-250 сериалов</button>
+                <button type="button" data-col="PREMIERES" class="col-chip shrink-0 min-h-[40px] px-3.5 rounded-full text-xs font-semibold border transition">✨ Премьеры месяца</button>
+                <button type="button" data-col="COMICS_THEME" class="col-chip shrink-0 min-h-[40px] px-3.5 rounded-full text-xs font-semibold border transition">🦸 Комиксы</button>
+                <button type="button" data-col="VAMPIRE_THEME" class="col-chip shrink-0 min-h-[40px] px-3.5 rounded-full text-xs font-semibold border transition">🧛 Вампиры</button>
             </div>
         </div>
 
-        <!-- Always accessible Demo-Search quick trigger when API key is set but results are empty -->
-        <div id="quickDemoBar" class="hidden mb-4 flex items-center justify-between gap-2 rounded-2xl bg-cinema-surface/70 border border-cinema-border/70 px-3.5 py-2.5">
-            <span class="text-xs text-[#9c9cab]">Нужно быстро проверить плеер?</span>
-            <button type="button" id="quickDemoBtn" class="min-h-[38px] px-3 rounded-xl bg-cinema-surfaceHover border border-cinema-border text-xs font-semibold text-white active:scale-95 transition">
-                Демо-поиск
+        <!-- Evening Mood Quick Presets -->
+        <div class="mb-3.5">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1.5 px-0.5">На вечер (быстрые пресеты)</div>
+            <div id="eveningPresetChips" class="flex gap-2 overflow-x-auto no-scrollbar pb-1 -mx-3.5 px-3.5">
+                <button type="button" data-preset="comedy" class="preset-chip shrink-0 min-h-[38px] px-3 rounded-xl text-xs font-semibold border transition">😂 Комедия 7+</button>
+                <button type="button" data-preset="thriller" class="preset-chip shrink-0 min-h-[38px] px-3 rounded-xl text-xs font-semibold border transition">😱 Триллер 7+</button>
+                <button type="button" data-preset="scifi" class="preset-chip shrink-0 min-h-[38px] px-3 rounded-xl text-xs font-semibold border transition">🚀 Фантастика 7+</button>
+                <button type="button" data-preset="detective" class="preset-chip shrink-0 min-h-[38px] px-3 rounded-xl text-xs font-semibold border transition">🕵️ Детектив 7+</button>
+                <button type="button" data-preset="action" class="preset-chip shrink-0 min-h-[38px] px-3 rounded-xl text-xs font-semibold border transition">💥 Боевик 7+</button>
+                <button type="button" data-preset="miniseries" class="preset-chip shrink-0 min-h-[38px] px-3 rounded-xl text-xs font-semibold border transition">🍿 Мини-сериалы</button>
+                <button type="button" data-preset="russian" class="preset-chip shrink-0 min-h-[38px] px-3 rounded-xl text-xs font-semibold border transition">🇷🇺 Новое российское</button>
+            </div>
+        </div>
+
+        <!-- Active Collection Status Row -->
+        <div class="flex items-center justify-between gap-2 mb-2.5 px-0.5">
+            <h2 id="collectionsHeading" class="text-sm font-bold text-white truncate">🔥 Популярное</h2>
+            <span id="collectionsMeta" class="text-xs text-gray-400 shrink-0"></span>
+        </div>
+
+        <!-- Collections Loader -->
+        <div id="collectionsLoader" class="hidden items-center justify-center gap-3 py-10 text-sm text-gray-400">
+            <div class="w-5 h-5 rounded-full border-2 border-cinema-border border-t-cinema-accent spinner-anim"></div>
+            <span>Загружаем подборку...</span>
+        </div>
+
+        <!-- Collections Results Container -->
+        <div id="collectionsList"></div>
+
+        <!-- Collections Load More Button -->
+        <div id="collectionsLoadMoreWrap" class="hidden mt-4">
+            <button type="button" id="collectionsLoadMoreBtn" class="w-full min-h-[46px] rounded-2xl bg-cinema-surface border border-cinema-border hover:border-cinema-accent/50 text-sm font-semibold text-white active:scale-[0.99] transition">
+                Загрузить ещё
+            </button>
+        </div>
+    </section>
+
+    <!-- =========================================
+         TAB 2: ПОИСК + ФИЛЬТРЫ
+         ========================================= -->
+    <section id="tab-search" class="tab-view hidden">
+        <!-- Sub-mode Switcher: Search vs Filters -->
+        <div class="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-cinema-surface border border-cinema-border mb-3.5">
+            <button type="button" data-search-sub="keyword" class="search-sub-btn min-h-[42px] rounded-xl text-xs font-bold transition">
+                🔍 Поиск
+            </button>
+            <button type="button" data-search-sub="filters" class="search-sub-btn min-h-[42px] rounded-xl text-xs font-bold transition">
+                🎛 Фильтры
             </button>
         </div>
 
-        <!-- Recent Search History Chips -->
-        <div id="searchHistorySection" class="hidden mb-4">
-            <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-bold uppercase tracking-wider text-[#9c9cab]">Недавние запросы</span>
-                <button type="button" id="clearSearchHistoryBtn" class="min-h-[36px] px-2 text-xs text-[#6e6e7d] hover:text-cinema-accent transition">
+        <!-- SUB-MODE A: KEYWORD & URL/ID SEARCH -->
+        <div id="sub-keyword">
+            <form id="searchForm" class="flex gap-2 mb-3" autocomplete="off">
+                <div class="relative flex-1 flex items-center">
+                    <span class="absolute left-3.5 text-gray-500 pointer-events-none">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"/>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                    </span>
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Название, ссылка КП или ID..."
+                        enterkeyhint="search"
+                        class="w-full min-h-[46px] bg-cinema-surface border border-cinema-border rounded-2xl pl-10 pr-10 py-2.5 text-[15px] text-white placeholder-gray-500 focus:outline-none focus:border-cinema-accent focus:ring-2 focus:ring-cinema-accent/20 transition"
+                    >
+                    <button type="button" id="clearSearchBtn" class="hidden absolute right-1.5 w-9 h-9 rounded-full items-center justify-center text-gray-400 hover:bg-white/10" aria-label="Очистить">
+                        ✕
+                    </button>
+                </div>
+                <button type="submit" class="min-h-[46px] px-4 rounded-2xl bg-cinema-accent hover:bg-cinema-accentLight text-white font-semibold text-sm active:scale-95 transition shrink-0">
+                    Найти
+                </button>
+            </form>
+
+            <!-- Direct Kinopoisk URL / ID Quick-Launch Card -->
+            <div id="directCardWrap" class="hidden mb-3.5"></div>
+
+            <!-- Recent Search Query Chips -->
+            <div id="searchHistorySection" class="hidden mb-3.5">
+                <div class="flex items-center justify-between mb-1.5 px-0.5">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-gray-400">Недавние запросы</span>
+                    <button type="button" id="clearSearchHistoryBtn" class="text-xs text-gray-500 hover:text-cinema-accentLight py-1 px-2">Очистить</button>
+                </div>
+                <div id="searchHistoryChips" class="flex flex-wrap gap-1.5"></div>
+            </div>
+
+            <!-- Keyword Search Loader -->
+            <div id="searchLoader" class="hidden items-center justify-center gap-3 py-8 text-sm text-gray-400">
+                <div class="w-5 h-5 rounded-full border-2 border-cinema-border border-t-cinema-accent spinner-anim"></div>
+                <span>Ищем в каталоге...</span>
+            </div>
+
+            <!-- Keyword Search Results Header -->
+            <div id="searchResultsHeader" class="hidden items-center justify-between mb-2.5 px-0.5">
+                <span id="searchResultsTitle" class="text-xs font-bold uppercase tracking-wider text-gray-400">Результаты</span>
+                <button type="button" id="clearSearchResultsBtn" class="text-xs text-gray-500 hover:text-cinema-accentLight py-1 px-2">Сбросить</button>
+            </div>
+            <div id="searchResultsList" class="flex flex-col gap-2.5"></div>
+        </div>
+
+        <!-- SUB-MODE B: ADVANCED FILTERS (GET /api/v2.2/films) -->
+        <div id="sub-filters" class="hidden">
+            <div class="rounded-2xl bg-cinema-surface border border-cinema-border p-3.5 space-y-3.5 mb-4">
+                <!-- Type Selector Pills -->
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Тип</label>
+                    <div id="filterTypePills" class="grid grid-cols-4 gap-1.5">
+                        <button type="button" data-ftype="ALL" class="ftype-pill min-h-[38px] px-1 rounded-xl text-xs font-semibold border transition">Все</button>
+                        <button type="button" data-ftype="FILM" class="ftype-pill min-h-[38px] px-1 rounded-xl text-xs font-semibold border transition">Фильмы</button>
+                        <button type="button" data-ftype="TV_SERIES" class="ftype-pill min-h-[38px] px-1 rounded-xl text-xs font-semibold border transition">Сериалы</button>
+                        <button type="button" data-ftype="MINI_SERIES" class="ftype-pill min-h-[38px] px-1 rounded-xl text-[11px] font-semibold border transition leading-tight">Мини-сер.</button>
+                    </div>
+                </div>
+
+                <!-- Genre & Country Dropdowns -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                        <label for="filterGenreSelect" class="block text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Жанр</label>
+                        <select id="filterGenreSelect" class="w-full min-h-[42px] bg-cinema-input border border-cinema-border rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cinema-accent">
+                            <option value="">Любой жанр</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="filterCountrySelect" class="block text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Страна</label>
+                        <select id="filterCountrySelect" class="w-full min-h-[42px] bg-cinema-input border border-cinema-border rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cinema-accent">
+                            <option value="">Любая страна</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Minimum Rating Pills -->
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Минимальный рейтинг</label>
+                    <div id="filterRatingPills" class="grid grid-cols-5 gap-1.5">
+                        <button type="button" data-frating="0" class="frating-pill min-h-[38px] rounded-xl text-xs font-semibold border transition">Любой</button>
+                        <button type="button" data-frating="6" class="frating-pill min-h-[38px] rounded-xl text-xs font-semibold border transition">6+</button>
+                        <button type="button" data-frating="7" class="frating-pill min-h-[38px] rounded-xl text-xs font-semibold border transition">7+</button>
+                        <button type="button" data-frating="7.5" class="frating-pill min-h-[38px] rounded-xl text-xs font-semibold border transition">7.5+</button>
+                        <button type="button" data-frating="8" class="frating-pill min-h-[38px] rounded-xl text-xs font-semibold border transition">8+</button>
+                    </div>
+                </div>
+
+                <!-- Year Range Presets + Inputs -->
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Годы выхода</label>
+                    <div id="filterYearPresets" class="flex gap-1.5 overflow-x-auto no-scrollbar pb-2">
+                        <button type="button" data-yf="" data-yt="" class="fyear-pill shrink-0 min-h-[34px] px-2.5 rounded-lg text-xs font-semibold border transition">Любые</button>
+                        <button type="button" data-yf="2024" data-yt="2026" class="fyear-pill shrink-0 min-h-[34px] px-2.5 rounded-lg text-xs font-semibold border transition">2024–2026</button>
+                        <button type="button" data-yf="2020" data-yt="2029" class="fyear-pill shrink-0 min-h-[34px] px-2.5 rounded-lg text-xs font-semibold border transition">2020-е</button>
+                        <button type="button" data-yf="2010" data-yt="2019" class="fyear-pill shrink-0 min-h-[34px] px-2.5 rounded-lg text-xs font-semibold border transition">2010-е</button>
+                        <button type="button" data-yf="2000" data-yt="2009" class="fyear-pill shrink-0 min-h-[34px] px-2.5 rounded-lg text-xs font-semibold border transition">2000-е</button>
+                        <button type="button" data-yf="1920" data-yt="1999" class="fyear-pill shrink-0 min-h-[34px] px-2.5 rounded-lg text-xs font-semibold border transition">Классика до 2000</button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">От</span>
+                            <input type="number" id="filterYearFrom" min="1900" max="2030" placeholder="1980" class="w-full min-h-[40px] bg-cinema-input border border-cinema-border rounded-xl pl-9 pr-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-cinema-accent">
+                        </div>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">До</span>
+                            <input type="number" id="filterYearTo" min="1900" max="2030" placeholder="2026" class="w-full min-h-[40px] bg-cinema-input border border-cinema-border rounded-xl pl-9 pr-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-cinema-accent">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sort Order Pills -->
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Сортировка</label>
+                    <div id="filterOrderPills" class="grid grid-cols-3 gap-1.5">
+                        <button type="button" data-forder="NUM_VOTE" class="forder-pill min-h-[38px] px-2 rounded-xl text-xs font-semibold border transition">Популярные</button>
+                        <button type="button" data-forder="RATING" class="forder-pill min-h-[38px] px-2 rounded-xl text-xs font-semibold border transition">По рейтингу</button>
+                        <button type="button" data-forder="YEAR" class="forder-pill min-h-[38px] px-2 rounded-xl text-xs font-semibold border transition">Новые</button>
+                    </div>
+                </div>
+
+                <!-- Optional Keyword Inside Filters -->
+                <div>
+                    <label for="filterKeywordInput" class="block text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Ключевое слово (необязательно)</label>
+                    <input type="text" id="filterKeywordInput" placeholder="Например: космос, зомби, школа..." class="w-full min-h-[42px] bg-cinema-input border border-cinema-border rounded-xl px-3.5 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cinema-accent">
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-2 pt-1">
+                    <button type="button" id="applyFiltersBtn" class="flex-1 min-h-[46px] px-4 rounded-xl bg-cinema-accent hover:bg-cinema-accentLight text-white font-bold text-sm active:scale-95 transition">
+                        Показать фильмы
+                    </button>
+                    <button type="button" id="randomByFilterBtn" class="min-h-[46px] px-4 rounded-xl bg-cinema-elevated border border-cinema-border hover:border-cinema-accent/50 text-white font-semibold text-sm active:scale-95 transition">
+                        🎲 Случайный по фильтру
+                    </button>
+                </div>
+                <div class="flex justify-end">
+                    <button type="button" id="resetFiltersBtn" class="text-xs text-gray-400 hover:text-cinema-accentLight py-1 px-2">
+                        Сбросить фильтры
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filter Results Header & View Toggle -->
+            <div id="filterResultsHeader" class="hidden items-center justify-between gap-2 mb-2.5 px-0.5">
+                <span id="filterResultsTitle" class="text-xs font-bold uppercase tracking-wider text-gray-400">Результаты</span>
+                <div class="inline-flex rounded-lg bg-cinema-surface border border-cinema-border p-0.5">
+                    <button type="button" data-view-mode="list" class="view-mode-btn px-2 py-1 rounded-md text-[11px] font-semibold transition">Список</button>
+                    <button type="button" data-view-mode="grid" class="view-mode-btn px-2 py-1 rounded-md text-[11px] font-semibold transition">Сетка</button>
+                </div>
+            </div>
+
+            <!-- Filter Loader -->
+            <div id="filterLoader" class="hidden items-center justify-center gap-3 py-8 text-sm text-gray-400">
+                <div class="w-5 h-5 rounded-full border-2 border-cinema-border border-t-cinema-accent spinner-anim"></div>
+                <span>Подбираем фильмы...</span>
+            </div>
+
+            <!-- Filter Results List -->
+            <div id="filterResultsList"></div>
+
+            <!-- Filter Load More -->
+            <div id="filterLoadMoreWrap" class="hidden mt-4">
+                <button type="button" id="filterLoadMoreBtn" class="w-full min-h-[46px] rounded-2xl bg-cinema-surface border border-cinema-border hover:border-cinema-accent/50 text-sm font-semibold text-white active:scale-[0.99] transition">
+                    Загрузить ещё
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================
+         TAB 3: МОЁ (ИСТОРИЯ + БУДУ СМОТРЕТЬ)
+         ========================================= -->
+    <section id="tab-my" class="tab-view hidden">
+        <!-- Sub-tabs Switcher -->
+        <div class="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-cinema-surface border border-cinema-border mb-3.5">
+            <button type="button" data-my-sub="history" class="my-sub-btn min-h-[42px] rounded-xl text-xs font-bold inline-flex items-center justify-center gap-1.5 transition">
+                <span>🕒 История</span>
+                <span id="historyTabCount" class="px-1.5 py-0.5 rounded-full text-[10px] bg-white/10">0</span>
+            </button>
+            <button type="button" data-my-sub="watchlist" class="my-sub-btn min-h-[42px] rounded-xl text-xs font-bold inline-flex items-center justify-center gap-1.5 transition">
+                <span>⭐ Буду смотреть</span>
+                <span id="watchlistTabCount" class="px-1.5 py-0.5 rounded-full text-[10px] bg-white/10">0</span>
+            </button>
+        </div>
+
+        <!-- SUB-TAB: WATCH HISTORY -->
+        <div id="sub-my-history">
+            <div class="flex items-center justify-between gap-2 mb-3">
+                <div id="historyTypeFilters" class="flex gap-1.5 overflow-x-auto no-scrollbar">
+                    <button type="button" data-hfilter="all" class="hfilter-pill min-h-[36px] px-3 rounded-full text-xs font-semibold border transition whitespace-nowrap">Все</button>
+                    <button type="button" data-hfilter="film" class="hfilter-pill min-h-[36px] px-3 rounded-full text-xs font-semibold border transition whitespace-nowrap">Фильмы</button>
+                    <button type="button" data-hfilter="series" class="hfilter-pill min-h-[36px] px-3 rounded-full text-xs font-semibold border transition whitespace-nowrap">Сериалы</button>
+                </div>
+                <button type="button" id="clearHistoryTopBtn" class="hidden shrink-0 min-h-[36px] px-3 rounded-xl bg-red-500/15 border border-red-500/30 text-red-400 text-xs font-semibold active:scale-95 transition">
                     Очистить
                 </button>
             </div>
-            <div id="searchHistoryChips" class="flex flex-wrap gap-2"></div>
-        </div>
-
-        <!-- Search Loader -->
-        <div id="searchLoader" class="hidden items-center justify-center gap-3 py-8 text-sm text-[#9c9cab]">
-            <div class="w-5 h-5 rounded-full border-2 border-cinema-border border-t-cinema-accent spinner-anim"></div>
-            <span>Ищем в каталоге Кинопоиска...</span>
-        </div>
-
-        <!-- Search Results Header & List -->
-        <div id="searchResultsHeader" class="hidden items-center justify-between mb-2.5">
-            <span id="searchResultsTitle" class="text-xs font-bold uppercase tracking-wider text-[#9c9cab]">Результаты</span>
-            <button type="button" id="clearResultsBtn" class="min-h-[36px] px-2 text-xs text-[#6e6e7d] hover:text-cinema-accent transition">
-                Сбросить
-            </button>
-        </div>
-        <div id="searchResultsList" class="flex flex-col gap-3"></div>
-    </section>
-
-    <!-- =========================================
-         TAB 2: ИСТОРИЯ
-         ========================================= -->
-    <section id="tab-history" class="tab-view hidden">
-        <div class="flex items-center justify-between gap-2 mb-3.5">
-            <div id="historyFilters" class="flex gap-2 overflow-x-auto pb-1">
-                <button type="button" data-filter="all" class="filter-pill min-h-[40px] px-3.5 rounded-full text-xs font-semibold border transition whitespace-nowrap bg-cinema-accent border-cinema-accent text-white">
-                    Все <span id="countAll"></span>
-                </button>
-                <button type="button" data-filter="film" class="filter-pill min-h-[40px] px-3.5 rounded-full text-xs font-semibold border transition whitespace-nowrap bg-cinema-surface border-cinema-border text-[#9c9cab]">
-                    Фильмы <span id="countFilms"></span>
-                </button>
-                <button type="button" data-filter="series" class="filter-pill min-h-[40px] px-3.5 rounded-full text-xs font-semibold border transition whitespace-nowrap bg-cinema-surface border-cinema-border text-[#9c9cab]">
-                    Сериалы <span id="countSeries"></span>
+            <div id="historyList" class="flex flex-col gap-2.5"></div>
+            <div id="historyEmptyState" class="hidden text-center py-12 px-4">
+                <div class="text-4xl mb-2.5">🎬</div>
+                <h3 class="text-base font-bold mb-1">История просмотров пуста</h3>
+                <p class="text-xs text-gray-400 max-w-xs mx-auto mb-4 leading-relaxed">
+                    Нажмите «▶ Смотреть» на любом фильме или сериале — он сразу появится здесь, а для сериалов включится счётчик сезонов и серий.
+                </p>
+                <button type="button" id="emptyHistoryGoColBtn" class="min-h-[42px] px-5 rounded-xl bg-cinema-accent text-white font-semibold text-sm active:scale-95 transition">
+                    Открыть подборки
                 </button>
             </div>
-            <button
-                type="button"
-                id="historyClearTopBtn"
-                class="hidden shrink-0 min-h-[40px] px-3 rounded-xl bg-red-500/15 border border-red-500/30 text-red-400 text-xs font-semibold active:scale-95 transition"
-            >
-                Очистить
-            </button>
         </div>
 
-        <div id="historyList" class="flex flex-col gap-3"></div>
-
-        <!-- Empty History State -->
-        <div id="historyEmptyState" class="hidden text-center py-12 px-4">
-            <div class="w-14 h-14 mx-auto mb-3.5 rounded-2xl bg-cinema-surface border border-cinema-border flex items-center justify-center text-[#6e6e7d]">
-                <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <polyline points="12 6 12 12 16 14"/>
-                </svg>
+        <!-- SUB-TAB: WATCHLIST (БУДУ СМОТРЕТЬ) -->
+        <div id="sub-my-watchlist" class="hidden">
+            <div id="watchlistList" class="flex flex-col gap-2.5"></div>
+            <div id="watchlistEmptyState" class="hidden text-center py-12 px-4">
+                <div class="text-4xl mb-2.5">⭐</div>
+                <h3 class="text-base font-bold mb-1">Список «Буду смотреть» пуст</h3>
+                <p class="text-xs text-gray-400 max-w-xs mx-auto mb-4 leading-relaxed">
+                    Нажимайте на звёздочку ☆ на любой карточке фильма, чтобы отложить его на вечер.
+                </p>
+                <button type="button" id="emptyWatchlistGoColBtn" class="min-h-[42px] px-5 rounded-xl bg-cinema-accent text-white font-semibold text-sm active:scale-95 transition">
+                    Выбрать фильм
+                </button>
             </div>
-            <h3 class="text-base font-bold mb-1.5">История пока пуста</h3>
-            <p class="text-sm text-[#9c9cab] max-w-xs mx-auto mb-4">
-                Найдите фильм или сериал и нажмите «▶ Смотреть» — он сохранится здесь, чтобы можно было вернуться.
-            </p>
-            <button type="button" id="emptyGoSearchBtn" class="min-h-[44px] px-5 rounded-xl bg-cinema-accent hover:bg-cinema-accentHover text-white font-semibold text-sm active:scale-95 transition">
-                Перейти к поиску
-            </button>
         </div>
     </section>
 
     <!-- =========================================
-         TAB 3: НАСТРОЙКИ
+         TAB 4: НАСТРОЙКИ
          ========================================= -->
     <section id="tab-settings" class="tab-view hidden space-y-3.5">
 
-        <!-- API Key Settings -->
+        <!-- API Key & Daily Quota -->
         <div class="rounded-2xl bg-cinema-surface border border-cinema-border p-4">
-            <h3 class="text-[15px] font-bold mb-1 flex items-center gap-2">
-                <svg class="w-4 h-4 text-cinema-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
-                </svg>
-                API-ключ (X-API-KEY)
-            </h3>
-            <p class="text-xs text-[#9c9cab] leading-relaxed mb-3">
-                Ключ хранится локально. Бесплатный ключ (500 запросов/сутки) выдаётся на
-                <a href="https://kinopoiskapiunofficial.tech/" target="_blank" rel="noopener noreferrer" class="text-cinema-accent underline underline-offset-2">kinopoiskapiunofficial.tech</a>.
+            <div class="flex items-center justify-between gap-2 mb-1">
+                <h3 class="text-[15px] font-bold flex items-center gap-1.5">
+                    <span class="text-cinema-accent">🔑</span> API-ключ (X-API-KEY)
+                </h3>
+                <span id="settingsQuotaBadge" class="text-[11px] font-mono px-2 py-0.5 rounded-lg bg-cinema-input border border-cinema-border text-gray-300">
+                    Запросов сегодня: 0 / 500
+                </span>
+            </div>
+            <p class="text-xs text-gray-400 leading-relaxed mb-3">
+                Бесплатный ключ (500 запросов/день) можно получить на <a href="https://kinopoiskapiunofficial.tech/" target="_blank" rel="noopener noreferrer" class="text-cinema-accentLight underline underline-offset-2">kinopoiskapiunofficial.tech</a>. Ключ хранится только в вашем браузере.
             </p>
             <div class="relative flex items-center mb-2.5">
                 <input
@@ -301,146 +527,155 @@
                     id="apiKeyInput"
                     placeholder="Вставьте ваш X-API-KEY..."
                     autocomplete="off"
-                    class="w-full min-h-[44px] bg-cinema-input border border-cinema-border rounded-xl pl-3.5 pr-12 py-2.5 text-sm text-white placeholder-[#6e6e7d] focus:outline-none focus:border-cinema-accent"
+                    class="w-full min-h-[44px] bg-cinema-input border border-cinema-border rounded-xl pl-3.5 pr-11 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cinema-accent"
                 >
-                <button
-                    type="button"
-                    id="toggleApiKeyVisBtn"
-                    class="absolute right-1 w-10 h-10 rounded-lg flex items-center justify-center text-[#9c9cab] hover:text-white active:scale-95 transition"
-                    aria-label="Показать или скрыть ключ"
-                >
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                        <circle cx="12" cy="12" r="3"/>
-                    </svg>
+                <button type="button" id="toggleApiKeyVisBtn" class="absolute right-1 w-9 h-9 rounded-lg flex items-center justify-center text-gray-400 hover:text-white" aria-label="Показать ключ">
+                    👁
                 </button>
             </div>
-            <div class="flex flex-wrap gap-2">
-                <button type="button" id="saveApiKeyBtn" class="flex-1 min-w-[130px] min-h-[44px] px-4 rounded-xl bg-cinema-accent hover:bg-cinema-accentHover text-white font-semibold text-sm active:scale-95 transition">
+            <div class="grid grid-cols-2 gap-2 mb-2">
+                <button type="button" id="saveApiKeyBtn" class="min-h-[42px] px-3 rounded-xl bg-cinema-accent hover:bg-cinema-accentLight text-white font-semibold text-xs active:scale-95 transition">
                     Сохранить ключ
                 </button>
-                <a href="https://kinopoiskapiunofficial.tech/" target="_blank" rel="noopener noreferrer" class="flex-1 min-w-[130px] min-h-[44px] px-4 rounded-xl bg-cinema-surfaceHover border border-cinema-border text-white font-semibold text-sm inline-flex items-center justify-center active:scale-95 transition">
-                    Получить ключ ↗
-                </a>
+                <button type="button" id="testApiKeyBtn" class="min-h-[42px] px-3 rounded-xl bg-cinema-elevated border border-cinema-border text-white font-semibold text-xs active:scale-95 transition">
+                    Проверить ключ
+                </button>
             </div>
+            <div id="apiKeyTestStatus" class="hidden text-xs px-3 py-2 rounded-xl mt-2"></div>
         </div>
 
-        <!-- Mirror Domain Settings -->
+        <!-- Mirror Selector -->
         <div class="rounded-2xl bg-cinema-surface border border-cinema-border p-4">
-            <h3 class="text-[15px] font-bold mb-1 flex items-center gap-2">
-                <svg class="w-4 h-4 text-cinema-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="2" y1="12" x2="22" y2="12"/>
-                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-                </svg>
-                Рабочее зеркало
-            </h3>
-            <p class="text-xs text-[#9c9cab] leading-relaxed mb-3">
-                Выберите готовый домен или введите свой — все ссылки обновятся автоматически.
+            <h3 class="text-[15px] font-bold mb-1">🌐 Рабочее зеркало</h3>
+            <p class="text-xs text-gray-400 leading-relaxed mb-3">
+                Если текущее зеркало не открывается, выберите запасное — все ссылки в приложении сразу обновятся.
             </p>
-            <div id="mirrorPresets" class="flex flex-wrap gap-2 mb-3">
-                <button type="button" data-mirror="kinopoisk.cx" class="mirror-preset min-h-[40px] px-3.5 rounded-full text-xs font-semibold border transition">kinopoisk.cx</button>
-                <button type="button" data-mirror="kinopoisk.vip" class="mirror-preset min-h-[40px] px-3.5 rounded-full text-xs font-semibold border transition">kinopoisk.vip</button>
-                <button type="button" data-mirror="kinopoisk.cfd" class="mirror-preset min-h-[40px] px-3.5 rounded-full text-xs font-semibold border transition">kinopoisk.cfd</button>
-                <button type="button" data-mirror="sspoisk.ru" class="mirror-preset min-h-[40px] px-3.5 rounded-full text-xs font-semibold border transition">sspoisk.ru</button>
+            <div id="mirrorPresets" class="flex flex-wrap gap-1.5 mb-3">
+                <button type="button" data-mirror="kinopoisk.cx" class="mirror-preset min-h-[38px] px-3 rounded-full text-xs font-semibold border transition">kinopoisk.cx</button>
+                <button type="button" data-mirror="kinopoisk.vip" class="mirror-preset min-h-[38px] px-3 rounded-full text-xs font-semibold border transition">kinopoisk.vip</button>
+                <button type="button" data-mirror="kinopoisk.cfd" class="mirror-preset min-h-[38px] px-3 rounded-full text-xs font-semibold border transition">kinopoisk.cfd</button>
+                <button type="button" data-mirror="sspoisk.ru" class="mirror-preset min-h-[38px] px-3 rounded-full text-xs font-semibold border transition">sspoisk.ru</button>
+                <button type="button" data-mirror="ggpoisk.ru" class="mirror-preset min-h-[38px] px-3 rounded-full text-xs font-semibold border transition">ggpoisk.ru</button>
             </div>
-            <div class="flex gap-2 mb-3">
+            <div class="flex gap-2 mb-2.5">
                 <input
                     type="text"
                     id="customMirrorInput"
                     placeholder="Свой домен (например, kinopoisk.cx)"
                     autocomplete="off"
-                    class="flex-1 min-h-[44px] bg-cinema-input border border-cinema-border rounded-xl px-3.5 py-2 text-sm text-white placeholder-[#6e6e7d] focus:outline-none focus:border-cinema-accent"
+                    class="flex-1 min-h-[42px] bg-cinema-input border border-cinema-border rounded-xl px-3.5 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cinema-accent"
                 >
-                <button type="button" id="saveMirrorBtn" class="min-h-[44px] px-4 rounded-xl bg-cinema-accent hover:bg-cinema-accentHover text-white font-semibold text-sm active:scale-95 transition shrink-0">
+                <button type="button" id="saveMirrorBtn" class="min-h-[42px] px-4 rounded-xl bg-cinema-accent text-white font-semibold text-xs active:scale-95 transition shrink-0">
                     Применить
                 </button>
             </div>
-            <div class="rounded-xl bg-cinema-input border border-dashed border-cinema-border px-3 py-2 font-mono text-xs text-[#9c9cab] break-all">
-                Пример: <strong id="mirrorUrlPreview" class="text-cinema-accent">https://www.kinopoisk.cx/film/258687/</strong>
+            <div class="rounded-xl bg-cinema-input border border-dashed border-cinema-border px-3 py-2 font-mono text-[11px] text-gray-400 break-all">
+                Ссылка: <strong id="mirrorUrlPreview" class="text-cinema-accentLight">https://kinopoisk.cx/film/435/</strong>
             </div>
         </div>
 
-        <!-- Link Open Mode -->
-        <div class="rounded-2xl bg-cinema-surface border border-cinema-border p-4">
-            <h3 class="text-[15px] font-bold mb-1">Режим открытия ссылок</h3>
-            <p class="text-xs text-[#9c9cab] leading-relaxed mb-3">
-                Если браузер блокирует новые вкладки, переключите на открытие в текущей вкладке.
-            </p>
-            <div class="grid grid-cols-2 gap-2" id="linkTargetToggle">
-                <button type="button" data-target="_blank" class="target-opt min-h-[44px] px-3 rounded-xl text-xs font-semibold border transition text-center">
-                    Новая вкладка (_blank)
-                </button>
-                <button type="button" data-target="_self" class="target-opt min-h-[44px] px-3 rounded-xl text-xs font-semibold border transition text-center">
-                    Текущая вкладка (_self)
-                </button>
+        <!-- Link Open Mode & Ad-Free Android Tip -->
+        <div class="rounded-2xl bg-cinema-surface border border-cinema-border p-4 space-y-3">
+            <div>
+                <h3 class="text-[15px] font-bold mb-1">🔗 Открытие плеера</h3>
+                <div class="grid grid-cols-2 gap-2 mt-2" id="linkTargetToggle">
+                    <button type="button" data-target="_blank" class="target-opt min-h-[42px] px-2.5 rounded-xl text-xs font-semibold border transition">
+                        Новая вкладка (_blank)
+                    </button>
+                    <button type="button" data-target="_self" class="target-opt min-h-[42px] px-2.5 rounded-xl text-xs font-semibold border transition">
+                        Текущая вкладка (_self)
+                    </button>
+                </div>
+            </div>
+
+            <div class="rounded-xl bg-emerald-500/10 border border-emerald-500/25 p-3 text-xs text-emerald-200 leading-relaxed">
+                <strong>🛡 Совет для Android без рекламы:</strong> открывайте это приложение и добавляйте его на главный экран через <strong>Brave</strong> или <strong>Firefox + uBlock Origin</strong> — тогда реклама и всплывающие окна на зеркалах будут блокироваться автоматически.
             </div>
         </div>
 
-        <!-- Backup & Clear Data -->
-        <div class="rounded-2xl bg-cinema-surface border border-cinema-border p-4">
-            <h3 class="text-[15px] font-bold mb-1">Резервная копия и очистка</h3>
-            <p class="text-xs text-[#9c9cab] leading-relaxed mb-3">
-                Переносите историю и настройки между браузерами (например, в Brave или Firefox + uBlock) через JSON.
+        <!-- Backup, Cache & Demo Controls -->
+        <div class="rounded-2xl bg-cinema-surface border border-cinema-border p-4 space-y-2.5">
+            <h3 class="text-[15px] font-bold">💾 Данные и справочники</h3>
+            <p class="text-xs text-gray-400 leading-relaxed">
+                Экспортируйте историю, список «Буду смотреть» и настройки в JSON для переноса на другое устройство или браузер.
             </p>
-            <div class="flex flex-wrap gap-2 mb-2.5">
-                <button type="button" id="exportDataBtn" class="flex-1 min-w-[130px] min-h-[44px] px-4 rounded-xl bg-cinema-surfaceHover border border-cinema-border text-white font-semibold text-sm active:scale-95 transition">
-                    Экспорт JSON
+            <div class="grid grid-cols-2 gap-2">
+                <button type="button" id="exportCopyBtn" class="min-h-[42px] px-3 rounded-xl bg-cinema-elevated border border-cinema-border text-white font-semibold text-xs active:scale-95 transition">
+                    📋 Копировать JSON
                 </button>
-                <button type="button" id="importDataBtn" class="flex-1 min-w-[130px] min-h-[44px] px-4 rounded-xl bg-cinema-surfaceHover border border-cinema-border text-white font-semibold text-sm active:scale-95 transition">
-                    Импорт JSON
+                <button type="button" id="exportDownloadBtn" class="min-h-[42px] px-3 rounded-xl bg-cinema-elevated border border-cinema-border text-white font-semibold text-xs active:scale-95 transition">
+                    ⬇ Скачать .json
                 </button>
             </div>
-            <button type="button" id="clearAllHistoryBtn" class="w-full min-h-[44px] px-4 rounded-xl bg-red-500/15 border border-red-500/35 text-red-400 font-semibold text-sm active:scale-95 transition">
-                Очистить всю историю
+            <button type="button" id="openImportModalBtn" class="w-full min-h-[42px] px-3 rounded-xl bg-cinema-elevated border border-cinema-border text-white font-semibold text-xs active:scale-95 transition">
+                📥 Импортировать JSON (текст или файл)
+            </button>
+            <button type="button" id="refreshFiltersCacheBtn" class="w-full min-h-[42px] px-3 rounded-xl bg-cinema-input border border-cinema-border text-gray-200 font-semibold text-xs active:scale-95 transition">
+                🔄 Обновить список жанров и стран
+            </button>
+            <button type="button" id="settingsToggleDemoBtn" class="w-full min-h-[42px] px-3 rounded-xl bg-cinema-input border border-cinema-border text-gray-300 font-semibold text-xs active:scale-95 transition">
+                🎬 Демо-режим: Выкл
             </button>
         </div>
 
-        <!-- Compact Diagnostics Block -->
-        <div class="rounded-2xl bg-cinema-surface border border-cinema-border p-4">
-            <h3 class="text-[15px] font-bold mb-2.5 flex items-center gap-2">
-                <svg class="w-4 h-4 text-cinema-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-                </svg>
-                Диагностика
-            </h3>
-            <div class="rounded-xl bg-cinema-input border border-cinema-border p-3 font-mono text-[11.5px] space-y-1.5 text-[#9c9cab]">
+        <!-- Collapsible Diagnostics Panel -->
+        <details class="rounded-2xl bg-cinema-surface border border-cinema-border p-4 group">
+            <summary class="text-sm font-bold cursor-pointer list-none flex items-center justify-between text-gray-200">
+                <span>🛠 Диагностика</span>
+                <span class="text-xs text-gray-500 group-open:rotate-180 transition-transform">▼</span>
+            </summary>
+            <div class="mt-3 rounded-xl bg-cinema-input border border-cinema-border p-3 font-mono text-[11px] space-y-1.5 text-gray-400">
                 <div class="flex justify-between gap-2">
-                    <span class="text-[#6e6e7d]">Среда:</span>
+                    <span class="text-gray-500">Среда:</span>
                     <span id="diagEnv" class="text-white text-right">—</span>
                 </div>
                 <div class="flex justify-between gap-2">
-                    <span class="text-[#6e6e7d]">localStorage:</span>
+                    <span class="text-gray-500">localStorage:</span>
                     <span id="diagStorage" class="text-white text-right">—</span>
                 </div>
                 <div class="flex justify-between gap-2">
-                    <span class="text-[#6e6e7d]">Зеркало:</span>
-                    <span id="diagMirror" class="text-cinema-accent text-right">—</span>
+                    <span class="text-gray-500">Активное зеркало:</span>
+                    <span id="diagMirror" class="text-cinema-accentLight text-right">—</span>
                 </div>
                 <div class="flex justify-between gap-2">
-                    <span class="text-[#6e6e7d]">Режим ссылок:</span>
-                    <span id="diagTarget" class="text-white text-right">—</span>
+                    <span class="text-gray-500">Запросов API сегодня:</span>
+                    <span id="diagQuota" class="text-white text-right">0 / 500</span>
                 </div>
                 <div class="pt-1 border-t border-cinema-border/70">
-                    <span class="text-[#6e6e7d] block mb-0.5">Последний URL:</span>
-                    <span id="diagLastUrl" class="text-white break-all block">Ещё не формировался</span>
+                    <span class="text-gray-500 block">Последний URL:</span>
+                    <span id="diagLastUrl" class="text-white break-all block">—</span>
                 </div>
                 <div class="pt-1 border-t border-cinema-border/70">
-                    <span class="text-[#6e6e7d] block mb-0.5">Последняя JS-ошибка:</span>
+                    <span class="text-gray-500 block">Последняя JS-ошибка:</span>
                     <span id="diagLastError" class="text-emerald-400 break-all block">Ошибок нет</span>
                 </div>
             </div>
-        </div>
+        </details>
     </section>
-</div>
+</main>
 
 <!-- =========================================
-     STICKY BOTTOM NAVIGATION BAR
+     FIXED BOTTOM NAVIGATION BAR (4 TABS)
      ========================================= -->
-<nav class="fixed bottom-0 left-0 right-0 bg-[#14141b]/95 backdrop-blur-lg border-t border-cinema-border safe-pb z-40" aria-label="Навигация">
-    <div class="max-w-xl mx-auto h-[68px] grid grid-cols-3">
-        <button type="button" data-tab="search" class="nav-item relative flex flex-col items-center justify-center gap-1 text-cinema-accent text-[11.5px] font-semibold">
-            <span class="nav-indicator absolute top-0 w-9 h-[3px] rounded-b bg-cinema-accent"></span>
+<nav class="fixed bottom-0 left-0 right-0 bg-[#121319]/96 backdrop-blur-lg border-t border-cinema-border safe-pb z-40" aria-label="Основная навигация">
+    <div class="max-w-xl mx-auto h-[66px] grid grid-cols-4">
+        <button type="button" data-tab="collections" class="nav-item relative flex flex-col items-center justify-center gap-1 text-cinema-accent text-[11px] font-semibold">
+            <span class="nav-indicator absolute top-0 w-8 h-[3px] rounded-b bg-cinema-accent"></span>
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
+                <line x1="7" y1="2" x2="7" y2="22"/>
+                <line x1="17" y1="2" x2="17" y2="22"/>
+                <line x1="2" y1="12" x2="22" y2="12"/>
+                <line x1="2" y1="7" x2="7" y2="7"/>
+                <line x1="2" y1="17" x2="7" y2="17"/>
+                <line x1="17" y1="17" x2="22" y2="17"/>
+                <line x1="17" y1="7" x2="22" y2="7"/>
+            </svg>
+            <span>Подборки</span>
+        </button>
+
+        <button type="button" data-tab="search" class="nav-item relative flex flex-col items-center justify-center gap-1 text-gray-500 text-[11px] font-semibold">
+            <span class="nav-indicator hidden absolute top-0 w-8 h-[3px] rounded-b bg-cinema-accent"></span>
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="11" cy="11" r="8"/>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -448,18 +683,17 @@
             <span>Поиск</span>
         </button>
 
-        <button type="button" data-tab="history" class="nav-item relative flex flex-col items-center justify-center gap-1 text-[#6e6e7d] text-[11.5px] font-semibold">
-            <span class="nav-indicator hidden absolute top-0 w-9 h-[3px] rounded-b bg-cinema-accent"></span>
+        <button type="button" data-tab="my" class="nav-item relative flex flex-col items-center justify-center gap-1 text-gray-500 text-[11px] font-semibold">
+            <span class="nav-indicator hidden absolute top-0 w-8 h-[3px] rounded-b bg-cinema-accent"></span>
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="12 6 12 12 16 14"/>
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
             </svg>
-            <span id="historyNavBadge" class="hidden absolute top-2 right-[calc(50%-22px)] bg-cinema-accent text-white text-[10px] font-bold min-w-[16px] h-4 px-1 rounded-full items-center justify-center">0</span>
-            <span>История</span>
+            <span id="myNavBadge" class="hidden absolute top-1.5 right-[calc(50%-22px)] bg-cinema-accent text-white text-[9.5px] font-bold min-w-[16px] h-4 px-1 rounded-full items-center justify-center">0</span>
+            <span>Моё</span>
         </button>
 
-        <button type="button" data-tab="settings" class="nav-item relative flex flex-col items-center justify-center gap-1 text-[#6e6e7d] text-[11.5px] font-semibold">
-            <span class="nav-indicator hidden absolute top-0 w-9 h-[3px] rounded-b bg-cinema-accent"></span>
+        <button type="button" data-tab="settings" class="nav-item relative flex flex-col items-center justify-center gap-1 text-gray-500 text-[11px] font-semibold">
+            <span class="nav-indicator hidden absolute top-0 w-8 h-[3px] rounded-b bg-cinema-accent"></span>
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="3"/>
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
@@ -476,38 +710,129 @@
     id="toast"
     role="status"
     aria-live="polite"
-    class="fixed left-1/2 -translate-x-1/2 toast-bottom bg-[#262632] text-white border border-cinema-border px-4 py-2.5 rounded-full text-sm font-medium shadow-2xl opacity-0 pointer-events-none translate-y-4 transition-all duration-200 z-50 max-w-[calc(100vw-2rem)] text-center"
+    class="fixed left-1/2 -translate-x-1/2 toast-bottom bg-[#232632] text-white border border-cinema-border px-4 py-2.5 rounded-full text-xs sm:text-sm font-medium shadow-2xl opacity-0 pointer-events-none translate-y-4 transition-all duration-200 z-[70] max-w-[calc(100vw-2rem)] text-center"
 ></div>
 
 <!-- =========================================
-     BOTTOM-SHEET MODAL: MANUAL LINK FALLBACK
+     MODAL 1: MOVIE DETAIL BOTTOM SHEET
      ========================================= -->
-<div id="linkSheetModal" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-50 items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="w-full max-w-lg bg-cinema-surface border-t sm:border border-cinema-border rounded-t-3xl sm:rounded-2xl p-5 safe-pb shadow-2xl">
-        <div class="w-10 h-1 bg-cinema-border rounded-full mx-auto mb-4 sm:hidden"></div>
-        <div class="flex items-center justify-between gap-2 mb-2">
-            <h3 class="text-base font-bold">Ссылка на просмотр</h3>
-            <button type="button" id="closeLinkSheetBtn" class="w-10 h-10 -mr-2 rounded-xl flex items-center justify-center text-[#9c9cab] hover:bg-white/10 active:scale-95 transition" aria-label="Закрыть">
-                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round">
-                    <line x1="18" y1="6" x2="6" y2="18"/>
-                    <line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
+<div id="detailModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 items-end sm:items-center justify-center">
+    <div class="sheet-anim w-full max-w-xl max-h-[92vh] bg-cinema-surface border-t sm:border border-cinema-border rounded-t-3xl sm:rounded-2xl flex flex-col overflow-hidden shadow-2xl">
+        <!-- Sticky Sheet Header -->
+        <div class="px-4 pt-3 pb-2.5 border-b border-cinema-border flex items-center justify-between gap-2 shrink-0">
+            <div class="flex items-center gap-2 min-w-0">
+                <span id="detailHeaderType" class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-cinema-elevated text-gray-300">Фильм</span>
+                <span id="detailHeaderId" class="text-[11px] font-mono text-gray-500"></span>
+            </div>
+            <button type="button" id="closeDetailModalBtn" class="w-9 h-9 rounded-xl bg-cinema-elevated text-gray-300 hover:text-white flex items-center justify-center active:scale-95 transition shrink-0" aria-label="Закрыть">
+                ✕
             </button>
         </div>
-        <p id="linkSheetSubtitle" class="text-xs text-[#9c9cab] mb-3">
-            Выделите и скопируйте ссылку вручную, чтобы вставить её в Brave или Firefox:
+
+        <!-- Scrollable Sheet Body -->
+        <div id="detailBody" class="overflow-y-auto p-4 space-y-4 safe-pb">
+            <!-- Populated dynamically via JS -->
+        </div>
+    </div>
+</div>
+
+<!-- =========================================
+     MODAL 2: "🎲 НА ВЕЧЕР" RANDOM MOVIE PICKER
+     ========================================= -->
+<div id="randomModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 items-end sm:items-center justify-center">
+    <div class="sheet-anim w-full max-w-xl max-h-[92vh] bg-cinema-surface border-t sm:border border-cinema-border rounded-t-3xl sm:rounded-2xl flex flex-col overflow-hidden shadow-2xl">
+        <div class="px-4 pt-3.5 pb-2.5 border-b border-cinema-border flex items-center justify-between gap-2 shrink-0">
+            <div>
+                <h3 class="text-base font-bold text-white">🎲 Что посмотреть на вечер?</h3>
+                <p id="randomModeHint" class="text-[11px] text-gray-400">Случайный выбор с хорошим рейтингом</p>
+            </div>
+            <button type="button" id="closeRandomModalBtn" class="w-9 h-9 rounded-xl bg-cinema-elevated text-gray-300 hover:text-white flex items-center justify-center active:scale-95 transition" aria-label="Закрыть">
+                ✕
+            </button>
+        </div>
+
+        <div class="overflow-y-auto p-4 space-y-3.5 safe-pb">
+            <!-- Quick Preferences Inside Modal -->
+            <div id="randomQuickControls" class="rounded-2xl bg-cinema-input border border-cinema-border p-3 space-y-2.5">
+                <!-- Type -->
+                <div class="flex flex-wrap gap-1.5" id="randTypeGroup">
+                    <button type="button" data-rtype="FILM" class="rand-opt min-h-[34px] px-3 rounded-lg text-xs font-semibold border transition">Фильм</button>
+                    <button type="button" data-rtype="TV_SERIES" class="rand-opt min-h-[34px] px-3 rounded-lg text-xs font-semibold border transition">Сериал</button>
+                    <button type="button" data-rtype="ALL" class="rand-opt min-h-[34px] px-3 rounded-lg text-xs font-semibold border transition">Любой</button>
+                </div>
+
+                <!-- Genre -->
+                <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5" id="randGenreGroup">
+                    <button type="button" data-rgenre="" class="rand-opt shrink-0 min-h-[34px] px-2.5 rounded-lg text-xs font-semibold border transition">Любой жанр</button>
+                    <button type="button" data-rgenre="комедия" class="rand-opt shrink-0 min-h-[34px] px-2.5 rounded-lg text-xs font-semibold border transition">Комедия</button>
+                    <button type="button" data-rgenre="триллер" class="rand-opt shrink-0 min-h-[34px] px-2.5 rounded-lg text-xs font-semibold border transition">Триллер</button>
+                    <button type="button" data-rgenre="фантастика" class="rand-opt shrink-0 min-h-[34px] px-2.5 rounded-lg text-xs font-semibold border transition">Фантастика</button>
+                    <button type="button" data-rgenre="боевик" class="rand-opt shrink-0 min-h-[34px] px-2.5 rounded-lg text-xs font-semibold border transition">Боевик</button>
+                    <button type="button" data-rgenre="драма" class="rand-opt shrink-0 min-h-[34px] px-2.5 rounded-lg text-xs font-semibold border transition">Драма</button>
+                    <button type="button" data-rgenre="детектив" class="rand-opt shrink-0 min-h-[34px] px-2.5 rounded-lg text-xs font-semibold border transition">Детектив</button>
+                </div>
+
+                <!-- Rating & Year -->
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex gap-1.5" id="randRatingGroup">
+                        <button type="button" data-rrating="7" class="rand-opt min-h-[32px] px-2.5 rounded-lg text-xs font-semibold border transition">7+</button>
+                        <button type="button" data-rrating="7.5" class="rand-opt min-h-[32px] px-2.5 rounded-lg text-xs font-semibold border transition">7.5+</button>
+                        <button type="button" data-rrating="8" class="rand-opt min-h-[32px] px-2.5 rounded-lg text-xs font-semibold border transition">8+</button>
+                    </div>
+                    <div class="flex gap-1.5" id="randYearGroup">
+                        <button type="button" data-ryear="" class="rand-opt min-h-[32px] px-2.5 rounded-lg text-xs font-semibold border transition">Любой год</button>
+                        <button type="button" data-ryear="2000" class="rand-opt min-h-[32px] px-2.5 rounded-lg text-xs font-semibold border transition">От 2000</button>
+                        <button type="button" data-ryear="2015" class="rand-opt min-h-[32px] px-2.5 rounded-lg text-xs font-semibold border transition">От 2015</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Filter Source Banner (shown when launched from Filters tab) -->
+            <div id="randomFilterSourceNotice" class="hidden rounded-xl bg-cinema-accent/10 border border-cinema-accent/30 px-3 py-2 flex items-center justify-between gap-2 text-xs text-cinema-accentLight">
+                <span>Используются настройки из вкладки «Фильтры»</span>
+                <button type="button" id="randomSwitchToQuickBtn" class="underline font-semibold shrink-0">Сбросить</button>
+            </div>
+
+            <!-- Roll Button -->
+            <button type="button" id="rollRandomBtn" class="w-full min-h-[46px] rounded-xl bg-cinema-accent hover:bg-cinema-accentLight text-white font-bold text-sm active:scale-95 transition">
+                🎲 Подобрать фильм
+            </button>
+
+            <!-- Random Loader -->
+            <div id="randomLoader" class="hidden items-center justify-center gap-3 py-6 text-sm text-gray-400">
+                <div class="w-5 h-5 rounded-full border-2 border-cinema-border border-t-cinema-accent spinner-anim"></div>
+                <span>Крутим барабан Кинопоиска...</span>
+            </div>
+
+            <!-- Random Picked Result Container -->
+            <div id="randomResultWrap"></div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================
+     MODAL 3: MANUAL LINK FALLBACK BOTTOM SHEET
+     ========================================= -->
+<div id="linkSheetModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="sheet-anim w-full max-w-md bg-cinema-surface border-t sm:border border-cinema-border rounded-t-3xl sm:rounded-2xl p-5 safe-pb shadow-2xl">
+        <div class="flex items-center justify-between gap-2 mb-2">
+            <h3 class="text-base font-bold text-white">Ссылка на просмотр</h3>
+            <button type="button" id="closeLinkSheetBtn" class="w-9 h-9 -mr-1 rounded-xl bg-cinema-elevated text-gray-300 flex items-center justify-center">✕</button>
+        </div>
+        <p id="linkSheetSubtitle" class="text-xs text-gray-400 mb-3">
+            Выделите и скопируйте ссылку вручную, чтобы открыть её в Brave или Firefox:
         </p>
         <input
             type="text"
             id="linkSheetInput"
             readonly
-            class="w-full min-h-[46px] bg-cinema-input border border-cinema-border rounded-xl px-3.5 py-2.5 font-mono text-xs sm:text-sm text-cinema-accent select-all focus:outline-none focus:border-cinema-accent mb-3.5"
+            class="w-full min-h-[44px] bg-cinema-input border border-cinema-border rounded-xl px-3.5 py-2 font-mono text-xs text-cinema-accentLight select-all focus:outline-none focus:border-cinema-accent mb-3.5"
         >
         <div class="flex gap-2">
-            <button type="button" id="linkSheetCopyBtn" class="flex-1 min-h-[44px] px-4 rounded-xl bg-cinema-surfaceHover border border-cinema-border text-white font-semibold text-sm active:scale-95 transition">
+            <button type="button" id="linkSheetCopyBtn" class="flex-1 min-h-[44px] px-4 rounded-xl bg-cinema-elevated border border-cinema-border text-white font-semibold text-sm active:scale-95 transition">
                 📋 Копировать
             </button>
-            <a id="linkSheetOpenBtn" href="#" target="_blank" rel="noopener noreferrer" class="flex-1 min-h-[44px] px-4 rounded-xl bg-cinema-accent hover:bg-cinema-accentHover text-white font-semibold text-sm inline-flex items-center justify-center active:scale-95 transition">
+            <a id="linkSheetOpenBtn" href="#" target="_blank" rel="noopener noreferrer" class="flex-1 min-h-[44px] px-4 rounded-xl bg-cinema-accent text-white font-semibold text-sm inline-flex items-center justify-center active:scale-95 transition">
                 ▶ Открыть ↗
             </a>
         </div>
@@ -515,47 +840,43 @@
 </div>
 
 <!-- =========================================
-     MODAL: IMPORT JSON
+     MODAL 4: IMPORT JSON (TEXT OR FILE)
      ========================================= -->
-<div id="importModal" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-50 items-center justify-center p-4">
+<div id="importModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] items-center justify-center p-4">
     <div class="w-full max-w-md bg-cinema-surface border border-cinema-border rounded-2xl p-5 shadow-2xl">
         <h3 class="text-base font-bold mb-1.5">Импорт резервной копии</h3>
-        <p class="text-xs text-[#9c9cab] mb-3">
-            Вставьте ранее экспортированный JSON. История, зеркало и режим открытия будут восстановлены.
+        <p class="text-xs text-gray-400 mb-3">
+            Загрузите файл `.json` или вставьте скопированный текст ниже.
         </p>
+        <label class="block mb-3">
+            <span class="sr-only">Выбрать JSON-файл</span>
+            <input type="file" id="importFileInput" accept=".json,application/json" class="block w-full text-xs text-gray-400 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border file:border-cinema-border file:text-xs file:font-semibold file:bg-cinema-elevated file:text-white hover:file:bg-cinema-accent/20">
+        </label>
         <textarea
             id="importTextarea"
             rows="6"
-            placeholder='{"mirror":"kinopoisk.cx","watchHistory":[...]}'
-            class="w-full bg-cinema-input border border-cinema-border rounded-xl p-3 font-mono text-xs text-white placeholder-[#6e6e7d] focus:outline-none focus:border-cinema-accent mb-3.5"
+            placeholder='{"mirror":"kinopoisk.cx","watchHistory":[...],"watchlist":[...]}'
+            class="w-full bg-cinema-input border border-cinema-border rounded-xl p-3 font-mono text-xs text-white placeholder-gray-600 focus:outline-none focus:border-cinema-accent mb-3.5"
         ></textarea>
         <div class="flex justify-end gap-2">
-            <button type="button" id="cancelImportBtn" class="min-h-[44px] px-4 rounded-xl bg-cinema-surfaceHover border border-cinema-border text-white font-semibold text-sm active:scale-95 transition">
-                Отмена
-            </button>
-            <button type="button" id="confirmImportBtn" class="min-h-[44px] px-4 rounded-xl bg-cinema-accent hover:bg-cinema-accentHover text-white font-semibold text-sm active:scale-95 transition">
-                Импортировать
-            </button>
+            <button type="button" id="cancelImportBtn" class="min-h-[42px] px-4 rounded-xl bg-cinema-elevated border border-cinema-border text-white font-semibold text-sm">Отмена</button>
+            <button type="button" id="confirmImportBtn" class="min-h-[42px] px-4 rounded-xl bg-cinema-accent text-white font-semibold text-sm">Импортировать</button>
         </div>
     </div>
 </div>
 
 <!-- =========================================
-     MODAL: CONFIRM CLEAR HISTORY
+     MODAL 5: CONFIRM CLEAR HISTORY
      ========================================= -->
-<div id="confirmClearModal" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-50 items-center justify-center p-4">
+<div id="confirmClearModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] items-center justify-center p-4">
     <div class="w-full max-w-sm bg-cinema-surface border border-cinema-border rounded-2xl p-5 shadow-2xl">
-        <h3 class="text-base font-bold mb-1.5">Очистить всю историю?</h3>
-        <p class="text-xs text-[#9c9cab] mb-4">
-            Все просмотренные фильмы, отметки серий и недавние запросы будут удалены без возможности восстановления.
+        <h3 class="text-base font-bold mb-1.5">Очистить историю просмотров?</h3>
+        <p class="text-xs text-gray-400 mb-4 leading-relaxed">
+            Все просмотренные фильмы и отметки сезонов/серий будут удалены. Список «Буду смотреть» и настройки останутся.
         </p>
         <div class="flex justify-end gap-2">
-            <button type="button" id="cancelClearBtn" class="min-h-[44px] px-4 rounded-xl bg-cinema-surfaceHover border border-cinema-border text-white font-semibold text-sm active:scale-95 transition">
-                Отмена
-            </button>
-            <button type="button" id="confirmClearBtn" class="min-h-[44px] px-4 rounded-xl bg-red-500/20 border border-red-500/40 text-red-400 font-semibold text-sm active:scale-95 transition">
-                Да, очистить
-            </button>
+            <button type="button" id="cancelClearBtn" class="min-h-[42px] px-4 rounded-xl bg-cinema-elevated border border-cinema-border text-white font-semibold text-sm">Отмена</button>
+            <button type="button" id="confirmClearBtn" class="min-h-[42px] px-4 rounded-xl bg-red-500/20 border border-red-500/40 text-red-400 font-semibold text-sm">Да, очистить</button>
         </div>
     </div>
 </div>
@@ -568,234 +889,509 @@
     'use strict';
 
     // =========================================
-    // 1. Constants & Diagnostics State
+    // 1. Constants, API Config & Fallback Reference Data
     // =========================================
+    const API_BASE = 'https://kinopoiskapiunofficial.tech';
+    const DEFAULT_MIRROR = 'kinopoisk.cx';
+    const FALLBACK_POSTER = 'https://placehold.co/180x270/181a20/787b8a?text=KP';
+    const SERIES_TYPES = ['TV_SERIES', 'MINI_SERIES', 'TV_SHOW'];
+    const MONTH_NAMES_EN = [
+        'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
+        'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'
+    ];
+    const MONTH_NAMES_RU = [
+        'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+        'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
+    ];
+
+    // Storage keys for v2 (with automatic migration from v1 keys)
     const STORAGE_KEYS = {
-        API_KEY: 'kpwatch_api_key',
-        MIRROR: 'kpwatch_mirror',
-        LINK_TARGET: 'kpwatch_link_target',
-        WATCH_HISTORY: 'kpwatch_watch_history',
-        SEARCH_HISTORY: 'kpwatch_search_history'
+        API_KEY: 'kpwatch_v2_api_key',
+        MIRROR: 'kpwatch_v2_mirror',
+        LINK_TARGET: 'kpwatch_v2_link_target',
+        VIEW_MODE: 'kpwatch_v2_view_mode',
+        WATCH_HISTORY: 'kpwatch_v2_watch_history',
+        WATCHLIST: 'kpwatch_v2_watchlist',
+        SEARCH_HISTORY: 'kpwatch_v2_search_history',
+        FILTERS_CACHE: 'kpwatch_v2_filters_cache',
+        DAILY_QUOTA: 'kpwatch_v2_daily_quota'
     };
 
-    const DEFAULT_MIRROR = 'kinopoisk.cx';
-    const FALLBACK_POSTER = 'https://placehold.co/160x240/1a1a22/8e8ea0?text=KP';
-    const SERIES_TYPES = ['TV_SERIES', 'MINI_SERIES', 'TV_SHOW'];
+    // Built-in fallback Genres & Countries (used before live /api/v2.2/films/filters is cached)
+    const FALLBACK_GENRES = [
+        { id: 1, genre: 'триллер' },
+        { id: 2, genre: 'драма' },
+        { id: 3, genre: 'криминал' },
+        { id: 4, genre: 'мелодрама' },
+        { id: 5, genre: 'детектив' },
+        { id: 6, genre: 'фантастика' },
+        { id: 7, genre: 'приключения' },
+        { id: 8, genre: 'биография' },
+        { id: 10, genre: 'вестерн' },
+        { id: 11, genre: 'боевик' },
+        { id: 12, genre: 'фэнтези' },
+        { id: 13, genre: 'комедия' },
+        { id: 14, genre: 'военный' },
+        { id: 15, genre: 'история' },
+        { id: 17, genre: 'ужасы' },
+        { id: 18, genre: 'мультфильм' },
+        { id: 19, genre: 'семейный' },
+        { id: 22, genre: 'документальный' },
+        { id: 24, genre: 'аниме' }
+    ];
 
-    // Demo catalog with real Kinopoisk IDs
-    const DEMO_FILMS = [
+    const FALLBACK_COUNTRIES = [
+        { id: 34, country: 'Россия' },
+        { id: 1, country: 'США' },
+        { id: 5, country: 'Великобритания' },
+        { id: 8, country: 'Франция' },
+        { id: 49, country: 'Южная Корея' },
+        { id: 16, country: 'Япония' },
+        { id: 3, country: 'Германия' },
+        { id: 12, country: 'Испания' },
+        { id: 10, country: 'Италия' },
+        { id: 33, country: 'СССР' },
+        { id: 2, country: 'Швейцария' },
+        { id: 14, country: 'Канада' }
+    ];
+
+    const POPULAR_COUNTRY_NAMES = [
+        'Россия', 'США', 'Великобритания', 'Франция', 'Южная Корея',
+        'Япония', 'Германия', 'Испания', 'Италия', 'СССР'
+    ];
+
+    // Curated Demo Catalog (real Kinopoisk IDs so all tabs & links work immediately without an API key)
+    const DEMO_CATALOG = [
         {
-            filmId: 258687,
-            nameRu: 'Интерстеллар',
-            nameEn: 'Interstellar',
-            year: '2014',
-            type: 'FILM',
-            rating: '8.6',
-            posterUrlPreview: 'https://placehold.co/160x240/1a1a22/ff5500?text=Interstellar'
+            kinopoiskId: 258687, nameRu: 'Интерстеллар', nameOriginal: 'Interstellar', year: 2014,
+            type: 'FILM', ratingKinopoisk: 8.6, ratingImdb: 8.7, filmLength: 169, ratingAgeLimits: 'age16',
+            slogan: 'Следующий шаг человечества станет величайшим',
+            genres: [{ genre: 'фантастика' }, { genre: 'драма' }, { genre: 'приключения' }],
+            countries: [{ country: 'США' }, { country: 'Великобритания' }],
+            posterUrlPreview: 'https://placehold.co/180x270/1a1d28/ff6b1a?text=Interstellar',
+            description: 'Когда засуха, пыльные бури и вымирание растений приводят человечество к продовольственному кризису, коллектив исследователей отправляется сквозь червоточину в поисках планеты с подходящими условиями.'
         },
         {
-            filmId: 447301,
-            nameRu: 'Начало',
-            nameEn: 'Inception',
-            year: '2010',
-            type: 'FILM',
-            rating: '8.7',
-            posterUrlPreview: 'https://placehold.co/160x240/1a1a22/ff5500?text=Inception'
+            kinopoiskId: 447301, nameRu: 'Начало', nameOriginal: 'Inception', year: 2010,
+            type: 'FILM', ratingKinopoisk: 8.7, ratingImdb: 8.8, filmLength: 148, ratingAgeLimits: 'age12',
+            slogan: 'Твой разум — место преступления',
+            genres: [{ genre: 'фантастика' }, { genre: 'боевик' }, { genre: 'триллер' }, { genre: 'детектив' }],
+            countries: [{ country: 'США' }, { country: 'Великобритания' }],
+            posterUrlPreview: 'https://placehold.co/180x270/1a1d28/ff6b1a?text=Inception',
+            description: 'Кобб — талантливый вор, лучший в опасном искусстве извлечения секретов из глубин подсознания во время сна. Но теперь ему предстоит обратная задача: внедрить идею.'
         },
         {
-            filmId: 404900,
-            nameRu: 'Во все тяжкие',
-            nameEn: 'Breaking Bad',
-            year: '2008',
-            type: 'TV_SERIES',
-            rating: '8.9',
-            posterUrlPreview: 'https://placehold.co/160x240/1a1a22/ff5500?text=Breaking+Bad'
+            kinopoiskId: 535341, nameRu: '1+1', nameOriginal: 'Intouchables', year: 2011,
+            type: 'FILM', ratingKinopoisk: 8.8, ratingImdb: 8.5, filmLength: 112, ratingAgeLimits: 'age18',
+            slogan: 'Sometimes you have to reach into someone else\'s world to find out what\'s missing in your own',
+            genres: [{ genre: 'драма' }, { genre: 'комедия' }, { genre: 'биография' }],
+            countries: [{ country: 'Франция' }],
+            posterUrlPreview: 'https://placehold.co/180x270/1a1d28/ff6b1a?text=1%2B1',
+            description: 'Пострадав в результате несчастного случая, богатый аристократ Филипп нанимает в помощники человека, который менее всего подходит для этой работы — молодого жителя предместья Дрисса.'
         },
         {
-            filmId: 326,
-            nameRu: 'Побег из Шоушенка',
-            nameEn: 'The Shawshank Redemption',
-            year: '1994',
-            type: 'FILM',
-            rating: '9.1',
-            posterUrlPreview: 'https://placehold.co/160x240/1a1a22/ff5500?text=Shawshank'
+            kinopoiskId: 404900, nameRu: 'Во все тяжкие', nameOriginal: 'Breaking Bad', year: 2008,
+            type: 'TV_SERIES', ratingKinopoisk: 8.9, ratingImdb: 9.5, filmLength: 47, ratingAgeLimits: 'age18',
+            slogan: 'Во все тяжкие',
+            genres: [{ genre: 'криминал' }, { genre: 'драма' }, { genre: 'триллер' }],
+            countries: [{ country: 'США' }],
+            posterUrlPreview: 'https://placehold.co/180x270/1a1d28/3bb33b?text=Breaking+Bad',
+            description: 'Школьный учитель химии Уолтер Уайт узнаёт, что болен раком лёгких. Чтобы обеспечить семью, он начинает производить метамфетамин вместе со своим бывшим учеником.'
+        },
+        {
+            kinopoiskId: 1143242, nameRu: 'Джентльмены', nameOriginal: 'The Gentlemen', year: 2019,
+            type: 'FILM', ratingKinopoisk: 8.6, ratingImdb: 7.8, filmLength: 113, ratingAgeLimits: 'age18',
+            slogan: 'Criminal. Class.',
+            genres: [{ genre: 'криминал' }, { genre: 'комедия' }, { genre: 'боевик' }],
+            countries: [{ country: 'Великобритания' }, { country: 'США' }],
+            posterUrlPreview: 'https://placehold.co/180x270/1a1d28/ff6b1a?text=Gentlemen',
+            description: 'Один ушлый американец со студенческих лет приторговывал наркотиками, а теперь придумал схему обогащения с использованием поместий обедневшей английской аристократии.'
+        },
+        {
+            kinopoiskId: 1188529, nameRu: 'Достать ножи', nameOriginal: 'Knives Out', year: 2019,
+            type: 'FILM', ratingKinopoisk: 8.1, ratingImdb: 7.9, filmLength: 130, ratingAgeLimits: 'age16',
+            slogan: 'У каждого есть мотив',
+            genres: [{ genre: 'детектив' }, { genre: 'комедия' }, { genre: 'драма' }, { genre: 'криминал' }],
+            countries: [{ country: 'США' }],
+            posterUrlPreview: 'https://placehold.co/180x270/1a1d28/ff6b1a?text=Knives+Out',
+            description: 'На следующее утро после празднования 85-летия известного автора детективных романов виновника торжества находят мёртвым. За дело берётся частный детектив Бенуа Блан.'
+        },
+        {
+            kinopoiskId: 1227803, nameRu: 'Чернобыль', nameOriginal: 'Chernobyl', year: 2019,
+            type: 'MINI_SERIES', ratingKinopoisk: 8.8, ratingImdb: 9.3, filmLength: 60, ratingAgeLimits: 'age18',
+            slogan: 'Какова цена лжи?',
+            genres: [{ genre: 'драма' }, { genre: 'история' }, { genre: 'триллер' }],
+            countries: [{ country: 'США' }, { country: 'Великобритания' }],
+            posterUrlPreview: 'https://placehold.co/180x270/1a1d28/3bb33b?text=Chernobyl',
+            description: 'Хроника событий после аварии на Чернобыльской АЭС в апреле 1986 года и история людей, пожертвовавших собой ради спасения Европы.'
+        },
+        {
+            kinopoiskId: 1316601, nameRu: 'Топи', nameOriginal: '', year: 2021,
+            type: 'MINI_SERIES', ratingKinopoisk: 7.2, ratingImdb: 6.9, filmLength: 50, ratingAgeLimits: 'age18',
+            slogan: 'Здесь чудеса случаются',
+            genres: [{ genre: 'триллер' }, { genre: 'детектив' }, { genre: 'драма' }],
+            countries: [{ country: 'Россия' }],
+            posterUrlPreview: 'https://placehold.co/180x270/1a1d28/ff6b1a?text=Topi',
+            description: 'Пятеро москвичей убегают от личных проблем в полузаброшенную деревню Топи рядом с чудотворным монастырём, но поездка оборачивается столкновением с загадочными событиями.'
+        },
+        {
+            kinopoiskId: 5047468, nameRu: 'Слово пацана. Кровь на асфальте', nameOriginal: '', year: 2023,
+            type: 'TV_SERIES', ratingKinopoisk: 8.2, ratingImdb: 7.5, filmLength: 52, ratingAgeLimits: 'age18',
+            slogan: '',
+            genres: [{ genre: 'драма' }, { genre: 'криминал' }],
+            countries: [{ country: 'Россия' }],
+            posterUrlPreview: 'https://placehold.co/180x270/1a1d28/ff6b1a?text=Slovo+Patsana',
+            description: 'Конец 1980-х. Пока родители борются за выживание, брошенные всеми подростки сбиваются в уличные стаи и бьются за асфальт.'
+        },
+        {
+            kinopoiskId: 435, nameRu: 'Зелёная миля', nameOriginal: 'The Green Mile', year: 1999,
+            type: 'FILM', ratingKinopoisk: 9.1, ratingImdb: 8.6, filmLength: 189, ratingAgeLimits: 'age16',
+            slogan: 'Пол Эджкомб не верил в чудеса. Пока не столкнулся с одним из них',
+            genres: [{ genre: 'драма' }, { genre: 'фэнтези' }, { genre: 'криминал' }],
+            countries: [{ country: 'США' }],
+            posterUrlPreview: 'https://placehold.co/180x270/1a1d28/3bb33b?text=Green+Mile',
+            description: 'В тюрьму для смертников «Холодная гора» поступает гигант Джон Коффи, обвинённый в страшном преступлении, но обладающий удивительным даром.'
+        },
+        {
+            kinopoiskId: 448, nameRu: 'Форрест Гамп', nameOriginal: 'Forrest Gump', year: 1994,
+            type: 'FILM', ratingKinopoisk: 8.9, ratingImdb: 8.8, filmLength: 142, ratingAgeLimits: 'age12',
+            slogan: 'Мир уже никогда не будет прежним, после того как вы увидите его глазами Форреста Гампа',
+            genres: [{ genre: 'драма' }, { genre: 'комедия' }, { genre: 'мелодрама' }, { genre: 'история' }],
+            countries: [{ country: 'США' }],
+            posterUrlPreview: 'https://placehold.co/180x270/1a1d28/3bb33b?text=Forrest+Gump',
+            description: 'От лица главного героя Форреста Гампа, простодушного и открытого человека, рассказывается история его необыкновенной жизни на фоне главных событий XX века.'
+        },
+        {
+            kinopoiskId: 111543, nameRu: 'Тёмный рыцарь', nameOriginal: 'The Dark Knight', year: 2008,
+            type: 'FILM', ratingKinopoisk: 8.5, ratingImdb: 9.0, filmLength: 152, ratingAgeLimits: 'age16',
+            slogan: 'Добро пожаловать в мир Хаоса!',
+            genres: [{ genre: 'фантастика' }, { genre: 'боевик' }, { genre: 'триллер' }, { genre: 'криминал' }],
+            countries: [{ country: 'США' }, { country: 'Великобритания' }],
+            posterUrlPreview: 'https://placehold.co/180x270/1a1d28/ff6b1a?text=Dark+Knight',
+            description: 'Бэтмен поднимает ставки в войне с криминалом. С помощью лейтенанта Джима Гордона и прокурора Харви Дента он намерен очистить улицы Готэма от преступности.'
+        },
+        {
+            kinopoiskId: 1309707, nameRu: 'Вампиры средней полосы', nameOriginal: '', year: 2021,
+            type: 'TV_SERIES', ratingKinopoisk: 8.3, ratingImdb: 7.5, filmLength: 50, ratingAgeLimits: 'age18',
+            slogan: 'У нас в Смоленске вампиры тихие',
+            genres: [{ genre: 'детектив' }, { genre: 'комедия' }, { genre: 'фэнтези' }],
+            countries: [{ country: 'Россия' }],
+            posterUrlPreview: 'https://placehold.co/180x270/1a1d28/ff6b1a?text=Vampiry',
+            description: 'Смоленск — обычный город средней полосы, но в нём веками живёт семья мирных вампиров под присмотром деда Славы, пока в берёзовой роще не находят обескровленных парней.'
+        },
+        {
+            kinopoiskId: 409424, nameRu: 'Дюна: Часть вторая', nameOriginal: 'Dune: Part Two', year: 2024,
+            type: 'FILM', ratingKinopoisk: 8.2, ratingImdb: 8.5, filmLength: 166, ratingAgeLimits: 'age12',
+            slogan: 'Да здравствуют бойцы',
+            genres: [{ genre: 'фантастика' }, { genre: 'боевик' }, { genre: 'драма' }, { genre: 'приключения' }],
+            countries: [{ country: 'США' }, { country: 'Канада' }],
+            posterUrlPreview: 'https://placehold.co/180x270/1a1d28/ff6b1a?text=Dune+2',
+            description: 'Герцог Пол Атрейдес присоединяется к фременам, чтобы стать Муад’Дибом, одновременно пытаясь остановить наступление войны.'
         }
     ];
 
     // =========================================
-    // 2. Safe Storage Wrapper (with In-Memory Fallback)
+    // 2. Safe localStorage Wrapper (with In-Memory Fallback)
     // =========================================
     const memoryStorage = Object.create(null);
-    let localStorageOk = false;
+    let localStorageAvailable = false;
 
     try {
-        const probeKey = '__kpwatch_probe__';
-        window.localStorage.setItem(probeKey, '1');
-        window.localStorage.removeItem(probeKey);
-        localStorageOk = true;
-    } catch (err) {
-        localStorageOk = false;
+        const probe = '__kpw_v2_probe__';
+        window.localStorage.setItem(probe, '1');
+        window.localStorage.removeItem(probe);
+        localStorageAvailable = true;
+    } catch (e) {
+        localStorageAvailable = false;
     }
 
     const safeStorage = {
         getItem(key) {
             try {
-                if (localStorageOk) {
+                if (localStorageAvailable) {
                     return window.localStorage.getItem(key);
                 }
-            } catch (err) {
-                localStorageOk = false;
+            } catch (e) {
+                localStorageAvailable = false;
             }
             return Object.prototype.hasOwnProperty.call(memoryStorage, key) ? memoryStorage[key] : null;
         },
         setItem(key, value) {
-            const strVal = String(value);
-            memoryStorage[key] = strVal;
+            const str = String(value);
+            memoryStorage[key] = str;
             try {
-                if (localStorageOk) {
-                    window.localStorage.setItem(key, strVal);
+                if (localStorageAvailable) {
+                    window.localStorage.setItem(key, str);
                 }
-            } catch (err) {
-                localStorageOk = false;
+            } catch (e) {
+                localStorageAvailable = false;
             }
         },
         removeItem(key) {
             delete memoryStorage[key];
             try {
-                if (localStorageOk) {
+                if (localStorageAvailable) {
                     window.localStorage.removeItem(key);
                 }
-            } catch (err) {
-                localStorageOk = false;
+            } catch (e) {
+                localStorageAvailable = false;
             }
+        },
+        getAllKeys() {
+            const keys = new Set(Object.keys(memoryStorage));
+            try {
+                if (localStorageAvailable) {
+                    for (let i = 0; i < window.localStorage.length; i++) {
+                        keys.add(window.localStorage.key(i));
+                    }
+                }
+            } catch (e) {
+                // ignore
+            }
+            return Array.from(keys);
         }
     };
 
     // =========================================
     // 3. Environment Detection & Global Error Capture
     // =========================================
-    function detectIframe() {
+    const IS_IFRAME = (function () {
         try {
             return window.self !== window.top;
-        } catch (err) {
-            // Cross-origin access error implies running inside an iframe
+        } catch (e) {
             return true;
         }
-    }
+    })();
 
-    const IS_IFRAME = detectIframe();
-
-    // =========================================
-    // 4. In-Memory Film Store & App State
-    // =========================================
-    // Keyed by stringified numeric ID — zero inline JSON/strings in DOM
+    // In-memory stores (keyed by stringified Kinopoisk ID — never embed raw JSON in HTML attributes)
     const filmStore = new Map();
+    const detailCache = new Map();
+    const similarsCache = new Map();
 
+    // Application reactive state
     const state = {
-        activeTab: 'search',
+        activeTab: 'collections',
+        searchSubTab: 'keyword',
+        mySubTab: 'history',
+        historyFilter: 'all',
+
         apiKey: '',
+        demoMode: false,
         mirror: DEFAULT_MIRROR,
         linkTarget: '_blank',
+        viewMode: 'list', // 'list' | 'grid'
+
         watchHistory: [],
+        watchlist: [],
         searchHistory: [],
-        historyFilter: 'all',
-        searchResultIds: [],
-        searchResultsHeaderText: '',
+
+        // Filters reference data
+        genres: FALLBACK_GENRES.slice(),
+        countries: FALLBACK_COUNTRIES.slice(),
+        filtersLoadedFromApi: false,
+
+        // Collections tab state
+        colSource: 'collection', // 'collection' | 'preset'
+        colActiveKey: 'TOP_POPULAR_ALL',
+        colPage: 1,
+        colTotalPages: 1,
+        colItemIds: [],
+        colLoading: false,
+
+        // Keyword search tab state
         directItem: null,
+        searchResultIds: [],
+        searchResultLabel: '',
+
+        // Advanced filters tab state
+        filters: {
+            type: 'ALL',
+            genreId: '',
+            countryId: '',
+            ratingFrom: 0,
+            yearFrom: '',
+            yearTo: '',
+            order: 'NUM_VOTE',
+            keyword: ''
+        },
+        filterPage: 1,
+        filterTotalPages: 1,
+        filterItemIds: [],
+        filterLoading: false,
+
+        // Random picker state
+        randomUseCurrentFilters: false,
+        randomPrefs: {
+            type: 'FILM',
+            genreName: '',
+            ratingFrom: 7,
+            yearFrom: ''
+        },
+        randomCurrentId: '',
+
+        // Daily API Quota & Diagnostics
+        quota: { date: '', count: 0 },
         lastGeneratedUrl: '',
-        lastJsError: ''
+        lastJsError: '',
+        activeDetailId: ''
     };
 
-    window.onerror = function (message, source, lineno) {
-        state.lastJsError = `${message} (строка ${lineno || '?'})`;
+    window.onerror = function (msg, src, line) {
+        state.lastJsError = `${msg} (стр. ${line || '?'})`;
         updateDiagnosticsUI();
         return false;
     };
 
-    window.addEventListener('unhandledrejection', function (event) {
-        const reason = event && event.reason ? (event.reason.message || String(event.reason)) : 'Unhandled Promise Rejection';
-        state.lastJsError = reason;
+    window.addEventListener('unhandledrejection', function (evt) {
+        state.lastJsError = evt && evt.reason ? (evt.reason.message || String(evt.reason)) : 'Promise Rejection';
         updateDiagnosticsUI();
     });
 
-    // Global capture-phase image error handler (avoids inline onerror attributes)
-    document.addEventListener('error', function (event) {
-        const el = event.target;
-        if (el && el.tagName === 'IMG' && el.dataset.fallback) {
-            if (el.src !== el.dataset.fallback) {
-                el.src = el.dataset.fallback;
-            }
+    // Global capture-phase fallback for broken poster images (no inline onerror)
+    document.addEventListener('error', function (evt) {
+        const el = evt.target;
+        if (el && el.tagName === 'IMG' && el.dataset.fallback && el.src !== el.dataset.fallback) {
+            el.src = el.dataset.fallback;
         }
     }, true);
 
     // =========================================
-    // 5. DOM References
+    // 4. DOM References
     // =========================================
     const dom = {
         iframeBanner: document.getElementById('iframeBanner'),
         dismissIframeBannerBtn: document.getElementById('dismissIframeBannerBtn'),
+        noKeyBanner: document.getElementById('noKeyBanner'),
+        noKeyBannerTitle: document.getElementById('noKeyBannerTitle'),
+        noKeyBannerText: document.getElementById('noKeyBannerText'),
+        bannerOpenSettingsBtn: document.getElementById('bannerOpenSettingsBtn'),
+        bannerToggleDemoBtn: document.getElementById('bannerToggleDemoBtn'),
+
+        headerSubStatus: document.getElementById('headerSubStatus'),
         headerMirrorBtn: document.getElementById('headerMirrorBtn'),
-        headerMirrorLabel: document.getElementById('headerMirrorLabel'),
+        headerMirrorBadge: document.getElementById('headerMirrorBadge'),
+        headerRandomBtn: document.getElementById('headerRandomBtn'),
+
         navItems: document.querySelectorAll('.nav-item'),
+        myNavBadge: document.getElementById('myNavBadge'),
         tabViews: {
+            collections: document.getElementById('tab-collections'),
             search: document.getElementById('tab-search'),
-            history: document.getElementById('tab-history'),
+            my: document.getElementById('tab-my'),
             settings: document.getElementById('tab-settings')
         },
-        historyNavBadge: document.getElementById('historyNavBadge'),
+        viewModeBtns: document.querySelectorAll('.view-mode-btn'),
 
-        // Search tab
+        // Collections Tab
+        colChips: document.querySelectorAll('#collectionChips .col-chip'),
+        presetChips: document.querySelectorAll('#eveningPresetChips .preset-chip'),
+        collectionsHeading: document.getElementById('collectionsHeading'),
+        collectionsMeta: document.getElementById('collectionsMeta'),
+        collectionsLoader: document.getElementById('collectionsLoader'),
+        collectionsList: document.getElementById('collectionsList'),
+        collectionsLoadMoreWrap: document.getElementById('collectionsLoadMoreWrap'),
+        collectionsLoadMoreBtn: document.getElementById('collectionsLoadMoreBtn'),
+
+        // Search & Filters Tab
+        searchSubBtns: document.querySelectorAll('.search-sub-btn'),
+        subKeyword: document.getElementById('sub-keyword'),
+        subFilters: document.getElementById('sub-filters'),
         searchForm: document.getElementById('searchForm'),
         searchInput: document.getElementById('searchInput'),
         clearSearchBtn: document.getElementById('clearSearchBtn'),
         directCardWrap: document.getElementById('directCardWrap'),
-        apiSetupCard: document.getElementById('apiSetupCard'),
-        goToSettingsBtn: document.getElementById('goToSettingsBtn'),
-        demoSearchBtn: document.getElementById('demoSearchBtn'),
-        quickDemoBar: document.getElementById('quickDemoBar'),
-        quickDemoBtn: document.getElementById('quickDemoBtn'),
         searchHistorySection: document.getElementById('searchHistorySection'),
         searchHistoryChips: document.getElementById('searchHistoryChips'),
         clearSearchHistoryBtn: document.getElementById('clearSearchHistoryBtn'),
         searchLoader: document.getElementById('searchLoader'),
         searchResultsHeader: document.getElementById('searchResultsHeader'),
         searchResultsTitle: document.getElementById('searchResultsTitle'),
-        clearResultsBtn: document.getElementById('clearResultsBtn'),
+        clearSearchResultsBtn: document.getElementById('clearSearchResultsBtn'),
         searchResultsList: document.getElementById('searchResultsList'),
 
-        // History tab
-        historyFilters: document.querySelectorAll('#historyFilters .filter-pill'),
-        historyClearTopBtn: document.getElementById('historyClearTopBtn'),
-        countAll: document.getElementById('countAll'),
-        countFilms: document.getElementById('countFilms'),
-        countSeries: document.getElementById('countSeries'),
+        // Advanced Filters Controls
+        ftypePills: document.querySelectorAll('#filterTypePills .ftype-pill'),
+        filterGenreSelect: document.getElementById('filterGenreSelect'),
+        filterCountrySelect: document.getElementById('filterCountrySelect'),
+        fratingPills: document.querySelectorAll('#filterRatingPills .frating-pill'),
+        fyearPills: document.querySelectorAll('#filterYearPresets .fyear-pill'),
+        filterYearFrom: document.getElementById('filterYearFrom'),
+        filterYearTo: document.getElementById('filterYearTo'),
+        forderPills: document.querySelectorAll('#filterOrderPills .forder-pill'),
+        filterKeywordInput: document.getElementById('filterKeywordInput'),
+        applyFiltersBtn: document.getElementById('applyFiltersBtn'),
+        randomByFilterBtn: document.getElementById('randomByFilterBtn'),
+        resetFiltersBtn: document.getElementById('resetFiltersBtn'),
+        filterResultsHeader: document.getElementById('filterResultsHeader'),
+        filterResultsTitle: document.getElementById('filterResultsTitle'),
+        filterLoader: document.getElementById('filterLoader'),
+        filterResultsList: document.getElementById('filterResultsList'),
+        filterLoadMoreWrap: document.getElementById('filterLoadMoreWrap'),
+        filterLoadMoreBtn: document.getElementById('filterLoadMoreBtn'),
+
+        // My Tab
+        mySubBtns: document.querySelectorAll('.my-sub-btn'),
+        historyTabCount: document.getElementById('historyTabCount'),
+        watchlistTabCount: document.getElementById('watchlistTabCount'),
+        subMyHistory: document.getElementById('sub-my-history'),
+        subMyWatchlist: document.getElementById('sub-my-watchlist'),
+        hfilterPills: document.querySelectorAll('#historyTypeFilters .hfilter-pill'),
+        clearHistoryTopBtn: document.getElementById('clearHistoryTopBtn'),
         historyList: document.getElementById('historyList'),
         historyEmptyState: document.getElementById('historyEmptyState'),
-        emptyGoSearchBtn: document.getElementById('emptyGoSearchBtn'),
+        emptyHistoryGoColBtn: document.getElementById('emptyHistoryGoColBtn'),
+        watchlistList: document.getElementById('watchlistList'),
+        watchlistEmptyState: document.getElementById('watchlistEmptyState'),
+        emptyWatchlistGoColBtn: document.getElementById('emptyWatchlistGoColBtn'),
 
-        // Settings tab
+        // Settings Tab
+        settingsQuotaBadge: document.getElementById('settingsQuotaBadge'),
         apiKeyInput: document.getElementById('apiKeyInput'),
         toggleApiKeyVisBtn: document.getElementById('toggleApiKeyVisBtn'),
         saveApiKeyBtn: document.getElementById('saveApiKeyBtn'),
+        testApiKeyBtn: document.getElementById('testApiKeyBtn'),
+        apiKeyTestStatus: document.getElementById('apiKeyTestStatus'),
         mirrorPresets: document.querySelectorAll('#mirrorPresets .mirror-preset'),
         customMirrorInput: document.getElementById('customMirrorInput'),
         saveMirrorBtn: document.getElementById('saveMirrorBtn'),
         mirrorUrlPreview: document.getElementById('mirrorUrlPreview'),
         linkTargetBtns: document.querySelectorAll('#linkTargetToggle .target-opt'),
-        exportDataBtn: document.getElementById('exportDataBtn'),
-        importDataBtn: document.getElementById('importDataBtn'),
-        clearAllHistoryBtn: document.getElementById('clearAllHistoryBtn'),
+        exportCopyBtn: document.getElementById('exportCopyBtn'),
+        exportDownloadBtn: document.getElementById('exportDownloadBtn'),
+        openImportModalBtn: document.getElementById('openImportModalBtn'),
+        refreshFiltersCacheBtn: document.getElementById('refreshFiltersCacheBtn'),
+        settingsToggleDemoBtn: document.getElementById('settingsToggleDemoBtn'),
 
         // Diagnostics
         diagEnv: document.getElementById('diagEnv'),
         diagStorage: document.getElementById('diagStorage'),
         diagMirror: document.getElementById('diagMirror'),
-        diagTarget: document.getElementById('diagTarget'),
+        diagQuota: document.getElementById('diagQuota'),
         diagLastUrl: document.getElementById('diagLastUrl'),
         diagLastError: document.getElementById('diagLastError'),
 
         // Toast & Modals
         toast: document.getElementById('toast'),
+        detailModal: document.getElementById('detailModal'),
+        closeDetailModalBtn: document.getElementById('closeDetailModalBtn'),
+        detailHeaderType: document.getElementById('detailHeaderType'),
+        detailHeaderId: document.getElementById('detailHeaderId'),
+        detailBody: document.getElementById('detailBody'),
+
+        randomModal: document.getElementById('randomModal'),
+        closeRandomModalBtn: document.getElementById('closeRandomModalBtn'),
+        randomModeHint: document.getElementById('randomModeHint'),
+        randomQuickControls: document.getElementById('randomQuickControls'),
+        randomFilterSourceNotice: document.getElementById('randomFilterSourceNotice'),
+        randomSwitchToQuickBtn: document.getElementById('randomSwitchToQuickBtn'),
+        randTypeBtns: document.querySelectorAll('#randTypeGroup .rand-opt'),
+        randGenreBtns: document.querySelectorAll('#randGenreGroup .rand-opt'),
+        randRatingBtns: document.querySelectorAll('#randRatingGroup .rand-opt'),
+        randYearBtns: document.querySelectorAll('#randYearGroup .rand-opt'),
+        rollRandomBtn: document.getElementById('rollRandomBtn'),
+        randomLoader: document.getElementById('randomLoader'),
+        randomResultWrap: document.getElementById('randomResultWrap'),
+
         linkSheetModal: document.getElementById('linkSheetModal'),
         closeLinkSheetBtn: document.getElementById('closeLinkSheetBtn'),
         linkSheetSubtitle: document.getElementById('linkSheetSubtitle'),
@@ -804,6 +1400,7 @@
         linkSheetOpenBtn: document.getElementById('linkSheetOpenBtn'),
 
         importModal: document.getElementById('importModal'),
+        importFileInput: document.getElementById('importFileInput'),
         importTextarea: document.getElementById('importTextarea'),
         cancelImportBtn: document.getElementById('cancelImportBtn'),
         confirmImportBtn: document.getElementById('confirmImportBtn'),
@@ -814,11 +1411,11 @@
     };
 
     // =========================================
-    // 6. Core Helpers: Sanitization, URLs, Normalization
+    // 5. Utilities: Escaping, Mirror URL, Normalization, Ratings
     // =========================================
-    function escapeHtml(value) {
-        if (value === null || value === undefined) return '';
-        return String(value)
+    function escapeHtml(val) {
+        if (val === null || val === undefined) return '';
+        return String(val)
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
@@ -838,1163 +1435,261 @@
     }
 
     /**
-     * Robust numeric ID extractor per spec.
+     * Cleanly builds https://{mirror}/{isSeries ? 'series' : 'film'}/{id}/
      */
-    function extractCleanId(film) {
-        if (!film || typeof film !== 'object') return '';
-        return String(film.filmId ?? film.kinopoiskId ?? film.id ?? '').replace(/\D/g, '');
-    }
-
-    /**
-     * Determine normalized mediaType: 'series' or 'film'.
-     */
-    function resolveMediaType(rawType) {
-        if (rawType === 'series' || SERIES_TYPES.includes(rawType)) {
-            return 'series';
-        }
-        return 'film';
-    }
-
-    /**
-     * Build clean mirror URL: https://www.<cleanMirrorDomain>/<film|series>/<id>/
-     */
-    function buildMirrorUrl(mediaType, id) {
+    function buildMirrorUrl(id, isSeries, mirrorOverride) {
         const cleanId = String(id ?? '').replace(/\D/g, '');
-        const cleanMirror = sanitizeMirrorDomain(state.mirror) || DEFAULT_MIRROR;
-        const path = resolveMediaType(mediaType) === 'series'
-            ? '/series/' + cleanId + '/'
-            : '/film/' + cleanId + '/';
-        const fullUrl = 'https://www.' + cleanMirror + path;
-        state.lastGeneratedUrl = fullUrl;
-        return fullUrl;
+        const cleanMirror = sanitizeMirrorDomain(mirrorOverride || state.mirror) || DEFAULT_MIRROR;
+        const segment = isSeries ? 'series' : 'film';
+        const url = `https://${cleanMirror}/${segment}/${cleanId}/`;
+        state.lastGeneratedUrl = url;
+        return url;
+    }
+
+    function getShortMirrorBadge(mirror) {
+        const clean = sanitizeMirrorDomain(mirror) || DEFAULT_MIRROR;
+        if (clean.startsWith('kinopoisk.')) {
+            return '.' + clean.slice('kinopoisk.'.length);
+        }
+        return clean;
+    }
+
+    function parseNumericRating(raw) {
+        if (raw === null || raw === undefined) return null;
+        const str = String(raw).trim();
+        if (!str || str === 'null' || str === 'undefined' || str.includes('%')) return null;
+        const num = parseFloat(str.replace(',', '.'));
+        if (!Number.isFinite(num) || num <= 0 || num > 10) return null;
+        return Math.round(num * 10) / 10;
+    }
+
+    function getRatingBadgeClass(ratingNum) {
+        if (ratingNum === null || ratingNum === undefined) return 'hidden';
+        if (ratingNum >= 7.0) return 'bg-emerald-600 text-white';
+        if (ratingNum >= 5.0) return 'bg-amber-600/90 text-white';
+        return 'bg-red-600 text-white';
+    }
+
+    function isSeriesType(rawType) {
+        if (typeof rawType === 'boolean') return rawType;
+        return rawType === 'series' || SERIES_TYPES.includes(rawType);
+    }
+
+    function extractGenresList(rawGenres) {
+        if (!Array.isArray(rawGenres)) return [];
+        return rawGenres
+            .map(g => (typeof g === 'string' ? g : (g && g.genre ? g.genre : '')))
+            .map(s => s.trim())
+            .filter(Boolean);
+    }
+
+    function extractCountriesList(rawCountries) {
+        if (!Array.isArray(rawCountries)) return [];
+        return rawCountries
+            .map(c => (typeof c === 'string' ? c : (c && c.country ? c.country : '')))
+            .map(s => s.trim())
+            .filter(Boolean);
+    }
+
+    function formatAgeLimit(raw) {
+        if (!raw || typeof raw !== 'string') return '';
+        const match = raw.match(/\d+/);
+        return match ? `${match[0]}+` : '';
     }
 
     /**
-     * Normalize any API/Demo/History film object and store in filmStore Map.
+     * Normalize film objects across v2.1 search-by-keyword, v2.2 collections/films/premieres/similars/details, and local storage.
      */
     function normalizeAndStoreFilm(raw) {
-        const id = extractCleanId(raw);
+        if (!raw || typeof raw !== 'object') return null;
+        const id = String(raw.kinopoiskId ?? raw.filmId ?? raw.id ?? '').replace(/\D/g, '');
         if (!id) return null;
 
-        const mediaType = resolveMediaType(raw.mediaType || raw.type);
-        const rawRating = raw.rating ?? raw.ratingKinopoisk ?? '';
-        const cleanRating = (rawRating && String(rawRating) !== 'null' && String(rawRating) !== '0.0' && !String(rawRating).includes('%'))
-            ? String(rawRating)
-            : '';
-        const cleanYear = (raw.year && String(raw.year) !== 'null') ? String(raw.year) : '';
-        const title = raw.title || raw.nameRu || raw.nameOriginal || raw.nameEn || `${mediaType === 'series' ? 'Сериал' : 'Фильм'} #${id}`;
-        const poster = raw.poster || raw.posterUrlPreview || FALLBACK_POSTER;
+        const existing = filmStore.get(id) || {};
+        const seriesFlag = (raw.isSeries !== undefined)
+            ? Boolean(raw.isSeries)
+            : (raw.mediaType ? isSeriesType(raw.mediaType) : (raw.type ? isSeriesType(raw.type) : Boolean(existing.isSeries)));
+
+        const ratingKp = parseNumericRating(raw.ratingKinopoisk ?? raw.rating ?? existing.rating);
+        const ratingImdb = parseNumericRating(raw.ratingImdb ?? existing.ratingImdb);
+
+        const rawYear = raw.year ?? existing.year;
+        const yearStr = (rawYear && String(rawYear) !== 'null' && String(rawYear) !== 'undefined') ? String(rawYear) : '';
+
+        const title = raw.title || raw.nameRu || raw.nameOriginal || raw.nameEn || existing.title || `${seriesFlag ? 'Сериал' : 'Фильм'} #${id}`;
+        const originalTitle = raw.originalTitle || raw.nameOriginal || raw.nameEn || existing.originalTitle || '';
+        const poster = raw.poster || raw.posterUrlPreview || raw.posterUrl || existing.poster || FALLBACK_POSTER;
+        const genres = extractGenresList(raw.genres).length ? extractGenresList(raw.genres) : (existing.genres || []);
+        const countries = extractCountriesList(raw.countries).length ? extractCountriesList(raw.countries) : (existing.countries || []);
 
         const normalized = {
             id: id,
             title: title,
-            year: cleanYear,
-            mediaType: mediaType,
-            rating: cleanRating,
+            originalTitle: originalTitle !== title ? originalTitle : '',
+            year: yearStr,
+            isSeries: seriesFlag,
+            rawType: raw.type || existing.rawType || (seriesFlag ? 'TV_SERIES' : 'FILM'),
+            rating: ratingKp,
+            ratingImdb: ratingImdb,
             poster: poster,
-            season: Number(raw.season) >= 1 ? Number(raw.season) : 1,
-            episode: Number(raw.episode) >= 1 ? Number(raw.episode) : 1,
-            showTracker: typeof raw.showTracker === 'boolean' ? raw.showTracker : (mediaType === 'series'),
-            lastWatched: Number(raw.lastWatched) || 0
+            genres: genres,
+            countries: countries,
+            filmLength: Number(raw.filmLength || existing.filmLength) || 0,
+            description: raw.description || existing.description || '',
+            slogan: raw.slogan || existing.slogan || '',
+            ageLimit: formatAgeLimit(raw.ratingAgeLimits) || raw.ageLimit || existing.ageLimit || '',
+            season: Number(raw.season || existing.season) >= 1 ? Number(raw.season || existing.season) : 1,
+            episode: Number(raw.episode || existing.episode) >= 1 ? Number(raw.episode || existing.episode) : 1,
+            showTracker: typeof raw.showTracker === 'boolean' ? raw.showTracker : (existing.showTracker ?? seriesFlag),
+            lastWatched: Number(raw.lastWatched || existing.lastWatched) || 0,
+            addedAt: Number(raw.addedAt || existing.addedAt) || 0
         };
 
         filmStore.set(id, normalized);
         return normalized;
     }
 
-    /**
-     * Parse direct Kinopoisk URL (film/series) or plain numeric ID from search input.
-     */
     function parseDirectInput(raw) {
         const trimmed = (raw || '').trim();
         if (!trimmed) return null;
-
-        // Plain numeric ID (3 to 10 digits)
         if (/^\d{3,10}$/.test(trimmed)) {
-            return { id: trimmed, mediaType: 'film' };
+            return { id: trimmed, isSeries: false };
         }
-
-        // Kinopoisk or mirror URL containing /film/ID or /series/ID
         const match = trimmed.match(/(?:film|series)\/(\d{3,10})/i);
         if (match) {
-            const isSeries = /series\/\d+/i.test(trimmed);
             return {
                 id: match[1],
-                mediaType: isSeries ? 'series' : 'film'
+                isSeries: /series\/\d+/i.test(trimmed)
             };
         }
-
         return null;
     }
 
-    function formatRelativeDate(timestamp) {
-        if (!timestamp) return '';
-        const diffSec = Math.floor((Date.now() - timestamp) / 1000);
+    function formatRelativeDate(ts) {
+        if (!ts) return '';
+        const diffSec = Math.floor((Date.now() - ts) / 1000);
         if (diffSec < 60) return 'Только что';
         const diffMin = Math.floor(diffSec / 60);
         if (diffMin < 60) return `${diffMin} мин назад`;
-        const diffHours = Math.floor(diffMin / 60);
-        if (diffHours < 24) return `${diffHours} ч назад`;
-        const date = new Date(timestamp);
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        if (date.toDateString() === yesterday.toDateString()) return 'Вчера';
-        return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+        const diffH = Math.floor(diffMin / 60);
+        if (diffH < 24) return `${diffH} ч назад`;
+        const d = new Date(ts);
+        const y = new Date();
+        y.setDate(y.getDate() - 1);
+        if (d.toDateString() === y.toDateString()) return 'Вчера';
+        return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+    }
+
+    function getTodayDateString() {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = String(now.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
     }
 
     // =========================================
-    // 7. Toast & Bulletproof Copy Link + Manual Fallback Modal
+    // 6. Auto-Migration & Persistence
     // =========================================
-    let toastTimer = null;
-    function showToast(message, variant = 'default') {
-        clearTimeout(toastTimer);
-        dom.toast.textContent = message;
-        dom.toast.classList.remove('border-red-500/50', 'bg-[#2b1a1e]', 'text-red-200', 'border-emerald-500/50', 'border-cinema-border', 'bg-[#262632]', 'text-white');
+    function migrateLegacyStorageIfNeeded() {
+        const allKeys = safeStorage.getAllKeys();
+        const legacyPrefixKeys = allKeys.filter(k => {
+            const lower = k.toLowerCase();
+            return (lower.startsWith('kp') || lower.startsWith('kpwatch') || lower.startsWith('kp_watch')) && !lower.startsWith('kpwatch_v2_');
+        });
 
-        if (variant === 'error') {
-            dom.toast.classList.add('border-red-500/50', 'bg-[#2b1a1e]', 'text-red-200');
-        } else if (variant === 'success') {
-            dom.toast.classList.add('border-emerald-500/50', 'bg-[#262632]', 'text-white');
-        } else {
-            dom.toast.classList.add('border-cinema-border', 'bg-[#262632]', 'text-white');
-        }
-
-        dom.toast.classList.remove('opacity-0', 'translate-y-4');
-        dom.toast.classList.add('opacity-100', 'translate-y-0');
-
-        toastTimer = setTimeout(() => {
-            dom.toast.classList.add('opacity-0', 'translate-y-4');
-            dom.toast.classList.remove('opacity-100', 'translate-y-0');
-        }, 2800);
-    }
-
-    function openManualLinkSheet(url, subtitleText) {
-        dom.linkSheetInput.value = url;
-        dom.linkSheetOpenBtn.href = url;
-        dom.linkSheetOpenBtn.target = state.linkTarget;
-        dom.linkSheetSubtitle.textContent = subtitleText || 'Выделите и скопируйте ссылку вручную, чтобы вставить её в Brave или Firefox:';
-        dom.linkSheetModal.classList.remove('hidden');
-        dom.linkSheetModal.classList.add('flex');
-        setTimeout(() => {
-            try {
-                dom.linkSheetInput.focus();
-                dom.linkSheetInput.select();
-            } catch (err) {
-                // Ignore selection errors on restricted environments
+        // 1) Migrate API key
+        if (!safeStorage.getItem(STORAGE_KEYS.API_KEY)) {
+            const keyCandidates = ['kpwatch_api_key', 'kp_watch_api_key', 'kp_api_key', ...legacyPrefixKeys.filter(k => k.toLowerCase().includes('key'))];
+            for (const k of keyCandidates) {
+                const val = safeStorage.getItem(k);
+                if (val && val.trim().length >= 10) {
+                    safeStorage.setItem(STORAGE_KEYS.API_KEY, val.trim());
+                    break;
+                }
             }
-        }, 80);
-    }
+        }
 
-    function closeManualLinkSheet() {
-        dom.linkSheetModal.classList.add('hidden');
-        dom.linkSheetModal.classList.remove('flex');
-    }
-
-    /**
-     * Bulletproof copyLink(url):
-     * 1) Try navigator.clipboard.writeText(url) inside try/catch
-     * 2) Fallback to off-screen <textarea> + document.execCommand('copy')
-     * 3) If both fail, open the manual bottom-sheet modal with selectable readonly <input>
-     */
-    async function copyLink(url, successMsg = 'Ссылка скопирована', allowModalFallback = true) {
-        if (!url) return false;
-
-        // Attempt 1: Modern Clipboard API
-        try {
-            if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-                await navigator.clipboard.writeText(url);
-                showToast(successMsg, 'success');
-                return true;
+        // 2) Migrate Mirror
+        if (!safeStorage.getItem(STORAGE_KEYS.MIRROR)) {
+            const mirrorCandidates = ['kpwatch_mirror', 'kp_watch_mirror', 'kp_mirror', ...legacyPrefixKeys.filter(k => k.toLowerCase().includes('mirror'))];
+            for (const k of mirrorCandidates) {
+                const val = sanitizeMirrorDomain(safeStorage.getItem(k));
+                if (val && val.includes('.')) {
+                    safeStorage.setItem(STORAGE_KEYS.MIRROR, val);
+                    break;
+                }
             }
-        } catch (err) {
-            // Fall through to execCommand fallback
         }
 
-        // Attempt 2: Off-screen <textarea> + document.execCommand('copy')
-        let execSuccess = false;
-        try {
-            const ta = document.createElement('textarea');
-            ta.value = url;
-            ta.setAttribute('readonly', '');
-            ta.style.position = 'fixed';
-            ta.style.top = '-9999px';
-            ta.style.left = '-9999px';
-            ta.style.opacity = '0';
-            document.body.appendChild(ta);
-            ta.focus();
-            ta.select();
-            execSuccess = document.execCommand('copy');
-            document.body.removeChild(ta);
-        } catch (err) {
-            execSuccess = false;
+        // 3) Migrate Link Target
+        if (!safeStorage.getItem(STORAGE_KEYS.LINK_TARGET)) {
+            const targetVal = safeStorage.getItem('kpwatch_link_target');
+            if (targetVal === '_self' || targetVal === '_blank') {
+                safeStorage.setItem(STORAGE_KEYS.LINK_TARGET, targetVal);
+            }
         }
 
-        if (execSuccess) {
-            showToast(successMsg, 'success');
-            return true;
+        // 4) Migrate Watch History
+        if (!safeStorage.getItem(STORAGE_KEYS.WATCH_HISTORY)) {
+            const histCandidates = ['kpwatch_watch_history', 'kp_watch_history', 'kp_history', ...legacyPrefixKeys.filter(k => k.toLowerCase().includes('watch_history') || k.toLowerCase().includes('history'))];
+            for (const k of histCandidates) {
+                if (k.toLowerCase().includes('search')) continue;
+                const raw = safeStorage.getItem(k);
+                if (raw && raw.startsWith('[')) {
+                    try {
+                        const parsed = JSON.parse(raw);
+                        if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === 'object') {
+                            safeStorage.setItem(STORAGE_KEYS.WATCH_HISTORY, raw);
+                            break;
+                        }
+                    } catch (e) { /* skip invalid */ }
+                }
+            }
         }
 
-        // Attempt 3: Open manual bottom-sheet fallback modal
-        if (allowModalFallback) {
-            openManualLinkSheet(url, 'Автокопирование ограничено средой. Скопируйте ссылку вручную из поля ниже:');
-        } else {
-            showToast('Выделите текст в поле и скопируйте вручную', 'error');
+        // 5) Migrate Search History
+        if (!safeStorage.getItem(STORAGE_KEYS.SEARCH_HISTORY)) {
+            const sCandidates = ['kpwatch_search_history', 'kp_search_history'];
+            for (const k of sCandidates) {
+                const raw = safeStorage.getItem(k);
+                if (raw && raw.startsWith('[')) {
+                    safeStorage.setItem(STORAGE_KEYS.SEARCH_HISTORY, raw);
+                    break;
+                }
+            }
         }
-        return false;
     }
 
-    // =========================================
-    // 8. State Persistence
-    // =========================================
     function loadState() {
-        state.apiKey = safeStorage.getItem(STORAGE_KEYS.API_KEY) || '';
+        migrateLegacyStorageIfNeeded();
+
+        state.apiKey = (safeStorage.getItem(STORAGE_KEYS.API_KEY) || '').trim();
         state.mirror = sanitizeMirrorDomain(safeStorage.getItem(STORAGE_KEYS.MIRROR)) || DEFAULT_MIRROR;
         const savedTarget = safeStorage.getItem(STORAGE_KEYS.LINK_TARGET);
         state.linkTarget = (savedTarget === '_self' || savedTarget === '_blank') ? savedTarget : '_blank';
+        const savedView = safeStorage.getItem(STORAGE_KEYS.VIEW_MODE);
+        state.viewMode = (savedView === 'grid' || savedView === 'list') ? savedView : 'list';
 
+        // If no API key yet, enable demo mode automatically so user can explore right away
+        state.demoMode = !state.apiKey;
+
+        // Watch History
         try {
-            const rawWatch = safeStorage.getItem(STORAGE_KEYS.WATCH_HISTORY);
-            const parsedWatch = rawWatch ? JSON.parse(rawWatch) : [];
-            state.watchHistory = Array.isArray(parsedWatch)
-                ? parsedWatch.map(normalizeAndStoreFilm).filter(Boolean)
-                : [];
-        } catch (err) {
+            const raw = safeStorage.getItem(STORAGE_KEYS.WATCH_HISTORY);
+            const parsed = raw ? JSON.parse(raw) : [];
+            state.watchHistory = Array.isArray(parsed) ? parsed.map(normalizeAndStoreFilm).filter(Boolean) : [];
+        } catch (e) {
             state.watchHistory = [];
         }
 
+        // Watchlist
         try {
-            const rawSearch = safeStorage.getItem(STORAGE_KEYS.SEARCH_HISTORY);
-            const parsedSearch = rawSearch ? JSON.parse(rawSearch) : [];
-            state.searchHistory = Array.isArray(parsedSearch) ? parsedSearch : [];
-        } catch (err) {
-            state.searchHistory = [];
-        }
-    }
-
-    function persistWatchHistory() {
-        safeStorage.setItem(STORAGE_KEYS.WATCH_HISTORY, JSON.stringify(state.watchHistory));
-        updateHistoryBadge();
-    }
-
-    function persistSearchHistory() {
-        safeStorage.setItem(STORAGE_KEYS.SEARCH_HISTORY, JSON.stringify(state.searchHistory));
-    }
-
-    /**
-     * Save or bump an item in watchHistory in the background.
-     * IMPORTANT: Does NOT re-render the current list DOM so native <a> navigation is never interrupted.
-     */
-    function recordWatchInBackground(id) {
-        const cleanId = String(id ?? '').replace(/\D/g, '');
-        if (!cleanId) return;
-
-        const storedFilm = filmStore.get(cleanId);
-        const existingIdx = state.watchHistory.findIndex(item => item.id === cleanId);
-
-        if (existingIdx !== -1) {
-            const existing = state.watchHistory[existingIdx];
-            existing.lastWatched = Date.now();
-            if (storedFilm) {
-                if (storedFilm.title && (existing.title.startsWith('Фильм #') || existing.title.startsWith('Сериал #'))) {
-                    existing.title = storedFilm.title;
-                }
-                if (storedFilm.poster && existing.poster === FALLBACK_POSTER) {
-                    existing.poster = storedFilm.poster;
-                }
-            }
-            state.watchHistory.splice(existingIdx, 1);
-            state.watchHistory.unshift(existing);
-            filmStore.set(cleanId, existing);
-        } else if (storedFilm) {
-            const entry = Object.assign({}, storedFilm, { lastWatched: Date.now() });
-            state.watchHistory.unshift(entry);
-            filmStore.set(cleanId, entry);
+            const raw = safeStorage.getItem(STORAGE_KEYS.WATCHLIST);
+            const parsed = raw ? JSON.parse(raw) : [];
+            state.watchlist = Array.isArray(parsed) ? parsed.map(normalizeAndStoreFilm).filter(Boolean) : [];
+        } catch (e) {
+            state.watchlist = [];
         }
 
-        persistWatchHistory();
-        updateDiagnosticsUI();
-    }
-
-    // =========================================
-    // 9. UI Updaters & Renderers
-    // =========================================
-    function updateDiagnosticsUI() {
-        dom.diagEnv.textContent = IS_IFRAME ? 'Preview iframe (песочница)' : 'Отдельный браузер';
-        dom.diagStorage.textContent = localStorageOk ? 'Доступен' : 'Fallback (память)';
-        dom.diagMirror.textContent = state.mirror;
-        dom.diagTarget.textContent = state.linkTarget;
-        dom.diagLastUrl.textContent = state.lastGeneratedUrl || 'Ещё не формировался';
-        if (state.lastJsError) {
-            dom.diagLastError.textContent = state.lastJsError;
-            dom.diagLastError.classList.remove('text-emerald-400');
-            dom.diagLastError.classList.add('text-red-400');
-        } else {
-            dom.diagLastError.textContent = 'Ошибок нет';
-            dom.diagLastError.classList.remove('text-red-400');
-            dom.diagLastError.classList.add('text-emerald-400');
-        }
-    }
-
-    function updateHistoryBadge() {
-        const count = state.watchHistory.length;
-        dom.historyNavBadge.textContent = count > 99 ? '99+' : String(count);
-        if (count > 0) {
-            dom.historyNavBadge.classList.remove('hidden');
-            dom.historyNavBadge.classList.add('inline-flex');
-        } else {
-            dom.historyNavBadge.classList.add('hidden');
-            dom.historyNavBadge.classList.remove('inline-flex');
-        }
-    }
-
-    function updateSearchPromptsVisibility() {
-        const hasKey = Boolean(state.apiKey.trim());
-        const hasResults = state.searchResultIds.length > 0;
-        const hasDirect = Boolean(state.directItem);
-
-        dom.apiSetupCard.classList.toggle('hidden', hasKey || hasResults || hasDirect);
-        dom.quickDemoBar.classList.toggle('hidden', !hasKey || hasResults || hasDirect);
-    }
-
-    function switchTab(tabName) {
-        state.activeTab = tabName;
-
-        dom.navItems.forEach(btn => {
-            const isActive = btn.dataset.tab === tabName;
-            btn.classList.toggle('text-cinema-accent', isActive);
-            btn.classList.toggle('text-[#6e6e7d]', !isActive);
-            const indicator = btn.querySelector('.nav-indicator');
-            if (indicator) indicator.classList.toggle('hidden', !isActive);
-        });
-
-        Object.keys(dom.tabViews).forEach(key => {
-            dom.tabViews[key].classList.toggle('hidden', key !== tabName);
-            dom.tabViews[key].classList.toggle('block', key === tabName);
-        });
-
-        if (tabName === 'history') {
-            renderWatchHistory();
-        } else if (tabName === 'settings') {
-            syncSettingsUI();
-            updateDiagnosticsUI();
-        } else if (tabName === 'search') {
-            updateSearchPromptsVisibility();
-            if (state.directItem) renderDirectCard();
-            if (state.searchResultIds.length > 0) renderSearchResults();
-        }
-
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function refreshAllRenderedLinks() {
-        dom.headerMirrorLabel.textContent = state.mirror;
-        if (state.directItem) renderDirectCard();
-        if (state.searchResultIds.length > 0) renderSearchResults();
-        if (state.activeTab === 'history') renderWatchHistory();
-        updateDiagnosticsUI();
-    }
-
-    /**
-     * Render a movie/series card for Search results or Direct URL/ID.
-     */
-    function buildSearchCardHtml(film, isDirect = false) {
-        const isSeries = film.mediaType === 'series';
-        const watchUrl = buildMirrorUrl(film.mediaType, film.id);
-        const typeLabel = isSeries ? 'Сериал' : 'Фильм';
-        const ratingNum = film.rating ? parseFloat(film.rating) : 0;
-        const targetAttr = escapeHtml(state.linkTarget);
-        const relAttr = state.linkTarget === '_blank' ? 'noopener noreferrer' : '';
-
-        return `
-            <article class="rounded-2xl bg-cinema-surface border ${isDirect ? 'border-cinema-accent/50 shadow-lg shadow-orange-950/20' : 'border-cinema-border'} p-3 flex gap-3">
-                <div class="relative w-[84px] min-w-[84px] h-[126px] rounded-xl overflow-hidden bg-cinema-input border border-white/5 shrink-0">
-                    <img
-                        src="${escapeHtml(film.poster)}"
-                        data-fallback="${FALLBACK_POSTER}"
-                        alt="${escapeHtml(film.title)}"
-                        loading="lazy"
-                        class="w-full h-full object-cover block"
-                    >
-                    ${film.rating ? `<span class="absolute top-1.5 left-1.5 text-[11px] font-bold px-1.5 py-0.5 rounded-md text-white ${ratingNum >= 7 ? 'bg-[#3bb33b]' : 'bg-black/80'}">${escapeHtml(film.rating)}</span>` : ''}
-                </div>
-
-                <div class="flex-1 min-w-0 flex flex-col justify-between">
-                    <div>
-                        ${isDirect ? `<div class="text-[11px] font-bold uppercase tracking-wider text-cinema-accent mb-1">Прямой переход • ID ${escapeHtml(film.id)}</div>` : ''}
-                        <h3 class="text-[15px] font-bold leading-snug text-white line-clamp-2">${escapeHtml(film.title)}</h3>
-                        <div class="flex items-center flex-wrap gap-1.5 mt-1.5">
-                            <span class="text-[11px] font-semibold px-2 py-0.5 rounded-md ${isSeries ? 'bg-cinema-accent/15 text-[#ff8a4c]' : 'bg-white/10 text-[#9c9cab]'}">${typeLabel}</span>
-                            ${film.year ? `<span class="text-xs text-[#9c9cab]">${escapeHtml(film.year)}</span>` : ''}
-                            ${isDirect ? `
-                                <button type="button" data-action="toggle-direct-type" class="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-cinema-surfaceHover border border-cinema-border text-white active:scale-95 transition">
-                                    Сменить на ${isSeries ? 'Фильм' : 'Сериал'}
-                                </button>
-                            ` : ''}
-                        </div>
-                        <div class="mt-1.5 font-mono text-[11px] text-[#6e6e7d] truncate" title="${escapeHtml(watchUrl)}">${escapeHtml(watchUrl)}</div>
-                    </div>
-
-                    <div class="flex items-center gap-1.5 mt-2.5">
-                        <!-- Genuine native <a> link: never calls preventDefault or re-renders DOM -->
-                        <a
-                            href="${escapeHtml(watchUrl)}"
-                            target="${targetAttr}"
-                            ${relAttr ? `rel="${relAttr}"` : ''}
-                            data-action="watch"
-                            data-id="${escapeHtml(film.id)}"
-                            class="flex-1 min-h-[44px] px-3 rounded-xl bg-cinema-accent hover:bg-cinema-accentHover text-white font-semibold text-sm inline-flex items-center justify-center gap-1.5 active:scale-95 transition"
-                        >
-                            ▶ Смотреть
-                        </a>
-                        <button
-                            type="button"
-                            data-action="copy-link"
-                            data-id="${escapeHtml(film.id)}"
-                            data-url="${escapeHtml(watchUrl)}"
-                            class="min-w-[44px] min-h-[44px] rounded-xl bg-cinema-surfaceHover border border-cinema-border text-white text-base inline-flex items-center justify-center active:scale-95 transition shrink-0"
-                            title="Скопировать ссылку"
-                            aria-label="Скопировать ссылку"
-                        >
-                            📋
-                        </button>
-                        <button
-                            type="button"
-                            data-action="show-link"
-                            data-url="${escapeHtml(watchUrl)}"
-                            class="min-w-[44px] min-h-[44px] rounded-xl bg-cinema-surfaceHover border border-cinema-border text-[#9c9cab] hover:text-white inline-flex items-center justify-center active:scale-95 transition shrink-0"
-                            title="Показать ссылку"
-                            aria-label="Показать ссылку"
-                        >
-                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </article>
-        `;
-    }
-
-    function renderDirectCard() {
-        if (!state.directItem) {
-            dom.directCardWrap.classList.add('hidden');
-            dom.directCardWrap.innerHTML = '';
-            return;
-        }
-        const stored = normalizeAndStoreFilm(state.directItem);
-        if (!stored) return;
-        dom.directCardWrap.innerHTML = buildSearchCardHtml(stored, true);
-        dom.directCardWrap.classList.remove('hidden');
-        updateDiagnosticsUI();
-    }
-
-    function renderSearchResults() {
-        if (state.searchResultIds.length === 0) {
-            dom.searchResultsHeader.classList.add('hidden');
-            dom.searchResultsHeader.classList.remove('flex');
-            dom.searchResultsList.innerHTML = '';
-            return;
-        }
-
-        dom.searchResultsHeader.classList.remove('hidden');
-        dom.searchResultsHeader.classList.add('flex');
-        dom.searchResultsTitle.textContent = state.searchResultsHeaderText;
-
-        const cardsHtml = state.searchResultIds
-            .map(id => filmStore.get(id))
-            .filter(Boolean)
-            .map(film => buildSearchCardHtml(film, false))
-            .join('');
-
-        dom.searchResultsList.innerHTML = cardsHtml;
-        updateDiagnosticsUI();
-    }
-
-    function renderSearchHistory() {
-        if (state.searchHistory.length === 0) {
-            dom.searchHistorySection.classList.add('hidden');
-            return;
-        }
-        dom.searchHistorySection.classList.remove('hidden');
-        dom.searchHistoryChips.innerHTML = state.searchHistory.map((query, idx) => `
-            <div class="inline-flex items-center bg-cinema-surface border border-cinema-border rounded-full pl-3.5 pr-1 py-1 max-w-full">
-                <button type="button" data-action="run-history-query" data-idx="${idx}" class="text-xs font-medium text-white truncate max-w-[180px] min-h-[34px] text-left">
-                    ${escapeHtml(query)}
-                </button>
-                <button type="button" data-action="remove-history-query" data-idx="${idx}" class="w-8 h-8 rounded-full inline-flex items-center justify-center text-[#6e6e7d] hover:text-white text-base" aria-label="Удалить запрос">
-                    &times;
-                </button>
-            </div>
-        `).join('');
-    }
-
-    function renderWatchHistory() {
-        const allCount = state.watchHistory.length;
-        const filmsCount = state.watchHistory.filter(i => i.mediaType === 'film').length;
-        const seriesCount = state.watchHistory.filter(i => i.mediaType === 'series').length;
-
-        dom.countAll.textContent = allCount ? `(${allCount})` : '';
-        dom.countFilms.textContent = filmsCount ? `(${filmsCount})` : '';
-        dom.countSeries.textContent = seriesCount ? `(${seriesCount})` : '';
-        dom.historyClearTopBtn.classList.toggle('hidden', allCount === 0);
-
-        const filtered = state.watchHistory
-            .filter(item => state.historyFilter === 'all' || item.mediaType === state.historyFilter)
-            .sort((a, b) => (b.lastWatched || 0) - (a.lastWatched || 0));
-
-        if (filtered.length === 0) {
-            dom.historyList.innerHTML = '';
-            dom.historyEmptyState.classList.remove('hidden');
-            return;
-        }
-
-        dom.historyEmptyState.classList.add('hidden');
-        const targetAttr = escapeHtml(state.linkTarget);
-        const relAttr = state.linkTarget === '_blank' ? 'noopener noreferrer' : '';
-
-        dom.historyList.innerHTML = filtered.map(item => {
-            const isSeries = item.mediaType === 'series';
-            const watchUrl = buildMirrorUrl(item.mediaType, item.id);
-            const season = item.season || 1;
-            const episode = item.episode || 1;
-            const showTracker = Boolean(item.showTracker || isSeries);
-            const ratingNum = item.rating ? parseFloat(item.rating) : 0;
-
-            return `
-                <article class="rounded-2xl bg-cinema-surface border border-cinema-border p-3 flex gap-3">
-                    <div class="relative w-[84px] min-w-[84px] h-[126px] rounded-xl overflow-hidden bg-cinema-input border border-white/5 shrink-0">
-                        <img
-                            src="${escapeHtml(item.poster)}"
-                            data-fallback="${FALLBACK_POSTER}"
-                            alt="${escapeHtml(item.title)}"
-                            loading="lazy"
-                            class="w-full h-full object-cover block"
-                        >
-                        ${item.rating ? `<span class="absolute top-1.5 left-1.5 text-[11px] font-bold px-1.5 py-0.5 rounded-md text-white ${ratingNum >= 7 ? 'bg-[#3bb33b]' : 'bg-black/80'}">${escapeHtml(item.rating)}</span>` : ''}
-                    </div>
-
-                    <div class="flex-1 min-w-0 flex flex-col justify-between">
-                        <div>
-                            <div class="flex items-start justify-between gap-2">
-                                <h3 class="text-[15px] font-bold leading-snug text-white line-clamp-2">${escapeHtml(item.title)}</h3>
-                                <button
-                                    type="button"
-                                    data-action="delete-history"
-                                    data-id="${escapeHtml(item.id)}"
-                                    class="shrink-0 w-9 h-9 -mr-1.5 -mt-1 rounded-xl flex items-center justify-center text-[#6e6e7d] hover:text-red-400 hover:bg-red-500/10 active:scale-95 transition"
-                                    title="Удалить из истории"
-                                    aria-label="Удалить из истории"
-                                >
-                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
-                                        <polyline points="3 6 5 6 21 6"/>
-                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                    </svg>
-                                </button>
-                            </div>
-
-                            <div class="flex items-center flex-wrap gap-1.5 mt-1">
-                                <span class="text-[11px] font-semibold px-2 py-0.5 rounded-md ${isSeries ? 'bg-cinema-accent/15 text-[#ff8a4c]' : 'bg-white/10 text-[#9c9cab]'}">
-                                    ${isSeries ? 'Сериал' : 'Фильм'}${item.year ? ' • ' + escapeHtml(item.year) : ''}
-                                </span>
-                                <span class="text-[11px] text-[#6e6e7d]">${formatRelativeDate(item.lastWatched)}</span>
-                                ${!isSeries ? `
-                                    <button type="button" data-action="toggle-tracker" data-id="${escapeHtml(item.id)}" class="text-[11px] font-medium px-2 py-0.5 rounded-md bg-cinema-input border border-cinema-border text-[#9c9cab] hover:text-white transition">
-                                        ${showTracker ? 'Скрыть S/E' : '+ Трекер S/E'}
-                                    </button>
-                                ` : ''}
-                            </div>
-
-                            ${showTracker ? `
-                                <div class="mt-2 p-2 rounded-xl bg-cinema-input border border-cinema-border flex items-center flex-wrap gap-2">
-                                    <span class="font-mono text-xs font-bold text-cinema-accent bg-cinema-accent/15 px-2 py-1 rounded-md">S${season} E${episode}</span>
-                                    <div class="flex items-center gap-1">
-                                        <span class="text-[11px] text-[#9c9cab] font-semibold">Сез</span>
-                                        <div class="inline-flex items-center rounded-lg bg-cinema-surface border border-cinema-border overflow-hidden">
-                                            <button type="button" data-action="step" data-field="season" data-delta="-1" data-id="${escapeHtml(item.id)}" class="w-8 h-8 flex items-center justify-center text-white font-bold active:bg-white/10" aria-label="Уменьшить сезон">−</button>
-                                            <span class="w-6 text-center text-xs font-bold">${season}</span>
-                                            <button type="button" data-action="step" data-field="season" data-delta="1" data-id="${escapeHtml(item.id)}" class="w-8 h-8 flex items-center justify-center text-white font-bold active:bg-white/10" aria-label="Увеличить сезон">+</button>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center gap-1">
-                                        <span class="text-[11px] text-[#9c9cab] font-semibold">Сер</span>
-                                        <div class="inline-flex items-center rounded-lg bg-cinema-surface border border-cinema-border overflow-hidden">
-                                            <button type="button" data-action="step" data-field="episode" data-delta="-1" data-id="${escapeHtml(item.id)}" class="w-8 h-8 flex items-center justify-center text-white font-bold active:bg-white/10" aria-label="Уменьшить серию">−</button>
-                                            <span class="w-6 text-center text-xs font-bold">${episode}</span>
-                                            <button type="button" data-action="step" data-field="episode" data-delta="1" data-id="${escapeHtml(item.id)}" class="w-8 h-8 flex items-center justify-center text-white font-bold active:bg-white/10" aria-label="Увеличить серию">+</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            ` : ''}
-                        </div>
-
-                        <div class="flex items-center gap-1.5 mt-2.5">
-                            <!-- Genuine native <a> link: never calls preventDefault or re-renders DOM -->
-                            <a
-                                href="${escapeHtml(watchUrl)}"
-                                target="${targetAttr}"
-                                ${relAttr ? `rel="${relAttr}"` : ''}
-                                data-action="watch"
-                                data-id="${escapeHtml(item.id)}"
-                                class="flex-1 min-h-[44px] px-3 rounded-xl bg-cinema-accent hover:bg-cinema-accentHover text-white font-semibold text-sm inline-flex items-center justify-center gap-1.5 active:scale-95 transition"
-                            >
-                                ▶ Продолжить
-                            </a>
-                            <button
-                                type="button"
-                                data-action="copy-link"
-                                data-id="${escapeHtml(item.id)}"
-                                data-url="${escapeHtml(watchUrl)}"
-                                class="min-w-[44px] min-h-[44px] rounded-xl bg-cinema-surfaceHover border border-cinema-border text-white text-base inline-flex items-center justify-center active:scale-95 transition shrink-0"
-                                title="Скопировать ссылку"
-                                aria-label="Скопировать ссылку"
-                            >
-                                📋
-                            </button>
-                            <button
-                                type="button"
-                                data-action="show-link"
-                                data-url="${escapeHtml(watchUrl)}"
-                                class="min-w-[44px] min-h-[44px] rounded-xl bg-cinema-surfaceHover border border-cinema-border text-[#9c9cab] hover:text-white inline-flex items-center justify-center active:scale-95 transition shrink-0"
-                                title="Показать ссылку"
-                                aria-label="Показать ссылку"
-                            >
-                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </article>
-            `;
-        }).join('');
-
-        updateDiagnosticsUI();
-    }
-
-    function syncSettingsUI() {
-        dom.apiKeyInput.value = state.apiKey;
-        dom.customMirrorInput.value = state.mirror;
-        updateMirrorPreviewAndPresets(state.mirror);
-
-        dom.linkTargetBtns.forEach(btn => {
-            const active = btn.dataset.target === state.linkTarget;
-            btn.classList.toggle('bg-cinema-accent/15', active);
-            btn.classList.toggle('border-cinema-accent', active);
-            btn.classList.toggle('text-cinema-accent', active);
-            btn.classList.toggle('bg-cinema-input', !active);
-            btn.classList.toggle('border-cinema-border', !active);
-            btn.classList.toggle('text-[#9c9cab]', !active);
-        });
-    }
-
-    function updateMirrorPreviewAndPresets(domainRaw) {
-        const clean = sanitizeMirrorDomain(domainRaw) || DEFAULT_MIRROR;
-        dom.mirrorUrlPreview.textContent = `https://www.${clean}/film/258687/`;
-
-        dom.mirrorPresets.forEach(pill => {
-            const active = pill.dataset.mirror === clean;
-            pill.classList.toggle('bg-cinema-accent/15', active);
-            pill.classList.toggle('border-cinema-accent', active);
-            pill.classList.toggle('text-cinema-accent', active);
-            pill.classList.toggle('bg-cinema-input', !active);
-            pill.classList.toggle('border-cinema-border', !active);
-            pill.classList.toggle('text-[#9c9cab]', !active);
-        });
-    }
-
-    // =========================================
-    // 10. Search Execution & Demo Mode
-    // =========================================
-    function addSearchHistoryQuery(query) {
-        const clean = query.trim();
-        if (!clean) return;
-        state.searchHistory = state.searchHistory.filter(q => q.toLowerCase() !== clean.toLowerCase());
-        state.searchHistory.unshift(clean);
-        if (state.searchHistory.length > 10) {
-            state.searchHistory = state.searchHistory.slice(0, 10);
-        }
-        persistSearchHistory();
-        renderSearchHistory();
-    }
-
-    function handleDirectInputDetection() {
-        const val = dom.searchInput.value;
-        dom.clearSearchBtn.classList.toggle('hidden', val.length === 0);
-        dom.clearSearchBtn.classList.toggle('flex', val.length > 0);
-
-        const parsed = parseDirectInput(val);
-        if (parsed) {
-            const existing = filmStore.get(parsed.id);
-            state.directItem = existing
-                ? Object.assign({}, existing, { mediaType: parsed.mediaType })
-                : {
-                    id: parsed.id,
-                    title: `${parsed.mediaType === 'series' ? 'Сериал' : 'Фильм'} #${parsed.id}`,
-                    year: '',
-                    mediaType: parsed.mediaType,
-                    rating: '',
-                    poster: FALLBACK_POSTER
-                };
-            renderDirectCard();
-        } else {
-            state.directItem = null;
-            renderDirectCard();
-        }
-        updateSearchPromptsVisibility();
-    }
-
-    function loadDemoSearch() {
-        state.directItem = null;
-        renderDirectCard();
-        const ids = [];
-        DEMO_FILMS.forEach(item => {
-            const norm = normalizeAndStoreFilm(item);
-            if (norm) ids.push(norm.id);
-        });
-        state.searchResultIds = ids;
-        state.searchResultsHeaderText = 'Демо-каталог (реальные ID)';
-        renderSearchResults();
-        updateSearchPromptsVisibility();
-        showToast('Загружены тестовые фильмы и сериалы');
-    }
-
-    async function executeSearch(rawQuery) {
-        const query = (rawQuery || '').trim();
-        if (!query) return;
-
-        // Direct URL or numeric ID works immediately even without an API key
-        const direct = parseDirectInput(query);
-        if (direct) {
-            handleDirectInputDetection();
-            showToast('Карточка быстрого перехода готова', 'success');
-            return;
-        }
-
-        if (!state.apiKey.trim()) {
-            showToast('Добавьте API-ключ в настройках или нажмите «Демо-поиск»', 'error');
-            updateSearchPromptsVisibility();
-            return;
-        }
-
-        addSearchHistoryQuery(query);
-        dom.searchLoader.classList.remove('hidden');
-        dom.searchLoader.classList.add('flex');
-        dom.searchResultsHeader.classList.add('hidden');
-        dom.searchResultsList.innerHTML = '';
-
-        try {
-            const endpoint = `https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword?keyword=${encodeURIComponent(query)}&page=1`;
-            const response = await fetch(endpoint, {
-                method: 'GET',
-                headers: {
-                    'X-API-KEY': state.apiKey.trim(),
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                if (response.status === 401) {
-                    showToast('Неверный API-ключ (401). Проверьте настройки.', 'error');
-                } else if (response.status === 402) {
-                    showToast('Лимит запросов API исчерпан (402).', 'error');
-                } else if (response.status === 429) {
-                    showToast('Слишком много запросов (429). Подождите секунду.', 'error');
-                } else {
-                    showToast(`Ошибка API: ${response.status}`, 'error');
-                }
-                return;
-            }
-
-            const data = await response.json();
-            const rawList = Array.isArray(data.films) ? data.films : [];
-            const ids = [];
-            rawList.forEach(film => {
-                const norm = normalizeAndStoreFilm(film);
-                if (norm && !ids.includes(norm.id)) {
-                    ids.push(norm.id);
-                }
-            });
-
-            state.searchResultIds = ids;
-            state.searchResultsHeaderText = `Найдено: ${ids.length}`;
-
-            if (ids.length === 0) {
-                dom.searchResultsHeader.classList.remove('hidden');
-                dom.searchResultsHeader.classList.add('flex');
-                dom.searchResultsTitle.textContent = 'Ничего не найдено';
-                dom.searchResultsList.innerHTML = `
-                    <div class="text-center py-10 px-4 text-[#9c9cab] text-sm">
-                        По запросу «${escapeHtml(query)}» ничего не найдено. Попробуйте другое название или вставьте прямую ссылку с Кинопоиска.
-                    </div>
-                `;
-            } else {
-                renderSearchResults();
-            }
-        } catch (err) {
-            state.lastJsError = err && err.message ? err.message : String(err);
-            updateDiagnosticsUI();
-            showToast('Ошибка сети при обращении к API', 'error');
-        } finally {
-            dom.searchLoader.classList.add('hidden');
-            dom.searchLoader.classList.remove('flex');
-            updateSearchPromptsVisibility();
-        }
-    }
-
-    // =========================================
-    // 11. Event Delegation & Listeners
-    // =========================================
-    function handleCardActionClick(event) {
-        const actionEl = event.target.closest('[data-action]');
-        if (!actionEl) return;
-
-        const action = actionEl.dataset.action;
-        const id = actionEl.dataset.id || '';
-        const url = actionEl.dataset.url || '';
-
-        if (action === 'watch') {
-            // Native <a> link click: DO NOT call preventDefault(), DO NOT re-render current list DOM!
-            try {
-                if (actionEl.href) {
-                    state.lastGeneratedUrl = actionEl.href;
-                }
-                recordWatchInBackground(id);
-            } catch (err) {
-                state.lastJsError = err && err.message ? err.message : String(err);
-                updateDiagnosticsUI();
-            }
-            return;
-        }
-
-        if (action === 'copy-link') {
-            if (url) {
-                state.lastGeneratedUrl = url;
-                updateDiagnosticsUI();
-                copyLink(url, 'Ссылка скопирована', true);
-            }
-            return;
-        }
-
-        if (action === 'show-link') {
-            if (url) {
-                state.lastGeneratedUrl = url;
-                updateDiagnosticsUI();
-                openManualLinkSheet(url);
-            }
-            return;
-        }
-
-        if (action === 'toggle-direct-type') {
-            if (state.directItem) {
-                state.directItem.mediaType = state.directItem.mediaType === 'series' ? 'film' : 'series';
-                if (state.directItem.title.startsWith('Фильм #') || state.directItem.title.startsWith('Сериал #')) {
-                    state.directItem.title = `${state.directItem.mediaType === 'series' ? 'Сериал' : 'Фильм'} #${state.directItem.id}`;
-                }
-                renderDirectCard();
-            }
-            return;
-        }
-
-        if (action === 'delete-history') {
-            state.watchHistory = state.watchHistory.filter(item => item.id !== id);
-            persistWatchHistory();
-            renderWatchHistory();
-            showToast('Удалено из истории');
-            return;
-        }
-
-        if (action === 'toggle-tracker') {
-            const item = state.watchHistory.find(i => i.id === id);
-            if (item) {
-                item.showTracker = !item.showTracker;
-                persistWatchHistory();
-                renderWatchHistory();
-            }
-            return;
-        }
-
-        if (action === 'step') {
-            const item = state.watchHistory.find(i => i.id === id);
-            const field = actionEl.dataset.field;
-            const delta = Number(actionEl.dataset.delta);
-            if (item && (field === 'season' || field === 'episode') && Number.isFinite(delta)) {
-                item[field] = Math.max(1, (Number(item[field]) || 1) + delta);
-                persistWatchHistory();
-                renderWatchHistory();
-            }
-        }
-    }
-
-    function bindEvents() {
-        // Preview iframe banner dismiss
-        dom.dismissIframeBannerBtn.addEventListener('click', () => {
-            dom.iframeBanner.classList.add('hidden');
-        });
-
-        // Bottom Navigation & Shortcuts
-        dom.navItems.forEach(btn => {
-            btn.addEventListener('click', () => switchTab(btn.dataset.tab));
-        });
-        dom.headerMirrorBtn.addEventListener('click', () => switchTab('settings'));
-        dom.goToSettingsBtn.addEventListener('click', () => switchTab('settings'));
-        dom.emptyGoSearchBtn.addEventListener('click', () => switchTab('search'));
-
-        // Search input & form
-        dom.searchInput.addEventListener('input', handleDirectInputDetection);
-        dom.clearSearchBtn.addEventListener('click', () => {
-            dom.searchInput.value = '';
-            handleDirectInputDetection();
-            dom.searchInput.focus();
-        });
-        dom.searchForm.addEventListener('submit', e => {
-            e.preventDefault();
-            executeSearch(dom.searchInput.value);
-        });
-
-        // Demo search & reset results
-        dom.demoSearchBtn.addEventListener('click', loadDemoSearch);
-        dom.quickDemoBtn.addEventListener('click', loadDemoSearch);
-        dom.clearResultsBtn.addEventListener('click', () => {
-            state.searchResultIds = [];
-            state.searchResultsHeaderText = '';
-            renderSearchResults();
-            updateSearchPromptsVisibility();
-        });
-
-        // Search history chips delegation
-        dom.searchHistoryChips.addEventListener('click', e => {
-            const actionEl = e.target.closest('[data-action]');
-            if (!actionEl) return;
-            const idx = Number(actionEl.dataset.idx);
-            if (actionEl.dataset.action === 'remove-history-query') {
-                state.searchHistory.splice(idx, 1);
-                persistSearchHistory();
-                renderSearchHistory();
-            } else if (actionEl.dataset.action === 'run-history-query') {
-                const q = state.searchHistory[idx];
-                if (q) {
-                    dom.searchInput.value = q;
-                    handleDirectInputDetection();
-                    executeSearch(q);
-                }
-            }
-        });
-
-        dom.clearSearchHistoryBtn.addEventListener('click', () => {
-            state.searchHistory = [];
-            persistSearchHistory();
-            renderSearchHistory();
-            showToast('История поиска очищена');
-        });
-
-        // Event delegation for Direct Card, Search Results, and History List
-        dom.directCardWrap.addEventListener('click', handleCardActionClick);
-        dom.searchResultsList.addEventListener('click', handleCardActionClick);
-        dom.historyList.addEventListener('click', handleCardActionClick);
-
-        // History Filter Pills
-        dom.historyFilters.forEach(pill => {
-            pill.addEventListener('click', () => {
-                state.historyFilter = pill.dataset.filter;
-                dom.historyFilters.forEach(p => {
-                    const active = p === pill;
-                    p.classList.toggle('bg-cinema-accent', active);
-                    p.classList.toggle('border-cinema-accent', active);
-                    p.classList.toggle('text-white', active);
-                    p.classList.toggle('bg-cinema-surface', !active);
-                    p.classList.toggle('border-cinema-border', !active);
-                    p.classList.toggle('text-[#9c9cab]', !active);
-                });
-                renderWatchHistory();
-            });
-        });
-
-        // Settings: API Key
-        dom.toggleApiKeyVisBtn.addEventListener('click', () => {
-            dom.apiKeyInput.type = dom.apiKeyInput.type === 'password' ? 'text' : 'password';
-        });
-
-        dom.saveApiKeyBtn.addEventListener('click', () => {
-            state.apiKey = dom.apiKeyInput.value.trim();
-            safeStorage.setItem(STORAGE_KEYS.API_KEY, state.apiKey);
-            updateSearchPromptsVisibility();
-            showToast(state.apiKey ? 'Настройки сохранены' : 'API-ключ удалён', 'success');
-        });
-
-        // Settings: Mirror presets & custom input
-        dom.mirrorPresets.forEach(pill => {
-            pill.addEventListener('click', () => {
-                const chosen = sanitizeMirrorDomain(pill.dataset.mirror) || DEFAULT_MIRROR;
-                state.mirror = chosen;
-                dom.customMirrorInput.value = chosen;
-                safeStorage.setItem(STORAGE_KEYS.MIRROR, state.mirror);
-                updateMirrorPreviewAndPresets(chosen);
-                refreshAllRenderedLinks();
-                showToast(`Зеркало: ${state.mirror}`, 'success');
-            });
-        });
-
-        dom.customMirrorInput.addEventListener('input', () => {
-            updateMirrorPreviewAndPresets(dom.customMirrorInput.value);
-        });
-
-        dom.saveMirrorBtn.addEventListener('click', () => {
-            const clean = sanitizeMirrorDomain(dom.customMirrorInput.value);
-            if (!clean || !clean.includes('.')) {
-                showToast('Введите корректный домен, например kinopoisk.cx', 'error');
-                return;
-            }
-            state.mirror = clean;
-            dom.customMirrorInput.value = clean;
-            safeStorage.setItem(STORAGE_KEYS.MIRROR, state.mirror);
-            updateMirrorPreviewAndPresets(clean);
-            refreshAllRenderedLinks();
-            showToast('Настройки сохранены', 'success');
-        });
-
-        // Settings: Link open mode (_blank vs _self)
-        dom.linkTargetBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const target = btn.dataset.target === '_self' ? '_self' : '_blank';
-                state.linkTarget = target;
-                safeStorage.setItem(STORAGE_KEYS.LINK_TARGET, target);
-                syncSettingsUI();
-                refreshAllRenderedLinks();
-                showToast('Настройки сохранены', 'success');
-            });
-        });
-
-        // Settings: Export / Import JSON
-        dom.exportDataBtn.addEventListener('click', () => {
-            const payload = {
-                version: 2,
-                exportedAt: new Date().toISOString(),
-                mirror: state.mirror,
-                linkTarget: state.linkTarget,
-                watchHistory: state.watchHistory,
-                searchHistory: state.searchHistory
-            };
-            copyLink(JSON.stringify(payload, null, 2), 'Резервная копия (JSON) скопирована', true);
-        });
-
-        dom.importDataBtn.addEventListener('click', () => {
-            dom.importTextarea.value = '';
-            dom.importModal.classList.remove('hidden');
-            dom.importModal.classList.add('flex');
-            setTimeout(() => dom.importTextarea.focus(), 80);
-        });
-
-        dom.cancelImportBtn.addEventListener('click', () => {
-            dom.importModal.classList.add('hidden');
-            dom.importModal.classList.remove('flex');
-        });
-
-        dom.confirmImportBtn.addEventListener('click', () => {
-            const raw = dom.importTextarea.value.trim();
-            if (!raw) {
-                showToast('Вставьте JSON для импорта', 'error');
-                return;
-            }
-            try {
-                const parsed = JSON.parse(raw);
-                if (parsed.mirror) {
-                    state.mirror = sanitizeMirrorDomain(parsed.mirror) || DEFAULT_MIRROR;
-                    safeStorage.setItem(STORAGE_KEYS.MIRROR, state.mirror);
-                }
-                if (parsed.linkTarget === '_self' || parsed.linkTarget === '_blank') {
-                    state.linkTarget = parsed.linkTarget;
-                    safeStorage.setItem(STORAGE_KEYS.LINK_TARGET, state.linkTarget);
-                }
-                if (Array.isArray(parsed.watchHistory)) {
-                    state.watchHistory = parsed.watchHistory.map(normalizeAndStoreFilm).filter(Boolean);
-                    persistWatchHistory();
-                }
-                if (Array.isArray(parsed.searchHistory)) {
-                    state.searchHistory = parsed.searchHistory;
-                    persistSearchHistory();
-                }
-                syncSettingsUI();
-                refreshAllRenderedLinks();
-                renderSearchHistory();
-                renderWatchHistory();
-                dom.importModal.classList.add('hidden');
-                dom.importModal.classList.remove('flex');
-                showToast('Данные импортированы', 'success');
-            } catch (err) {
-                showToast('Неверный формат JSON', 'error');
-            }
-        });
-
-        // Clear all history modal triggers
-        function openClearModal() {
-            dom.confirmClearModal.classList.remove('hidden');
-            dom.confirmClearModal.classList.add('flex');
-        }
-        function closeClearModal() {
-            dom.confirmClearModal.classList.add('hidden');
-            dom.confirmClearModal.classList.remove('flex');
-        }
-
-        dom.clearAllHistoryBtn.addEventListener('click', openClearModal);
-        dom.historyClearTopBtn.addEventListener('click', openClearModal);
-        dom.cancelClearBtn.addEventListener('click', closeClearModal);
-        dom.confirmClearBtn.addEventListener('click', () => {
-            state.watchHistory = [];
-            state.searchHistory = [];
-            persistWatchHistory();
-            persistSearchHistory();
-            renderSearchHistory();
-            renderWatchHistory();
-            closeClearModal();
-            showToast('История очищена');
-        });
-
-        // Manual Link Bottom Sheet actions
-        dom.closeLinkSheetBtn.addEventListener('click', closeManualLinkSheet);
-        dom.linkSheetCopyBtn.addEventListener('click', () => {
-            copyLink(dom.linkSheetInput.value, 'Ссылка скопирована', false);
-        });
-
-        // Close modals on backdrop tap
-        [dom.linkSheetModal, dom.importModal, dom.confirmClearModal].forEach(modal => {
-            modal.addEventListener('click', e => {
-                if (e.target === modal) {
-                    modal.classList.add('hidden');
-                    modal.classList.remove('flex');
-                }
-            });
-        });
-    }
-
-    // =========================================
-    // 12. Initialization
-    // =========================================
-    function init() {
-        loadState();
-        bindEvents();
-
-        if (IS_IFRAME) {
-            dom.iframeBanner.classList.remove('hidden');
-        }
-
-        dom.headerMirrorLabel.textContent = state.mirror;
-        updateHistoryBadge();
-        updateSearchPromptsVisibility();
-        renderSearchHistory();
-        renderWatchHistory();
-        syncSettingsUI();
-        updateDiagnosticsUI();
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
-})();
-</script>
-</body>
-</html>
-```
+        // Search History
