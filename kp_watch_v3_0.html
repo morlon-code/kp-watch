@@ -1,0 +1,2833 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0d0f14">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="KP Watch">
+  <title>KP Watch v3.0 — КиноПоиск Зеркало</title>
+  <!-- Inline SVG Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff5500'/%3E%3Cpolygon points='24,18 48,32 24,46' fill='%23ffffff'/%3E%3C/svg%3E">
+
+  <!-- Google Font: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif']
+          },
+          colors: {
+            cinema: {
+              bg: '#0d0f14',
+              card: '#161922',
+              elevated: '#1d2230',
+              input: '#11141c',
+              border: '#232838',
+              accent: '#ff5500',
+              accentHi: '#ff6e24'
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Minimal Base Styles & Safe-Area Utilities -->
+  <style>
+    html, body {
+      background-color: #0d0f14;
+      color: #f3f4f6;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+      color-scheme: dark;
+    }
+
+    /* Hide scrollbars for horizontal chip rails */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Safe-area bottom padding */
+    .pb-safe-nav {
+      padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+    }
+    .nav-safe-bottom {
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    .toast-safe-bottom {
+      bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* Fixed 2:3 Poster Aspect Ratio */
+    .poster-ratio {
+      aspect-ratio: 2 / 3;
+    }
+
+    /* Shimmer Skeleton Animation */
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, #161922 25%, #232838 50%, #161922 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite linear;
+    }
+
+    /* Hidden overlay guard */
+    .hidden {
+      display: none !important;
+      pointer-events: none !important;
+    }
+  </style>
+</head>
+<body class="bg-[#0d0f14] text-gray-100 antialiased selection:bg-[#ff5500]/30 selection:text-white">
+
+  <!-- Runtime Error Banner (hidden unless JS throws) -->
+  <div id="jsErrorBanner" class="hidden sticky top-0 z-50 bg-red-950/95 border-b border-red-500/60 px-3 py-2.5 text-xs text-red-100 flex items-start gap-2" role="alert">
+    <span class="text-sm leading-none mt-0.5">🚨</span>
+    <div id="jsErrorText" class="flex-1 font-mono break-words"></div>
+    <button type="button" data-action="close-error-banner" class="min-w-[36px] min-h-[36px] rounded-lg bg-red-900/70 hover:bg-red-800 flex items-center justify-center font-bold" aria-label="Закрыть">✕</button>
+  </div>
+
+  <!-- ==========================================
+       STICKY HEADER
+       ========================================== -->
+  <header class="sticky top-0 z-30 bg-[#0d0f14]/95 backdrop-blur-md border-b border-[#232838]">
+    <div class="max-w-xl mx-auto px-3 py-2 flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-[#ff5500] to-[#ff7b24] flex items-center justify-center text-white font-extrabold shadow-lg shadow-[#ff5500]/25 shrink-0">
+          ▶
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-1.5">
+            <span class="font-extrabold text-[15px] tracking-tight text-white truncate">KP Watch</span>
+            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-[#1d2230] border border-[#232838] text-gray-400">v3.0</span>
+          </div>
+          <p class="text-[11px] text-gray-400 truncate">КиноПоиск → Зеркало</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button type="button" data-action="nav" data-tab="settings" class="min-h-[40px] px-2.5 rounded-xl bg-[#161922] border border-[#232838] active:scale-95 transition flex items-center gap-1.5 text-xs font-semibold text-gray-200" title="Настроить зеркало">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+          <span id="headerMirrorLabel" class="max-w-[115px] truncate">www.kinopoisk.cx</span>
+        </button>
+        <button type="button" data-action="roulette-quick" class="min-h-[40px] min-w-[44px] px-2.5 rounded-xl bg-[#ff5500]/15 border border-[#ff5500]/40 active:scale-95 transition flex items-center justify-center gap-1 text-xs font-bold text-[#ff7b3a]" title="Случайный фильм на вечер">
+          <span>🎲</span>
+          <span class="hidden sm:inline">На вечер</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==========================================
+       MAIN CONTENT CONTAINER
+       ========================================== -->
+  <main class="max-w-xl mx-auto px-3 pt-3 pb-safe-nav">
+
+    <!-- ========================================
+         TAB 1: ПОИСК (DEFAULT)
+         ======================================== -->
+    <section id="tab-search" class="space-y-3">
+      <!-- Search Form -->
+      <form id="searchForm" class="flex items-center gap-2" autocomplete="off">
+        <div class="relative flex-1 min-w-0">
+          <input
+            type="text"
+            id="searchInput"
+            class="w-full min-h-[46px] pl-3.5 pr-10 rounded-xl bg-[#161922] border border-[#232838] focus:border-[#ff5500] focus:outline-none text-[16px] text-white placeholder-gray-500 transition"
+            placeholder="Название, ID или ссылка КП..."
+            enterkeyhint="search"
+          >
+          <button type="button" id="clearSearchBtn" data-action="clear-search-input" class="hidden absolute right-1 top-1/2 -translate-y-1/2 w-9 h-9 rounded-lg text-gray-400 hover:text-white flex items-center justify-center" aria-label="Очистить поле">✕</button>
+        </div>
+        <button type="submit" class="min-h-[46px] min-w-[78px] px-4 rounded-xl bg-[#ff5500] hover:bg-[#ff6e24] active:scale-95 transition text-sm font-bold text-white shrink-0">
+          Найти
+        </button>
+      </form>
+
+      <!-- Smart Direct Link / ID Card -->
+      <div id="directCardWrap" class="hidden"></div>
+
+      <!-- Recent Search Query Chips -->
+      <div id="searchHistoryWrap" class="hidden space-y-1.5">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-gray-400">Недавние запросы</span>
+          <button type="button" data-action="clear-search-history" class="text-xs text-gray-400 hover:text-white py-1 px-2">Очистить</button>
+        </div>
+        <div id="searchHistoryChips" class="flex flex-wrap gap-1.5"></div>
+      </div>
+
+      <!-- Collapsible Filters Panel -->
+      <div class="rounded-2xl bg-[#161922] border border-[#232838] overflow-hidden">
+        <button type="button" id="toggleFiltersBtn" data-action="toggle-filters" class="w-full min-h-[46px] px-3.5 py-2.5 flex items-center justify-between text-sm font-bold text-gray-100 active:bg-[#1d2230] transition">
+          <span class="flex items-center gap-2">
+            <span>🎛</span>
+            <span>Фильтры и подбор на вечер</span>
+          </span>
+          <span id="filtersChevron" class="text-gray-400 text-xs transition-transform">▼</span>
+        </button>
+
+        <div id="filtersBody" class="hidden border-t border-[#232838] p-3.5 space-y-3.5">
+          <!-- Type -->
+          <div class="space-y-1.5">
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-400">Тип</label>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+              <button type="button" data-action="filter-type" data-val="ALL" class="min-h-[44px] px-2 rounded-xl border text-xs font-bold transition bg-[#ff5500] border-[#ff5500] text-white">Все</button>
+              <button type="button" data-action="filter-type" data-val="FILM" class="min-h-[44px] px-2 rounded-xl border text-xs font-bold transition bg-[#11141c] border-[#232838] text-gray-300">Фильмы</button>
+              <button type="button" data-action="filter-type" data-val="TV_SERIES" class="min-h-[44px] px-2 rounded-xl border text-xs font-bold transition bg-[#11141c] border-[#232838] text-gray-300">Сериалы</button>
+              <button type="button" data-action="filter-type" data-val="MINI_SERIES" class="min-h-[44px] px-2 rounded-xl border text-xs font-bold transition bg-[#11141c] border-[#232838] text-gray-300">Мини-сериалы</button>
+            </div>
+          </div>
+
+          <!-- Genre -->
+          <div class="space-y-1.5">
+            <label for="filterGenreSelect" class="block text-[11px] font-bold uppercase tracking-wider text-gray-400">Жанр</label>
+            <select id="filterGenreSelect" class="w-full min-h-[46px] px-3 rounded-xl bg-[#11141c] border border-[#232838] focus:border-[#ff5500] focus:outline-none text-[16px] text-white">
+              <option value="">Любой жанр</option>
+            </select>
+          </div>
+
+          <!-- Min Rating -->
+          <div class="space-y-1.5">
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-400">Минимальный рейтинг</label>
+            <div class="grid grid-cols-4 gap-1.5">
+              <button type="button" data-action="filter-rating" data-val="0" class="min-h-[44px] rounded-xl border text-xs font-bold transition bg-[#ff5500] border-[#ff5500] text-white">Любой</button>
+              <button type="button" data-action="filter-rating" data-val="6" class="min-h-[44px] rounded-xl border text-xs font-bold transition bg-[#11141c] border-[#232838] text-gray-300">6+</button>
+              <button type="button" data-action="filter-rating" data-val="7" class="min-h-[44px] rounded-xl border text-xs font-bold transition bg-[#11141c] border-[#232838] text-gray-300">7+</button>
+              <button type="button" data-action="filter-rating" data-val="8" class="min-h-[44px] rounded-xl border text-xs font-bold transition bg-[#11141c] border-[#232838] text-gray-300">8+</button>
+            </div>
+          </div>
+
+          <!-- Year From / To -->
+          <div class="grid grid-cols-2 gap-2">
+            <div class="space-y-1">
+              <label for="filterYearFrom" class="block text-[11px] font-bold uppercase tracking-wider text-gray-400">Год от</label>
+              <input type="number" id="filterYearFrom" min="1900" max="2030" placeholder="1980" class="w-full min-h-[46px] px-3 rounded-xl bg-[#11141c] border border-[#232838] focus:border-[#ff5500] focus:outline-none text-[16px] text-white placeholder-gray-500">
+            </div>
+            <div class="space-y-1">
+              <label for="filterYearTo" class="block text-[11px] font-bold uppercase tracking-wider text-gray-400">Год до</label>
+              <input type="number" id="filterYearTo" min="1900" max="2030" placeholder="2026" class="w-full min-h-[46px] px-3 rounded-xl bg-[#11141c] border border-[#232838] focus:border-[#ff5500] focus:outline-none text-[16px] text-white placeholder-gray-500">
+            </div>
+          </div>
+
+          <!-- Sort -->
+          <div class="space-y-1.5">
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-400">Сортировка</label>
+            <div class="grid grid-cols-3 gap-1.5">
+              <button type="button" data-action="filter-sort" data-val="NUM_VOTE" class="min-h-[44px] px-2 rounded-xl border text-xs font-bold transition bg-[#ff5500] border-[#ff5500] text-white">Популярные</button>
+              <button type="button" data-action="filter-sort" data-val="RATING" class="min-h-[44px] px-2 rounded-xl border text-xs font-bold transition bg-[#11141c] border-[#232838] text-gray-300">Рейтинг</button>
+              <button type="button" data-action="filter-sort" data-val="YEAR" class="min-h-[44px] px-2 rounded-xl border text-xs font-bold transition bg-[#11141c] border-[#232838] text-gray-300">Год</button>
+            </div>
+          </div>
+
+          <!-- Filter Actions -->
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <button type="button" data-action="apply-filters" class="min-h-[46px] px-3 rounded-xl bg-[#ff5500] hover:bg-[#ff6e24] active:scale-95 transition text-sm font-bold text-white">
+              Показать
+            </button>
+            <button type="button" data-action="roulette-filters" class="min-h-[46px] px-3 rounded-xl bg-[#1d2230] border border-[#ff5500]/45 text-[#ff7b3a] active:scale-95 transition text-xs sm:text-sm font-bold">
+              🎲 Случайный на вечер
+            </button>
+          </div>
+          <button type="button" data-action="reset-filters" class="w-full min-h-[40px] rounded-xl bg-[#11141c] border border-[#232838] text-xs font-semibold text-gray-400 hover:text-white active:scale-95 transition">
+            Сбросить фильтры
+          </button>
+        </div>
+      </div>
+
+      <!-- Search Results Header -->
+      <div id="searchResultsHead" class="hidden flex items-center justify-between pt-1">
+        <h2 id="searchResultsTitle" class="text-sm font-bold text-white">Результаты</h2>
+        <button type="button" data-action="clear-search-results" class="text-xs text-gray-400 hover:text-white py-1 px-2">Сбросить</button>
+      </div>
+
+      <!-- Search Results / Empty / Error / Skeletons Container -->
+      <div id="searchResultsContainer" class="space-y-2.5">
+        <!-- Initial Welcome Helper -->
+        <div class="rounded-2xl bg-[#161922] border border-[#232838] p-4 text-center space-y-3">
+          <div class="text-3xl">🎬</div>
+          <div>
+            <h2 class="text-base font-bold text-white">Найдите фильм или сериал</h2>
+            <p class="text-xs text-gray-400 mt-1 leading-relaxed">Введите название, ID фильма или вставьте прямую ссылку с <span class="text-gray-200">kinopoisk.ru</span> — сразу откроется кнопка просмотра на <span id="welcomeMirrorText" class="text-[#ff7b3a] font-semibold">www.kinopoisk.cx</span>.</p>
+          </div>
+          <div class="flex flex-wrap justify-center gap-1.5 pt-1">
+            <button type="button" data-action="quick-example" data-q="Интерстеллар" class="min-h-[38px] px-3 rounded-full bg-[#11141c] border border-[#232838] text-xs font-semibold text-gray-300 active:scale-95 transition">Интерстеллар</button>
+            <button type="button" data-action="quick-example" data-q="Во все тяжкие" class="min-h-[38px] px-3 rounded-full bg-[#11141c] border border-[#232838] text-xs font-semibold text-gray-300 active:scale-95 transition">Во все тяжкие</button>
+            <button type="button" data-action="quick-example" data-q="Достать ножи" class="min-h-[38px] px-3 rounded-full bg-[#11141c] border border-[#232838] text-xs font-semibold text-gray-300 active:scale-95 transition">Достать ножи</button>
+          </div>
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <button type="button" data-action="nav" data-tab="collections" class="min-h-[44px] px-3 rounded-xl bg-[#1d2230] border border-[#232838] text-xs font-bold text-gray-200 active:scale-95 transition">
+              🔥 Открыть подборки
+            </button>
+            <button type="button" data-action="roulette-quick" class="min-h-[44px] px-3 rounded-xl bg-[#ff5500]/15 border border-[#ff5500]/45 text-xs font-bold text-[#ff7b3a] active:scale-95 transition">
+              🎲 Случайный на вечер
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Load More Button for Filter Search -->
+      <div id="searchLoadMoreWrap" class="hidden pt-1">
+        <button type="button" id="searchLoadMoreBtn" data-action="search-load-more" class="w-full min-h-[46px] rounded-xl bg-[#161922] border border-[#232838] text-sm font-bold text-gray-200 active:scale-95 transition">
+          Загрузить ещё
+        </button>
+      </div>
+    </section>
+
+    <!-- ========================================
+         TAB 2: ПОДБОРКИ
+         ======================================== -->
+    <section id="tab-collections" class="hidden space-y-3">
+      <!-- Collections Chips -->
+      <div class="space-y-1.5">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-gray-400">Подборки Кинопоиска</span>
+          <div class="inline-flex rounded-lg bg-[#161922] border border-[#232838] p-0.5">
+            <button type="button" data-action="set-col-view" data-view="list" class="min-h-[32px] px-2.5 rounded-md text-xs font-bold bg-[#ff5500] text-white transition">Список</button>
+            <button type="button" data-action="set-col-view" data-view="grid" class="min-h-[32px] px-2.5 rounded-md text-xs font-bold text-gray-400 transition">Сетка</button>
+          </div>
+        </div>
+        <div id="collectionChips" class="flex gap-2 overflow-x-auto no-scrollbar -mx-3 px-3 pb-1">
+          <button type="button" data-action="select-col" data-col="TOP_POPULAR_ALL" class="shrink-0 min-h-[44px] px-3.5 rounded-full border text-xs font-bold transition bg-[#ff5500] border-[#ff5500] text-white">🔥 Популярное</button>
+          <button type="button" data-action="select-col" data-col="TOP_250_MOVIES" class="shrink-0 min-h-[44px] px-3.5 rounded-full border text-xs font-bold transition bg-[#161922] border-[#232838] text-gray-300">🏆 Топ-250 фильмов</button>
+          <button type="button" data-action="select-col" data-col="TOP_250_TV_SHOWS" class="shrink-0 min-h-[44px] px-3.5 rounded-full border text-xs font-bold transition bg-[#161922] border-[#232838] text-gray-300">📺 Топ-250 сериалов</button>
+          <button type="button" data-action="select-col" data-col="POPULAR_SERIES" class="shrink-0 min-h-[44px] px-3.5 rounded-full border text-xs font-bold transition bg-[#161922] border-[#232838] text-gray-300">⚡ Популярные сериалы</button>
+          <button type="button" data-action="select-col" data-col="CLOSES_RELEASES" class="shrink-0 min-h-[44px] px-3.5 rounded-full border text-xs font-bold transition bg-[#161922] border-[#232838] text-gray-300">✨ Новинки</button>
+          <button type="button" data-action="select-col" data-col="FAMILY" class="shrink-0 min-h-[44px] px-3.5 rounded-full border text-xs font-bold transition bg-[#161922] border-[#232838] text-gray-300">👨‍👩‍👧 Семейное</button>
+        </div>
+      </div>
+
+      <!-- Quick Evening Presets -->
+      <div class="space-y-1.5">
+        <span class="block text-[11px] font-bold uppercase tracking-wider text-gray-400">Быстро на вечер</span>
+        <div id="presetChips" class="flex gap-2 overflow-x-auto no-scrollbar -mx-3 px-3 pb-1">
+          <button type="button" data-action="select-preset" data-preset="comedy" class="shrink-0 min-h-[42px] px-3 rounded-xl border text-xs font-bold transition bg-[#161922] border-[#232838] text-gray-300">😂 Комедия 7+</button>
+          <button type="button" data-action="select-preset" data-preset="thriller" class="shrink-0 min-h-[42px] px-3 rounded-xl border text-xs font-bold transition bg-[#161922] border-[#232838] text-gray-300">😱 Триллер 7+</button>
+          <button type="button" data-action="select-preset" data-preset="scifi" class="shrink-0 min-h-[42px] px-3 rounded-xl border text-xs font-bold transition bg-[#161922] border-[#232838] text-gray-300">🚀 Фантастика 7+</button>
+          <button type="button" data-action="select-preset" data-preset="detective" class="shrink-0 min-h-[42px] px-3 rounded-xl border text-xs font-bold transition bg-[#161922] border-[#232838] text-gray-300">🕵️ Детектив 7+</button>
+        </div>
+      </div>
+
+      <!-- Active Collection Title & Meta -->
+      <div class="flex items-center justify-between pt-0.5">
+        <h2 id="colHeading" class="text-sm font-bold text-white">🔥 Популярное</h2>
+        <span id="colMeta" class="text-xs text-gray-400"></span>
+      </div>
+
+      <!-- Collections List / Grid -->
+      <div id="colContainer" class="space-y-2.5"></div>
+
+      <!-- Pagination -->
+      <div id="colLoadMoreWrap" class="hidden pt-1">
+        <button type="button" id="colLoadMoreBtn" data-action="col-load-more" class="w-full min-h-[46px] rounded-xl bg-[#161922] border border-[#232838] text-sm font-bold text-gray-200 active:scale-95 transition">
+          Загрузить ещё
+        </button>
+      </div>
+    </section>
+
+    <!-- ========================================
+         TAB 3: МОЁ (ИСТОРИЯ / БУДУ СМОТРЕТЬ)
+         ======================================== -->
+    <section id="tab-my" class="hidden space-y-3">
+      <!-- Segmented Switch -->
+      <div class="grid grid-cols-2 gap-1 p-1 rounded-2xl bg-[#161922] border border-[#232838]">
+        <button type="button" data-action="my-subtab" data-sub="history" class="min-h-[44px] rounded-xl text-xs font-bold transition bg-[#ff5500] text-white flex items-center justify-center gap-1.5">
+          <span>🕒 История</span>
+          <span id="historyCountBadge" class="px-1.5 py-0.5 rounded-md bg-black/25 text-[11px]">0</span>
+        </button>
+        <button type="button" data-action="my-subtab" data-sub="bookmarks" class="min-h-[44px] rounded-xl text-xs font-bold transition text-gray-400 flex items-center justify-center gap-1.5">
+          <span>⭐ Буду смотреть</span>
+          <span id="bookmarksCountBadge" class="px-1.5 py-0.5 rounded-md bg-[#232838] text-[11px]">0</span>
+        </button>
+      </div>
+
+      <!-- History View -->
+      <div id="myHistoryWrap" class="space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-gray-400">Недавно открытые</span>
+          <button type="button" id="clearHistoryBtn" data-action="ask-clear-history" class="hidden min-h-[36px] px-3 rounded-lg bg-red-500/15 border border-red-500/35 text-xs font-bold text-red-400 active:scale-95 transition">
+            Очистить
+          </button>
+        </div>
+        <div id="historyList" class="space-y-2.5"></div>
+      </div>
+
+      <!-- Bookmarks View -->
+      <div id="myBookmarksWrap" class="hidden space-y-2.5">
+        <div id="bookmarksList" class="space-y-2.5"></div>
+      </div>
+    </section>
+
+    <!-- ========================================
+         TAB 4: НАСТРОЙКИ
+         ======================================== -->
+    <section id="tab-settings" class="hidden space-y-3">
+
+      <!-- Mirror Settings -->
+      <div class="rounded-2xl bg-[#161922] border border-[#232838] p-4 space-y-3">
+        <div>
+          <h2 class="text-sm font-bold text-white">🌐 Зеркало для просмотра</h2>
+          <p class="text-xs text-gray-400 mt-0.5">Приставка <code class="text-gray-200">www.</code> сохраняется точно как указано. Все ссылки на сайте обновляются мгновенно.</p>
+        </div>
+
+        <div id="mirrorChips" class="flex flex-wrap gap-1.5">
+          <button type="button" data-action="set-mirror-chip" data-mirror="www.kinopoisk.cx" class="min-h-[42px] px-3 rounded-xl border text-xs font-bold transition bg-[#ff5500]/15 border-[#ff5500] text-[#ff7b3a]">www.kinopoisk.cx</button>
+          <button type="button" data-action="set-mirror-chip" data-mirror="www.kinopoisk.vip" class="min-h-[42px] px-3 rounded-xl border text-xs font-bold transition bg-[#11141c] border-[#232838] text-gray-300">www.kinopoisk.vip</button>
+          <button type="button" data-action="set-mirror-chip" data-mirror="www.kinopoisk.cfd" class="min-h-[42px] px-3 rounded-xl border text-xs font-bold transition bg-[#11141c] border-[#232838] text-gray-300">www.kinopoisk.cfd</button>
+          <button type="button" data-action="set-mirror-chip" data-mirror="sspoisk.ru" class="min-h-[42px] px-3 rounded-xl border text-xs font-bold transition bg-[#11141c] border-[#232838] text-gray-300">sspoisk.ru</button>
+          <button type="button" data-action="set-mirror-chip" data-mirror="ggpoisk.ru" class="min-h-[42px] px-3 rounded-xl border text-xs font-bold transition bg-[#11141c] border-[#232838] text-gray-300">ggpoisk.ru</button>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <input
+            type="text"
+            id="customMirrorInput"
+            class="flex-1 min-w-0 min-h-[46px] px-3 rounded-xl bg-[#11141c] border border-[#232838] focus:border-[#ff5500] focus:outline-none text-[16px] text-white placeholder-gray-500"
+            placeholder="www.kinopoisk.cx"
+            autocomplete="off"
+            autocapitalize="none"
+            spellcheck="false"
+          >
+          <button type="button" data-action="save-custom-mirror" class="min-h-[46px] px-4 rounded-xl bg-[#ff5500] hover:bg-[#ff6e24] active:scale-95 transition text-sm font-bold text-white shrink-0">
+            Сохранить
+          </button>
+        </div>
+
+        <div class="rounded-xl bg-[#11141c] border border-dashed border-[#232838] px-3 py-2 text-xs font-mono text-gray-400 break-all">
+          Пример ссылки: <span id="mirrorLivePreview" class="text-[#ff7b3a] font-semibold">https://www.kinopoisk.cx/film/927898/</span>
+        </div>
+      </div>
+
+      <!-- API Key Settings -->
+      <div class="rounded-2xl bg-[#161922] border border-[#232838] p-4 space-y-3">
+        <div class="flex items-center justify-between gap-2">
+          <h2 class="text-sm font-bold text-white">🔑 API-ключ Кинопоиска</h2>
+          <span id="apiKeyStatusPill" class="text-[11px] font-bold px-2 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/35 text-emerald-400 shrink-0">
+            Используется встроенный ключ
+          </span>
+        </div>
+        <p class="text-xs text-gray-400 leading-relaxed">
+          Поиск работает сразу со встроенным ключом. Если дневной лимит (500 запросов) закончится, получите бесплатный ключ на
+          <a href="https://kinopoiskapiunofficial.tech/" target="_blank" rel="noopener noreferrer" class="text-[#ff7b3a] underline">kinopoiskapiunofficial.tech</a> и вставьте ниже.
+        </p>
+
+        <div class="flex items-center gap-2">
+          <input
+            type="password"
+            id="apiKeyInput"
+            class="flex-1 min-w-0 min-h-[46px] px-3 rounded-xl bg-[#11141c] border border-[#232838] focus:border-[#ff5500] focus:outline-none text-[16px] text-white placeholder-gray-500"
+            placeholder="Вставьте свой X-API-KEY..."
+            autocomplete="off"
+            autocapitalize="none"
+            spellcheck="false"
+          >
+          <button type="button" id="toggleKeyVisBtn" data-action="toggle-key-vis" class="min-w-[46px] min-h-[46px] rounded-xl bg-[#1d2230] border border-[#232838] text-base flex items-center justify-center active:scale-95 transition" aria-label="Показать или скрыть ключ">
+            👁
+          </button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" data-action="save-api-key" class="min-h-[44px] px-3 rounded-xl bg-[#ff5500] hover:bg-[#ff6e24] active:scale-95 transition text-xs sm:text-sm font-bold text-white">
+            Сохранить ключ
+          </button>
+          <button type="button" data-action="reset-api-key" class="min-h-[44px] px-3 rounded-xl bg-[#1d2230] border border-[#232838] text-xs sm:text-sm font-bold text-gray-200 active:scale-95 transition">
+            Сбросить на встроенный
+          </button>
+        </div>
+
+        <button type="button" id="testApiKeyBtn" data-action="test-api-key" class="w-full min-h-[44px] px-3 rounded-xl bg-[#11141c] border border-[#232838] text-xs font-bold text-gray-200 active:scale-95 transition">
+          🔌 Проверить ключ
+        </button>
+        <div id="apiKeyTestResult" class="hidden rounded-xl px-3 py-2 text-xs font-semibold"></div>
+      </div>
+
+      <!-- Link Open Mode -->
+      <div class="rounded-2xl bg-[#161922] border border-[#232838] p-4 space-y-3">
+        <h2 class="text-sm font-bold text-white">🔗 Как открывать плеер</h2>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" id="targetBlankBtn" data-action="set-target" data-target="_blank" class="min-h-[44px] px-3 rounded-xl border text-xs font-bold transition bg-[#ff5500]/15 border-[#ff5500] text-[#ff7b3a]">
+            Новая вкладка
+          </button>
+          <button type="button" id="targetSelfBtn" data-action="set-target" data-target="_self" class="min-h-[44px] px-3 rounded-xl border text-xs font-bold transition bg-[#11141c] border-[#232838] text-gray-300">
+            Текущая вкладка
+          </button>
+        </div>
+        <div class="rounded-xl bg-emerald-500/10 border border-emerald-500/30 px-3 py-2.5 text-xs text-emerald-200 leading-relaxed">
+          🛡 <strong>Без рекламы на Android:</strong> открывайте приложение в <strong>Brave</strong> или <strong>Firefox + uBlock Origin</strong> — реклама на зеркале вырежется автоматически.
+        </div>
+      </div>
+
+      <!-- Backup Export / Import -->
+      <div class="rounded-2xl bg-[#161922] border border-[#232838] p-4 space-y-2.5">
+        <h2 class="text-sm font-bold text-white">💾 Резервная копия</h2>
+        <p class="text-xs text-gray-400">Экспорт и перенос истории просмотров, закладок и настроек.</p>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" data-action="export-copy" class="min-h-[44px] px-3 rounded-xl bg-[#1d2230] border border-[#232838] text-xs font-bold text-gray-200 active:scale-95 transition">
+            📋 Копировать JSON
+          </button>
+          <button type="button" data-action="export-download" class="min-h-[44px] px-3 rounded-xl bg-[#1d2230] border border-[#232838] text-xs font-bold text-gray-200 active:scale-95 transition">
+            ⬇ Скачать .json
+          </button>
+        </div>
+        <button type="button" data-action="open-import" class="w-full min-h-[44px] px-3 rounded-xl bg-[#11141c] border border-[#232838] text-xs font-bold text-gray-200 active:scale-95 transition">
+          📥 Импортировать JSON
+        </button>
+      </div>
+
+      <!-- Diagnostics Block -->
+      <div class="rounded-2xl bg-[#161922] border border-[#232838] p-4 space-y-2.5">
+        <h2 class="text-sm font-bold text-white">🛠 Диагностика</h2>
+        <div class="rounded-xl bg-[#11141c] border border-[#232838] p-3 font-mono text-[11px] space-y-1.5">
+          <div class="flex justify-between gap-3"><span class="text-gray-400 shrink-0">Версия:</span><span class="text-white text-right">KP Watch v3.0</span></div>
+          <div class="flex justify-between gap-3"><span class="text-gray-400 shrink-0">Среда:</span><span id="diagEnv" class="text-white text-right">—</span></div>
+          <div class="flex justify-between gap-3"><span class="text-gray-400 shrink-0">Хранилище:</span><span id="diagStorage" class="text-white text-right">—</span></div>
+          <div class="flex justify-between gap-3"><span class="text-gray-400 shrink-0">Зеркало:</span><span id="diagMirror" class="text-[#ff7b3a] text-right break-all">—</span></div>
+          <div class="flex justify-between gap-3"><span class="text-gray-400 shrink-0">Пример URL:</span><span id="diagSampleUrl" class="text-gray-200 text-right break-all">—</span></div>
+          <div class="flex justify-between gap-3"><span class="text-gray-400 shrink-0">Последний API:</span><span id="diagApiStatus" class="text-gray-300 text-right break-words">Нет запросов</span></div>
+          <div class="flex justify-between gap-3"><span class="text-gray-400 shrink-0">JS-ошибка:</span><span id="diagJsError" class="text-emerald-400 text-right break-words">Нет</span></div>
+        </div>
+        <button type="button" data-action="clear-cache" class="w-full min-h-[42px] px-3 rounded-xl bg-[#1d2230] border border-[#232838] text-xs font-bold text-gray-300 active:scale-95 transition">
+          🧹 Очистить кэш запросов
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <!-- ==========================================
+       FIXED BOTTOM NAVIGATION (4 TABS)
+       ========================================== -->
+  <nav class="fixed bottom-0 inset-x-0 z-40 bg-[#11141c]/95 backdrop-blur-md border-t border-[#232838] nav-safe-bottom" aria-label="Основная навигация">
+    <div class="max-w-xl mx-auto grid grid-cols-4 h-16">
+      <button type="button" data-action="nav" data-tab="search" class="nav-item relative flex flex-col items-center justify-center gap-0.5 text-[11px] font-bold text-[#ff5500]">
+        <span class="nav-indicator absolute top-0 w-9 h-[3px] rounded-b-full bg-[#ff5500]"></span>
+        <span class="text-lg leading-none">🔍</span>
+        <span>Поиск</span>
+      </button>
+      <button type="button" data-action="nav" data-tab="collections" class="nav-item relative flex flex-col items-center justify-center gap-0.5 text-[11px] font-semibold text-gray-400">
+        <span class="nav-indicator hidden absolute top-0 w-9 h-[3px] rounded-b-full bg-[#ff5500]"></span>
+        <span class="text-lg leading-none">🎬</span>
+        <span>Подборки</span>
+      </button>
+      <button type="button" data-action="nav" data-tab="my" class="nav-item relative flex flex-col items-center justify-center gap-0.5 text-[11px] font-semibold text-gray-400">
+        <span class="nav-indicator hidden absolute top-0 w-9 h-[3px] rounded-b-full bg-[#ff5500]"></span>
+        <span class="text-lg leading-none">🔖</span>
+        <span>Моё</span>
+        <span id="myNavBadge" class="hidden absolute top-1.5 right-[calc(50%-22px)] min-w-[17px] h-[17px] px-1 rounded-full bg-[#ff5500] text-white text-[10px] font-bold flex items-center justify-center">0</span>
+      </button>
+      <button type="button" data-action="nav" data-tab="settings" class="nav-item relative flex flex-col items-center justify-center gap-0.5 text-[11px] font-semibold text-gray-400">
+        <span class="nav-indicator hidden absolute top-0 w-9 h-[3px] rounded-b-full bg-[#ff5500]"></span>
+        <span class="text-lg leading-none">⚙️</span>
+        <span>Настройки</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="hidden fixed left-1/2 -translate-x-1/2 toast-safe-bottom z-[160] max-w-[calc(100vw-24px)] px-4 py-2.5 rounded-full bg-[#1d2230] border border-[#232838] shadow-2xl text-xs font-bold text-white text-center pointer-events-none" role="status" aria-live="polite"></div>
+
+  <!-- ==========================================
+       MODAL: MOVIE DETAILS BOTTOM SHEET
+       ========================================== -->
+  <div id="detailModal" class="hidden fixed inset-0 z-[100] bg-black/80 backdrop-blur-xs flex items-end sm:items-center justify-center sm:p-4" data-backdrop="detailModal">
+    <div class="w-full max-w-xl max-h-[90dvh] bg-[#161922] border-t sm:border border-[#232838] rounded-t-3xl sm:rounded-2xl flex flex-col overflow-hidden nav-safe-bottom">
+      <div class="px-4 py-3 border-b border-[#232838] flex items-center justify-between gap-2 shrink-0">
+        <div class="flex items-center gap-2 min-w-0">
+          <span id="detailTypeBadge" class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#1d2230] text-gray-200">Фильм</span>
+          <span id="detailIdBadge" class="text-xs font-mono text-gray-400"></span>
+        </div>
+        <button type="button" data-action="close-modal" data-modal="detailModal" class="min-w-[44px] min-h-[44px] rounded-xl bg-[#1d2230] border border-[#232838] text-gray-200 flex items-center justify-center active:scale-95 transition" aria-label="Закрыть">✕</button>
+      </div>
+      <div id="detailModalBody" class="p-4 overflow-y-auto space-y-4"></div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL: COPY FALLBACK
+       ========================================== -->
+  <div id="copyModal" class="hidden fixed inset-0 z-[120] bg-black/80 flex items-center justify-center p-4" data-backdrop="copyModal">
+    <div class="w-full max-w-md bg-[#161922] border border-[#232838] rounded-2xl overflow-hidden">
+      <div class="px-4 py-3 border-b border-[#232838] flex items-center justify-between">
+        <h3 class="text-sm font-bold text-white">Ссылка на просмотр</h3>
+        <button type="button" data-action="close-modal" data-modal="copyModal" class="min-w-[40px] min-h-[40px] rounded-xl bg-[#1d2230] text-gray-300 flex items-center justify-center">✕</button>
+      </div>
+      <div class="p-4 space-y-3">
+        <p class="text-xs text-gray-400">Выделите и скопируйте ссылку вручную или откройте напрямую:</p>
+        <input type="text" id="copyModalInput" readonly class="w-full min-h-[46px] px-3 rounded-xl bg-[#11141c] border border-[#232838] text-[16px] font-mono text-white">
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" data-action="copy-modal-select" class="min-h-[44px] rounded-xl bg-[#1d2230] border border-[#232838] text-xs font-bold text-white">📋 Копировать</button>
+          <a id="copyModalOpenLink" href="#" target="_blank" rel="noopener noreferrer" class="min-h-[44px] rounded-xl bg-[#ff5500] text-xs font-bold text-white flex items-center justify-center">▶ Открыть ↗</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL: IMPORT JSON
+       ========================================== -->
+  <div id="importModal" class="hidden fixed inset-0 z-[120] bg-black/80 flex items-center justify-center p-4" data-backdrop="importModal">
+    <div class="w-full max-w-md bg-[#161922] border border-[#232838] rounded-2xl overflow-hidden">
+      <div class="px-4 py-3 border-b border-[#232838] flex items-center justify-between">
+        <h3 class="text-sm font-bold text-white">Импорт резервной копии</h3>
+        <button type="button" data-action="close-modal" data-modal="importModal" class="min-w-[40px] min-h-[40px] rounded-xl bg-[#1d2230] text-gray-300 flex items-center justify-center">✕</button>
+      </div>
+      <div class="p-4 space-y-3">
+        <input type="file" id="importFileInput" accept=".json,application/json" class="block w-full text-xs text-gray-400 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-[#1d2230] file:text-gray-200 file:font-semibold">
+        <textarea id="importJsonTextarea" rows="5" class="w-full p-3 rounded-xl bg-[#11141c] border border-[#232838] focus:border-[#ff5500] focus:outline-none text-[16px] sm:text-xs font-mono text-white placeholder-gray-500" placeholder='{"mirror":"www.kinopoisk.cx","history":[],"bookmarks":[]}'></textarea>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" data-action="close-modal" data-modal="importModal" class="min-h-[44px] rounded-xl bg-[#1d2230] border border-[#232838] text-xs font-bold text-gray-300">Отмена</button>
+          <button type="button" data-action="confirm-import" class="min-h-[44px] rounded-xl bg-[#ff5500] text-xs font-bold text-white">Импортировать</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL: CONFIRMATION (NO window.confirm)
+       ========================================== -->
+  <div id="confirmModal" class="hidden fixed inset-0 z-[130] bg-black/80 flex items-center justify-center p-4" data-backdrop="confirmModal">
+    <div class="w-full max-w-sm bg-[#161922] border border-[#232838] rounded-2xl overflow-hidden">
+      <div class="px-4 py-3 border-b border-[#232838] flex items-center justify-between">
+        <h3 id="confirmModalTitle" class="text-sm font-bold text-white">Подтверждение</h3>
+        <button type="button" data-action="close-modal" data-modal="confirmModal" class="min-w-[40px] min-h-[40px] rounded-xl bg-[#1d2230] text-gray-300 flex items-center justify-center">✕</button>
+      </div>
+      <div class="p-4 space-y-4">
+        <p id="confirmModalText" class="text-xs text-gray-300 leading-relaxed"></p>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" data-action="close-modal" data-modal="confirmModal" class="min-h-[44px] rounded-xl bg-[#1d2230] border border-[#232838] text-xs font-bold text-gray-300">Отмена</button>
+          <button type="button" data-action="confirm-ok" class="min-h-[44px] rounded-xl bg-red-600 hover:bg-red-500 text-xs font-bold text-white">Подтвердить</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // ==========================================
+      // 1. CONFIG & STATE
+      // ==========================================
+      const APP_VERSION = '3.0';
+      const SCHEMA_VERSION = 3;
+      const DEFAULT_API_KEY = '5cc47542-dd60-4a48-a3bd-7c36ab9c6b35';
+      const DEFAULT_MIRROR = 'www.kinopoisk.cx';
+      const API_BASE = 'https://kinopoiskapiunofficial.tech';
+      const CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes
+      const SAMPLE_FILM_ID = '927898';
+      const FALLBACK_POSTER = 'https://placehold.co/180x270/161922/9ca3af?text=KP';
+      const SERIES_TYPES = ['TV_SERIES', 'MINI_SERIES', 'TV_SHOW'];
+
+      const STORAGE_KEYS = {
+        SCHEMA: 'kpwatch_v3_schema',
+        CUSTOM_KEY: 'kpwatch_v3_custom_api_key',
+        MIRROR: 'kpwatch_v3_mirror',
+        TARGET: 'kpwatch_v3_target',
+        COL_VIEW: 'kpwatch_v3_col_view',
+        HISTORY: 'kpwatch_v3_history',
+        BOOKMARKS: 'kpwatch_v3_bookmarks',
+        SEARCH_HISTORY: 'kpwatch_v3_search_history'
+      };
+
+      const COLLECTION_LABELS = {
+        TOP_POPULAR_ALL: '🔥 Популярное',
+        TOP_250_MOVIES: '🏆 Топ-250 фильмов',
+        TOP_250_TV_SHOWS: '📺 Топ-250 сериалов',
+        POPULAR_SERIES: '⚡ Популярные сериалы',
+        CLOSES_RELEASES: '✨ Новинки',
+        FAMILY: '👨‍👩‍👧 Семейное'
+      };
+
+      const EVENING_PRESETS = {
+        comedy: { label: '😂 Комедия 7+', genreName: 'комедия', ratingFrom: 7, type: 'FILM' },
+        thriller: { label: '😱 Триллер 7+', genreName: 'триллер', ratingFrom: 7, type: 'FILM' },
+        scifi: { label: '🚀 Фантастика 7+', genreName: 'фантастика', ratingFrom: 7, type: 'FILM' },
+        detective: { label: '🕵️ Детектив 7+', genreName: 'детектив', ratingFrom: 7, type: 'FILM' }
+      };
+
+      // Fallback genres in case /api/v2.2/films/filters hasn't loaded yet
+      const FALLBACK_GENRES = [
+        { id: 1, genre: 'триллер' },
+        { id: 2, genre: 'драма' },
+        { id: 3, genre: 'криминал' },
+        { id: 4, genre: 'мелодрама' },
+        { id: 5, genre: 'детектив' },
+        { id: 6, genre: 'фантастика' },
+        { id: 7, genre: 'приключения' },
+        { id: 11, genre: 'боевик' },
+        { id: 12, genre: 'фэнтези' },
+        { id: 13, genre: 'комедия' },
+        { id: 17, genre: 'ужасы' },
+        { id: 18, genre: 'мультфильм' },
+        { id: 19, genre: 'семейный' },
+        { id: 24, genre: 'аниме' }
+      ];
+
+      // Central item registry (ID -> normalized movie object) so no inline onclick is ever needed
+      const itemRegistry = new Map();
+
+      const state = {
+        activeTab: 'search',
+        mySubTab: 'history',
+        customApiKey: '',
+        mirror: DEFAULT_MIRROR,
+        linkTarget: '_blank',
+        colView: 'list',
+        history: [],
+        bookmarks: [],
+        searchHistory: [],
+        genres: FALLBACK_GENRES.slice(),
+        genresLoadedFromApi: false,
+
+        // Search tab state
+        directItem: null,
+        searchMode: 'idle', // 'idle' | 'keyword' | 'filter'
+        searchIds: [],
+        searchPage: 1,
+        searchTotalPages: 1,
+        searchLoading: false,
+        lastSearchKeyword: '',
+        filters: {
+          type: 'ALL',
+          genreId: '',
+          ratingFrom: 0,
+          yearFrom: '',
+          yearTo: '',
+          order: 'NUM_VOTE'
+        },
+
+        // Collections tab state
+        colInitialized: false,
+        colKind: 'collection', // 'collection' | 'preset'
+        colKey: 'TOP_POPULAR_ALL',
+        colIds: [],
+        colPage: 1,
+        colTotalPages: 1,
+        colLoading: false,
+
+        // Detail modal / Roulette state
+        detailItemId: null,
+        rouletteActive: false,
+        rouletteUseFilters: false,
+        rouletteLastId: '',
+        confirmCallback: null,
+
+        // Diagnostics state
+        lastApiStatus: 'Нет запросов',
+        lastJsError: '',
+        retryAction: null
+      };
+
+      // Global error capturing into UI banner and Diagnostics
+      function captureJsError(message) {
+        const text = String(message || 'Неизвестная ошибка JS');
+        state.lastJsError = text;
+        const banner = document.getElementById('jsErrorBanner');
+        const textEl = document.getElementById('jsErrorText');
+        if (banner && textEl) {
+          textEl.textContent = text;
+          banner.classList.remove('hidden');
+        }
+        updateDiagnosticsUI();
+      }
+
+      window.onerror = function (msg, _src, line) {
+        captureJsError(msg + (line ? ' (стр. ' + line + ')' : ''));
+        return false;
+      };
+      window.onunhandledrejection = function (event) {
+        const reason = event && event.reason ? (event.reason.message || String(event.reason)) : 'Unhandled Promise Rejection';
+        captureJsError(reason);
+      };
+
+      // ==========================================
+      // 2. STORAGE LAYER
+      // ==========================================
+      const memoryFallbackStore = new Map();
+      let localStorageAvailable = false;
+
+      try {
+        localStorage.setItem('__kpw3_probe__', '1');
+        localStorage.removeItem('__kpw3_probe__');
+        localStorageAvailable = true;
+      } catch (_err) {
+        localStorageAvailable = false;
+      }
+
+      const storage = {
+        get(key) {
+          try {
+            if (localStorageAvailable) {
+              return localStorage.getItem(key);
+            }
+          } catch (_err) {
+            localStorageAvailable = false;
+          }
+          return memoryFallbackStore.has(key) ? memoryFallbackStore.get(key) : null;
+        },
+        set(key, value) {
+          const strVal = String(value);
+          memoryFallbackStore.set(key, strVal);
+          try {
+            if (localStorageAvailable) {
+              localStorage.setItem(key, strVal);
+            }
+          } catch (_err) {
+            localStorageAvailable = false;
+          }
+        },
+        remove(key) {
+          memoryFallbackStore.delete(key);
+          try {
+            if (localStorageAvailable) {
+              localStorage.removeItem(key);
+            }
+          } catch (_err) {
+            localStorageAvailable = false;
+          }
+        }
+      };
+
+      function safeJsonParse(raw, fallback) {
+        if (!raw) return fallback;
+        try {
+          return JSON.parse(raw);
+        } catch (_err) {
+          return fallback;
+        }
+      }
+
+      /**
+       * CRITICAL: Strictly preserves "www."!
+       * Only trims whitespace, lowercases, strips leading http:// or https://,
+       * and strips any path, query, hash, or trailing slashes.
+       */
+      function normalizeMirror(raw) {
+        if (typeof raw !== 'string') return '';
+        const cleaned = raw
+          .trim()
+          .toLowerCase()
+          .replace(/^https?:\/\//i, '')
+          .split(/[/?#]/)[0]
+          .replace(/\s+/g, '');
+        return cleaned;
+      }
+
+      function isValidMirror(domain) {
+        return Boolean(domain && domain.indexOf('.') !== -1 && /^[a-z0-9.-]+$/i.test(domain));
+      }
+
+      function isSeriesType(typeOrFlag) {
+        if (typeof typeOrFlag === 'boolean') return typeOrFlag;
+        if (typeof typeOrFlag === 'string') {
+          const upper = typeOrFlag.toUpperCase();
+          return upper === 'SERIES' || SERIES_TYPES.indexOf(upper) !== -1;
+        }
+        return false;
+      }
+
+      function buildMirrorUrl(id, typeOrIsSeries) {
+        const cleanId = String(id || '').replace(/\D/g, '');
+        const normalized = normalizeMirror(state.mirror);
+        const safeMirror = isValidMirror(normalized) ? normalized : DEFAULT_MIRROR;
+        const segment = isSeriesType(typeOrIsSeries) ? 'series' : 'film';
+        const url = 'https://' + safeMirror + '/' + segment + '/' + cleanId + '/';
+        if (!/^https:\/\//.test(url)) {
+          return 'https://' + DEFAULT_MIRROR + '/' + segment + '/' + cleanId + '/';
+        }
+        return url;
+      }
+
+      function getActiveApiKey() {
+        return state.customApiKey ? state.customApiKey : DEFAULT_API_KEY;
+      }
+
+      function loadAndMigrateStorage() {
+        const storedSchema = Number(storage.get(STORAGE_KEYS.SCHEMA) || 0);
+
+        // 1) Custom API key (migrate from legacy keys if present and different from default)
+        const legacyKeyCandidates = [
+          STORAGE_KEYS.CUSTOM_KEY,
+          'kpwatch_v21_api_key',
+          'kpwatch_v2_api_key',
+          'kpwatch_api_key',
+          'kp_watch_key'
+        ];
+        for (let i = 0; i < legacyKeyCandidates.length; i++) {
+          const candidate = (storage.get(legacyKeyCandidates[i]) || '').trim();
+          if (candidate.length >= 8) {
+            state.customApiKey = (candidate === DEFAULT_API_KEY) ? '' : candidate;
+            break;
+          }
+        }
+
+        // Legacy combined object fallback (v1)
+        const legacyCombined = safeJsonParse(storage.get('kp_watch_state'), null);
+        if (!state.customApiKey && legacyCombined && typeof legacyCombined.apiKey === 'string') {
+          const k = legacyCombined.apiKey.trim();
+          if (k.length >= 8 && k !== DEFAULT_API_KEY) state.customApiKey = k;
+        }
+
+        // 2) Mirror with one-time v3 schema migration: 'kinopoisk.cx' -> 'www.kinopoisk.cx'
+        const legacyMirrorCandidates = [
+          STORAGE_KEYS.MIRROR,
+          'kpwatch_v21_mirror',
+          'kpwatch_v2_mirror',
+          'kpwatch_mirror',
+          'kp_watch_mirror'
+        ];
+        let foundMirror = '';
+        for (let i = 0; i < legacyMirrorCandidates.length; i++) {
+          const m = normalizeMirror(storage.get(legacyMirrorCandidates[i]) || '');
+          if (isValidMirror(m)) {
+            foundMirror = m;
+            break;
+          }
+        }
+        if (!foundMirror && legacyCombined && typeof legacyCombined.mirror === 'string') {
+          const m = normalizeMirror(legacyCombined.mirror);
+          if (isValidMirror(m)) foundMirror = m;
+        }
+
+        if (storedSchema < SCHEMA_VERSION && foundMirror === 'kinopoisk.cx') {
+          foundMirror = DEFAULT_MIRROR; // Automatic one-time fix for broken non-www setting
+        }
+        state.mirror = isValidMirror(foundMirror) ? foundMirror : DEFAULT_MIRROR;
+
+        // 3) Target & view preferences
+        const savedTarget = storage.get(STORAGE_KEYS.TARGET) || storage.get('kpwatch_v21_target') || storage.get('kpwatch_v2_link_target');
+        state.linkTarget = (savedTarget === '_self') ? '_self' : '_blank';
+
+        const savedView = storage.get(STORAGE_KEYS.COL_VIEW) || storage.get('kpwatch_v21_view') || storage.get('kpwatch_v2_view_mode');
+        state.colView = (savedView === 'grid') ? 'grid' : 'list';
+
+        // 4) History migration
+        const historyCandidates = [
+          STORAGE_KEYS.HISTORY,
+          'kpwatch_v21_history',
+          'kpwatch_v2_watch_history',
+          'kpwatch_watch_history',
+          'kp_watch_history'
+        ];
+        for (let i = 0; i < historyCandidates.length; i++) {
+          const arr = safeJsonParse(storage.get(historyCandidates[i]), null);
+          if (Array.isArray(arr) && arr.length > 0) {
+            state.history = arr.map(normalizeItem).filter(Boolean);
+            break;
+          }
+        }
+        if (!state.history.length && legacyCombined && Array.isArray(legacyCombined.history)) {
+          state.history = legacyCombined.history.map(normalizeItem).filter(Boolean);
+        }
+
+        // 5) Bookmarks / Watchlist migration
+        const bookmarkCandidates = [
+          STORAGE_KEYS.BOOKMARKS,
+          'kpwatch_v21_watchlist',
+          'kpwatch_v2_watchlist'
+        ];
+        for (let i = 0; i < bookmarkCandidates.length; i++) {
+          const arr = safeJsonParse(storage.get(bookmarkCandidates[i]), null);
+          if (Array.isArray(arr) && arr.length > 0) {
+            state.bookmarks = arr.map(normalizeItem).filter(Boolean);
+            break;
+          }
+        }
+
+        // 6) Search History migration
+        const searchHistCandidates = [
+          STORAGE_KEYS.SEARCH_HISTORY,
+          'kpwatch_v21_search_hist',
+          'kpwatch_v2_search_history',
+          'kpwatch_search_history'
+        ];
+        for (let i = 0; i < searchHistCandidates.length; i++) {
+          const arr = safeJsonParse(storage.get(searchHistCandidates[i]), null);
+          if (Array.isArray(arr) && arr.length > 0) {
+            state.searchHistory = arr.filter(function (s) { return typeof s === 'string' && s.trim(); }).slice(0, 10);
+            break;
+          }
+        }
+
+        // Persist v3 schema & migrated values
+        storage.set(STORAGE_KEYS.SCHEMA, String(SCHEMA_VERSION));
+        storage.set(STORAGE_KEYS.MIRROR, state.mirror);
+        storage.set(STORAGE_KEYS.TARGET, state.linkTarget);
+        storage.set(STORAGE_KEYS.COL_VIEW, state.colView);
+        if (state.customApiKey) storage.set(STORAGE_KEYS.CUSTOM_KEY, state.customApiKey);
+        if (state.history.length) storage.set(STORAGE_KEYS.HISTORY, JSON.stringify(state.history));
+        if (state.bookmarks.length) storage.set(STORAGE_KEYS.BOOKMARKS, JSON.stringify(state.bookmarks));
+        if (state.searchHistory.length) storage.set(STORAGE_KEYS.SEARCH_HISTORY, JSON.stringify(state.searchHistory));
+      }
+
+      function persistHistory() {
+        storage.set(STORAGE_KEYS.HISTORY, JSON.stringify(state.history));
+        updateMyBadgesUI();
+      }
+
+      function persistBookmarks() {
+        storage.set(STORAGE_KEYS.BOOKMARKS, JSON.stringify(state.bookmarks));
+        updateMyBadgesUI();
+      }
+
+      function persistSearchHistory() {
+        storage.set(STORAGE_KEYS.SEARCH_HISTORY, JSON.stringify(state.searchHistory));
+      }
+
+      // ==========================================
+      // 3. API & CACHE LAYER
+      // ==========================================
+      const apiMemoryCache = new Map();
+
+      function cacheGet(cacheKey) {
+        const now = Date.now();
+        if (apiMemoryCache.has(cacheKey)) {
+          const entry = apiMemoryCache.get(cacheKey);
+          if (entry && entry.expires > now) return entry.data;
+          apiMemoryCache.delete(cacheKey);
+        }
+        try {
+          const raw = sessionStorage.getItem('kpw3_cache_' + cacheKey);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && parsed.expires > now) {
+              apiMemoryCache.set(cacheKey, parsed);
+              return parsed.data;
+            }
+            sessionStorage.removeItem('kpw3_cache_' + cacheKey);
+          }
+        } catch (_err) {
+          // Ignore sessionStorage restrictions
+        }
+        return null;
+      }
+
+      function cacheSet(cacheKey, data) {
+        const entry = { expires: Date.now() + CACHE_TTL_MS, data: data };
+        apiMemoryCache.set(cacheKey, entry);
+        try {
+          sessionStorage.setItem('kpw3_cache_' + cacheKey, JSON.stringify(entry));
+        } catch (_err) {
+          // Ignore sessionStorage quota errors
+        }
+      }
+
+      function cacheClearAll() {
+        apiMemoryCache.clear();
+        try {
+          const keysToRemove = [];
+          for (let i = 0; i < sessionStorage.length; i++) {
+            const k = sessionStorage.key(i);
+            if (k && k.indexOf('kpw3_cache_') === 0) keysToRemove.push(k);
+          }
+          keysToRemove.forEach(function (k) { sessionStorage.removeItem(k); });
+        } catch (_err) {
+          // Ignore
+        }
+      }
+
+      function parseRating(val) {
+        if (val === null || val === undefined) return null;
+        const s = String(val).trim();
+        if (!s || s === 'null' || s.indexOf('%') !== -1) return null;
+        const num = parseFloat(s.replace(',', '.'));
+        if (!isFinite(num) || num <= 0 || num > 10) return null;
+        return Math.round(num * 10) / 10;
+      }
+
+      function formatFilmLength(val) {
+        if (!val) return '';
+        if (typeof val === 'number' && isFinite(val) && val > 0) {
+          return val + ' мин';
+        }
+        const s = String(val).trim();
+        if (/^\d+$/.test(s)) return s + ' мин';
+        if (/^\d{1,2}:\d{2}$/.test(s)) {
+          const parts = s.split(':');
+          const mins = Number(parts[0]) * 60 + Number(parts[1]);
+          return mins > 0 ? mins + ' мин' : '';
+        }
+        return '';
+      }
+
+      function normalizeItem(raw) {
+        if (!raw || typeof raw !== 'object') return null;
+        const rawId = raw.kinopoiskId !== undefined && raw.kinopoiskId !== null
+          ? raw.kinopoiskId
+          : (raw.filmId !== undefined && raw.filmId !== null ? raw.filmId : raw.id);
+        const id = String(rawId || '').replace(/\D/g, '');
+        if (!id) return null;
+
+        const prev = itemRegistry.get(id) || {};
+        const rawType = raw.type || prev.type || (raw.isSeries ? 'TV_SERIES' : 'FILM');
+        const isSeries = raw.isSeries !== undefined ? Boolean(raw.isSeries) : isSeriesType(rawType);
+
+        const title = raw.title || raw.nameRu || raw.nameOriginal || raw.nameEn || prev.title || ((isSeries ? 'Сериал #' : 'Фильм #') + id);
+        const origRaw = raw.originalTitle || raw.nameOriginal || raw.nameEn || prev.originalTitle || '';
+        const originalTitle = (origRaw && origRaw !== title) ? String(origRaw) : '';
+
+        const ratingSource = (raw.ratingKinopoisk !== undefined && raw.ratingKinopoisk !== null)
+          ? raw.ratingKinopoisk
+          : (raw.rating !== undefined && raw.rating !== null ? raw.rating : prev.rating);
+
+        const yearRaw = raw.year !== undefined && raw.year !== null && String(raw.year) !== 'null'
+          ? String(raw.year)
+          : (prev.year || '');
+
+        const genres = Array.isArray(raw.genres)
+          ? raw.genres.map(function (g) { return typeof g === 'string' ? g : (g && g.genre ? g.genre : ''); }).filter(Boolean)
+          : (prev.genres || []);
+
+        const countries = Array.isArray(raw.countries)
+          ? raw.countries.map(function (c) { return typeof c === 'string' ? c : (c && c.country ? c.country : ''); }).filter(Boolean)
+          : (prev.countries || []);
+
+        const normalized = {
+          id: id,
+          title: String(title),
+          originalTitle: originalTitle,
+          year: yearRaw,
+          type: String(rawType),
+          isSeries: isSeries,
+          rating: parseRating(ratingSource),
+          ratingImdb: parseRating(raw.ratingImdb !== undefined ? raw.ratingImdb : prev.ratingImdb),
+          poster: raw.poster || raw.posterUrlPreview || raw.posterUrl || prev.poster || FALLBACK_POSTER,
+          genres: genres,
+          countries: countries,
+          lengthText: formatFilmLength(raw.filmLength) || prev.lengthText || '',
+          description: raw.description || prev.description || '',
+          season: Math.max(1, Number(raw.season || prev.season) || 1),
+          episode: Math.max(1, Number(raw.episode || prev.episode) || 1),
+          lastWatched: Number(raw.lastWatched || prev.lastWatched) || 0
+        };
+
+        itemRegistry.set(id, normalized);
+        return normalized;
+      }
+
+      function classifyApiError(err) {
+        const status = err && err.status ? err.status : 0;
+        if (status === 401) {
+          return {
+            status: 401,
+            isKeyError: true,
+            title: 'API-ключ недействителен (401)',
+            message: 'Сервер Кинопоиска отклонил текущий ключ. Смените ключ в настройках или сбросьте на встроенный.'
+          };
+        }
+        if (status === 402) {
+          return {
+            status: 402,
+            isKeyError: true,
+            title: 'Исчерпан дневной лимит ключа (402)',
+            message: 'Достигнут лимит 500 запросов в сутки на текущий ключ. Вставьте свой бесплатный ключ с kinopoiskapiunofficial.tech.'
+          };
+        }
+        if (status === 429) {
+          return {
+            status: 429,
+            isKeyError: true,
+            title: 'Слишком много запросов (429)',
+            message: 'Превышена частота запросов к API. Подождите пару секунд и повторите или укажите свой ключ.'
+          };
+        }
+        if (status === 404) {
+          return {
+            status: 404,
+            isKeyError: false,
+            title: 'Ничего не найдено (404)',
+            message: 'Запрошенный фильм или раздел отсутствует в базе API.'
+          };
+        }
+        return {
+          status: status,
+          isKeyError: false,
+          title: status ? ('Ошибка сервера (' + status + ')') : 'Ошибка сети или CORS',
+          message: 'Не удалось связаться с kinopoiskapiunofficial.tech. Проверьте интернет, VPN или повторите попытку.'
+        };
+      }
+
+      async function apiRequest(path, params, options) {
+        const opts = options || {};
+        const url = new URL(API_BASE + path);
+        if (params) {
+          Object.keys(params).forEach(function (k) {
+            const v = params[k];
+            if (v !== '' && v !== null && v !== undefined) {
+              url.searchParams.set(k, String(v));
+            }
+          });
+        }
+
+        const cacheKey = url.pathname + url.search;
+        if (opts.useCache && !opts.bypassCache) {
+          const cached = cacheGet(cacheKey);
+          if (cached !== null) {
+            state.lastApiStatus = '200 OK (кэш) ' + path;
+            updateDiagnosticsUI();
+            return cached;
+          }
+        }
+
+        let response;
+        try {
+          response = await fetch(url.toString(), {
+            method: 'GET',
+            headers: {
+              'X-API-KEY': getActiveApiKey(),
+              'Content-Type': 'application/json'
+            }
+          });
+        } catch (networkErr) {
+          state.lastApiStatus = 'Network/CORS Error: ' + path;
+          updateDiagnosticsUI();
+          const e = new Error('NETWORK_ERROR');
+          e.status = 0;
+          throw e;
+        }
+
+        state.lastApiStatus = response.status + ' ' + (response.ok ? 'OK' : 'ERR') + ' ' + path;
+        updateDiagnosticsUI();
+
+        if (!response.ok) {
+          const err = new Error('HTTP_' + response.status);
+          err.status = response.status;
+          throw err;
+        }
+
+        const data = await response.json();
+        if (opts.useCache) {
+          cacheSet(cacheKey, data);
+        }
+        return data;
+      }
+
+      async function ensureGenresLoaded() {
+        if (state.genresLoadedFromApi) return state.genres;
+        try {
+          const data = await apiRequest('/api/v2.2/films/filters', null, { useCache: true });
+          if (data && Array.isArray(data.genres) && data.genres.length > 0) {
+            state.genres = data.genres.filter(function (g) { return g && g.id && g.genre; });
+            state.genresLoadedFromApi = true;
+            renderGenreOptions();
+          }
+        } catch (_err) {
+          // Keep FALLBACK_GENRES silently so filters remain usable
+        }
+        return state.genres;
+      }
+
+      function findGenreIdByName(name) {
+        const lower = String(name || '').toLowerCase();
+        const match = state.genres.find(function (g) { return g.genre.toLowerCase() === lower; });
+        return match ? match.id : '';
+      }
+
+      // ==========================================
+      // 4. UI LAYER
+      // ==========================================
+      function escapeHtml(value) {
+        if (value === null || value === undefined) return '';
+        return String(value)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function ratingColorClass(rating) {
+        if (rating === null) return 'bg-gray-700';
+        if (rating >= 7.0) return 'bg-emerald-600';
+        if (rating >= 5.0) return 'bg-amber-600';
+        return 'bg-red-600';
+      }
+
+      function formatRelativeTime(ts) {
+        if (!ts) return '';
+        const diffSec = Math.max(0, Math.floor((Date.now() - ts) / 1000));
+        if (diffSec < 60) return 'только что';
+        const diffMin = Math.floor(diffSec / 60);
+        if (diffMin < 60) return diffMin + ' мин назад';
+        const diffHours = Math.floor(diffMin / 60);
+        if (diffHours < 24) return diffHours + ' ч назад';
+        return new Date(ts).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+      }
+
+      function parseDirectInput(rawText) {
+        const trimmed = String(rawText || '').trim();
+        if (!trimmed) return null;
+        if (/^\d{3,10}$/.test(trimmed)) {
+          return { id: trimmed, isSeries: false };
+        }
+        const match = trimmed.match(/(?:film|series)\/(\d{3,10})/i);
+        if (match) {
+          return { id: match[1], isSeries: /series\/\d+/i.test(trimmed) };
+        }
+        return null;
+      }
+
+      function isBookmarked(id) {
+        return state.bookmarks.some(function (item) { return item.id === String(id); });
+      }
+
+      // Toast notification
+      let toastTimeout = null;
+      function showToast(message, variant) {
+        const el = document.getElementById('toast');
+        if (!el) return;
+        clearTimeout(toastTimeout);
+        el.textContent = message;
+        el.classList.remove('hidden', 'border-emerald-500/60', 'border-red-500/60', 'bg-red-950');
+        if (variant === 'ok') el.classList.add('border-emerald-500/60');
+        if (variant === 'err') el.classList.add('border-red-500/60', 'bg-red-950');
+        toastTimeout = setTimeout(function () {
+          el.classList.add('hidden');
+        }, 2500);
+      }
+
+      // Modal helpers
+      function openModal(id) {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('hidden');
+      }
+      function closeModal(id) {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+      }
+
+      function openCopyFallbackModal(url) {
+        const inp = document.getElementById('copyModalInput');
+        const lnk = document.getElementById('copyModalOpenLink');
+        if (inp) inp.value = url;
+        if (lnk) {
+          lnk.href = url;
+          lnk.target = state.linkTarget;
+          lnk.rel = state.linkTarget === '_blank' ? 'noopener noreferrer' : '';
+        }
+        openModal('copyModal');
+        setTimeout(function () {
+          try { inp.focus(); inp.select(); } catch (_err) {}
+        }, 50);
+      }
+
+      function copyToClipboard(text, successMsg, allowFallbackModal) {
+        if (!text) return;
+        let copied = false;
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.setAttribute('readonly', '');
+          ta.style.position = 'fixed';
+          ta.style.left = '-9999px';
+          document.body.appendChild(ta);
+          ta.focus();
+          ta.select();
+          copied = document.execCommand('copy');
+          document.body.removeChild(ta);
+        } catch (_err) {
+          copied = false;
+        }
+
+        if (copied) {
+          showToast(successMsg || 'Ссылка скопирована', 'ok');
+          return;
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(function () {
+            showToast(successMsg || 'Ссылка скопирована', 'ok');
+          }).catch(function () {
+            if (allowFallbackModal !== false) openCopyFallbackModal(text);
+            else showToast('Скопируйте вручную', 'err');
+          });
+        } else if (allowFallbackModal !== false) {
+          openCopyFallbackModal(text);
+        } else {
+          showToast('Скопируйте вручную', 'err');
+        }
+      }
+
+      // Immediate DOM sync for ALL rendered watch links & copy buttons when mirror/target changes
+      function syncAllDomWatchLinks() {
+        const rel = state.linkTarget === '_blank' ? 'noopener noreferrer' : '';
+        const watchLinks = document.querySelectorAll('a[data-watch-id]');
+        for (let i = 0; i < watchLinks.length; i++) {
+          const a = watchLinks[i];
+          const id = a.getAttribute('data-watch-id');
+          const isSeries = a.getAttribute('data-watch-series') === '1';
+          const newUrl = buildMirrorUrl(id, isSeries);
+          a.href = newUrl;
+          a.target = state.linkTarget;
+          if (rel) a.rel = rel;
+          else a.removeAttribute('rel');
+          if (a.getAttribute('data-mirror-label') === '1') {
+            a.textContent = '▶ Смотреть на ' + state.mirror;
+          }
+        }
+
+        const copyBtns = document.querySelectorAll('button[data-copy-id]');
+        for (let i = 0; i < copyBtns.length; i++) {
+          const btn = copyBtns[i];
+          const id = btn.getAttribute('data-copy-id');
+          const isSeries = btn.getAttribute('data-copy-series') === '1';
+          btn.setAttribute('data-url', buildMirrorUrl(id, isSeries));
+        }
+
+        const headerMirror = document.getElementById('headerMirrorLabel');
+        if (headerMirror) headerMirror.textContent = state.mirror;
+
+        const welcomeMirror = document.getElementById('welcomeMirrorText');
+        if (welcomeMirror) welcomeMirror.textContent = state.mirror;
+
+        updateSettingsUI();
+        updateDiagnosticsUI();
+      }
+
+      // Record watch to History strictly in background WITHOUT re-rendering current list DOM
+      function recordWatchInBackground(id) {
+        try {
+          const cid = String(id || '').replace(/\D/g, '');
+          if (!cid) return;
+          const existingIdx = state.history.findIndex(function (h) { return h.id === cid; });
+          if (existingIdx !== -1) {
+            const existing = state.history[existingIdx];
+            existing.lastWatched = Date.now();
+            state.history.splice(existingIdx, 1);
+            state.history.unshift(existing);
+          } else {
+            const fromReg = itemRegistry.get(cid);
+            if (fromReg) {
+              state.history.unshift(Object.assign({}, fromReg, { lastWatched: Date.now() }));
+            }
+          }
+          if (state.history.length > 100) state.history = state.history.slice(0, 100);
+          persistHistory();
+        } catch (err) {
+          captureJsError('History save error: ' + err.message);
+        }
+      }
+
+      function toggleBookmark(id) {
+        const cid = String(id || '').replace(/\D/g, '');
+        if (!cid) return;
+        const idx = state.bookmarks.findIndex(function (b) { return b.id === cid; });
+        if (idx !== -1) {
+          state.bookmarks.splice(idx, 1);
+          showToast('Убрано из «Буду смотреть»');
+        } else {
+          const item = itemRegistry.get(cid);
+          if (item) {
+            state.bookmarks.unshift(Object.assign({}, item));
+            showToast('Добавлено в «Буду смотреть» ⭐', 'ok');
+          }
+        }
+        persistBookmarks();
+        syncBookmarkButtonsUI(cid);
+        if (state.activeTab === 'my' && state.mySubTab === 'bookmarks') {
+          renderBookmarksTab();
+        }
+      }
+
+      function syncBookmarkButtonsUI(id) {
+        const active = isBookmarked(id);
+        const btns = document.querySelectorAll('button[data-action="bookmark"][data-id="' + id + '"]');
+        for (let i = 0; i < btns.length; i++) {
+          const b = btns[i];
+          if (b.getAttribute('data-full-label') === '1') {
+            b.textContent = active ? '★ В закладках' : '⭐ Буду смотреть';
+            b.classList.toggle('border-amber-400/50', active);
+            b.classList.toggle('text-amber-300', active);
+          } else {
+            b.textContent = active ? '★' : '☆';
+            b.classList.toggle('text-amber-400', active);
+            b.classList.toggle('text-gray-400', !active);
+          }
+        }
+      }
+
+      function updateMyBadgesUI() {
+        const hCount = document.getElementById('historyCountBadge');
+        const bCount = document.getElementById('bookmarksCountBadge');
+        const navBadge = document.getElementById('myNavBadge');
+        if (hCount) hCount.textContent = String(state.history.length);
+        if (bCount) bCount.textContent = String(state.bookmarks.length);
+        const total = state.history.length + state.bookmarks.length;
+        if (navBadge) {
+          navBadge.textContent = total > 99 ? '99+' : String(total);
+          navBadge.classList.toggle('hidden', total === 0);
+        }
+      }
+
+      // Skeleton Loaders
+      function renderSkeletonCards(count, isGrid) {
+        const items = [];
+        for (let i = 0; i < count; i++) {
+          if (isGrid) {
+            items.push(
+              '<div class="rounded-2xl bg-[#161922] border border-[#232838] overflow-hidden">' +
+                '<div class="w-full poster-ratio skeleton"></div>' +
+                '<div class="p-2.5 space-y-2">' +
+                  '<div class="h-4 rounded skeleton w-4/5"></div>' +
+                  '<div class="h-3 rounded skeleton w-1/2"></div>' +
+                  '<div class="h-10 rounded-xl skeleton w-full"></div>' +
+                '</div>' +
+              '</div>'
+            );
+          } else {
+            items.push(
+              '<div class="rounded-2xl bg-[#161922] border border-[#232838] p-3 flex gap-3">' +
+                '<div class="w-[76px] shrink-0 poster-ratio rounded-xl skeleton"></div>' +
+                '<div class="flex-1 min-w-0 flex flex-col justify-between py-0.5">' +
+                  '<div class="space-y-2">' +
+                    '<div class="h-4 rounded skeleton w-3/4"></div>' +
+                    '<div class="h-3 rounded skeleton w-1/2"></div>' +
+                  '</div>' +
+                  '<div class="h-10 rounded-xl skeleton w-full"></div>' +
+                '</div>' +
+              '</div>'
+            );
+          }
+        }
+        return isGrid
+          ? '<div class="grid grid-cols-2 gap-2.5">' + items.join('') + '</div>'
+          : items.join('');
+      }
+
+      // Reusable API Error Card
+      function renderApiErrorCard(err, retryFn) {
+        const info = classifyApiError(err);
+        state.retryAction = retryFn || null;
+        return (
+          '<div class="rounded-2xl bg-red-950/35 border border-red-500/40 p-4 space-y-3 text-center">' +
+            '<div class="text-2xl">' + (info.isKeyError ? '🔑' : '⚠️') + '</div>' +
+            '<div>' +
+              '<h3 class="text-sm font-bold text-red-200">' + escapeHtml(info.title) + '</h3>' +
+              '<p class="text-xs text-red-200/80 mt-1 leading-relaxed">' + escapeHtml(info.message) + '</p>' +
+            '</div>' +
+            '<div class="flex flex-wrap justify-center gap-2 pt-1">' +
+              (info.isKeyError
+                ? '<button type="button" data-action="go-change-api-key" class="min-h-[44px] px-4 rounded-xl bg-[#ff5500] text-xs font-bold text-white active:scale-95 transition">Сменить API-ключ</button>'
+                : '') +
+              (retryFn
+                ? '<button type="button" data-action="retry-last" class="min-h-[44px] px-4 rounded-xl bg-[#1d2230] border border-[#232838] text-xs font-bold text-gray-100 active:scale-95 transition">Повторить</button>'
+                : '') +
+            '</div>' +
+          '</div>'
+        );
+      }
+
+      // Movie Card Builder (List & Grid)
+      function renderMovieCardHtml(item, opts) {
+        const o = opts || {};
+        const url = buildMirrorUrl(item.id, item.isSeries);
+        const relAttr = state.linkTarget === '_blank' ? ' rel="noopener noreferrer"' : '';
+        const seriesFlag = item.isSeries ? '1' : '0';
+        const starred = isBookmarked(item.id);
+        const genresText = item.genres.slice(0, 2).join(', ');
+        const watchLabel = o.continueMode ? '▶ Продолжить' : '▶ Смотреть';
+
+        if (o.grid) {
+          return (
+            '<article class="rounded-2xl bg-[#161922] border border-[#232838] overflow-hidden flex flex-col">' +
+              '<div class="relative w-full poster-ratio bg-[#11141c] overflow-hidden">' +
+                '<button type="button" data-action="open-detail" data-id="' + escapeHtml(item.id) + '" class="block w-full h-full">' +
+                  '<img src="' + escapeHtml(item.poster) + '" data-fallback="' + FALLBACK_POSTER + '" alt="' + escapeHtml(item.title) + '" loading="lazy" decoding="async" class="w-full h-full object-cover">' +
+                '</button>' +
+                (item.rating !== null
+                  ? '<span class="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md text-[11px] font-extrabold text-white shadow ' + ratingColorClass(item.rating) + '">' + item.rating.toFixed(1) + '</span>'
+                  : '') +
+                '<button type="button" data-action="bookmark" data-id="' + escapeHtml(item.id) + '" class="absolute top-1 right-1 w-9 h-9 rounded-xl bg-black/65 flex items-center justify-center text-base ' + (starred ? 'text-amber-400' : 'text-gray-200') + '" aria-label="Буду смотреть">' + (starred ? '★' : '☆') + '</button>' +
+              '</div>' +
+              '<div class="p-2.5 flex-1 flex flex-col justify-between gap-2">' +
+                '<div>' +
+                  '<button type="button" data-action="open-detail" data-id="' + escapeHtml(item.id) + '" class="text-left text-xs font-bold text-white leading-snug line-clamp-2">' + escapeHtml(item.title) + '</button>' +
+                  '<div class="flex flex-wrap items-center gap-1 mt-1 text-[11px] text-gray-400">' +
+                    (item.year ? '<span>' + escapeHtml(item.year) + '</span>' : '') +
+                    (item.isSeries ? '<span class="px-1.5 py-0.5 rounded bg-[#ff5500]/15 text-[#ff7b3a] text-[10px] font-bold">Сериал</span>' : '') +
+                  '</div>' +
+                '</div>' +
+                '<div class="flex items-center gap-1.5">' +
+                  '<a href="' + escapeHtml(url) + '" target="' + escapeHtml(state.linkTarget) + '"' + relAttr + ' data-watch-id="' + escapeHtml(item.id) + '" data-watch-series="' + seriesFlag + '" class="flex-1 min-h-[44px] px-2 rounded-xl bg-[#ff5500] hover:bg-[#ff6e24] active:scale-95 transition text-xs font-bold text-white flex items-center justify-center">' + watchLabel + '</a>' +
+                  '<button type="button" data-action="copy-url" data-copy-id="' + escapeHtml(item.id) + '" data-copy-series="' + seriesFlag + '" data-url="' + escapeHtml(url) + '" class="min-w-[44px] min-h-[44px] rounded-xl bg-[#1d2230] border border-[#232838] flex items-center justify-center text-sm active:scale-95 transition" aria-label="Копировать ссылку">📋</button>' +
+                '</div>' +
+              '</div>' +
+            '</article>'
+          );
+        }
+
+        // Standard List Card (also used for Direct Card & History Card)
+        const borderClass = o.direct ? 'border-[#ff5500]/65' : 'border-[#232838]';
+        const s = item.season || 1;
+        const e = item.episode || 1;
+
+        return (
+          '<article class="rounded-2xl bg-[#161922] border ' + borderClass + ' p-2.5 flex gap-3">' +
+            '<button type="button" data-action="open-detail" data-id="' + escapeHtml(item.id) + '" class="relative w-[78px] shrink-0 poster-ratio rounded-xl overflow-hidden bg-[#11141c] self-start">' +
+              '<img src="' + escapeHtml(item.poster) + '" data-fallback="' + FALLBACK_POSTER + '" alt="' + escapeHtml(item.title) + '" loading="lazy" decoding="async" class="w-full h-full object-cover">' +
+              (item.rating !== null
+                ? '<span class="absolute top-1 left-1 px-1.5 py-0.5 rounded-md text-[11px] font-extrabold text-white shadow ' + ratingColorClass(item.rating) + '">' + item.rating.toFixed(1) + '</span>'
+                : '') +
+            '</button>' +
+            '<div class="flex-1 min-w-0 flex flex-col justify-between gap-2">' +
+              '<div>' +
+                '<div class="flex items-start justify-between gap-1">' +
+                  '<div class="min-w-0 flex-1">' +
+                    (o.direct ? '<div class="text-[11px] font-bold text-[#ff7b3a] mb-0.5">⚡ Быстрый переход • ID ' + escapeHtml(item.id) + '</div>' : '') +
+                    '<button type="button" data-action="open-detail" data-id="' + escapeHtml(item.id) + '" class="text-left text-sm font-bold text-white leading-snug line-clamp-2">' + escapeHtml(item.title) + '</button>' +
+                  '</div>' +
+                  (o.removeHistory
+                    ? '<button type="button" data-action="remove-history" data-id="' + escapeHtml(item.id) + '" class="min-w-[40px] min-h-[40px] -mt-1.5 -mr-1.5 rounded-xl text-gray-400 hover:text-red-400 flex items-center justify-center text-sm" aria-label="Удалить из истории">✕</button>'
+                    : (o.removeBookmark
+                        ? '<button type="button" data-action="bookmark" data-id="' + escapeHtml(item.id) + '" class="min-w-[40px] min-h-[40px] -mt-1.5 -mr-1.5 rounded-xl text-gray-400 hover:text-red-400 flex items-center justify-center text-sm" aria-label="Удалить из закладок">✕</button>'
+                        : '<button type="button" data-action="bookmark" data-id="' + escapeHtml(item.id) + '" class="min-w-[40px] min-h-[40px] -mt-1.5 -mr-1.5 rounded-xl flex items-center justify-center text-lg ' + (starred ? 'text-amber-400' : 'text-gray-400') + '" aria-label="Буду смотреть">' + (starred ? '★' : '☆') + '</button>')) +
+                '</div>' +
+                '<div class="flex flex-wrap items-center gap-1.5 mt-1 text-xs text-gray-400">' +
+                  (item.year ? '<span>' + escapeHtml(item.year) + '</span>' : '') +
+                  '<span class="px-1.5 py-0.5 rounded-md text-[10.5px] font-bold ' + (item.isSeries ? 'bg-[#ff5500]/15 text-[#ff7b3a]' : 'bg-[#1d2230] text-gray-300') + '">' + (item.isSeries ? 'Сериал' : 'Фильм') + '</span>' +
+                  (genresText ? '<span class="truncate max-w-[160px]">' + escapeHtml(genresText) + '</span>' : '') +
+                  (o.continueMode && item.lastWatched ? '<span class="text-[11px] text-gray-500">• ' + escapeHtml(formatRelativeTime(item.lastWatched)) + '</span>' : '') +
+                  (o.direct ? '<button type="button" data-action="toggle-direct-type" class="px-2 py-0.5 rounded-md bg-[#1d2230] border border-[#232838] text-[11px] font-semibold text-gray-200">Сменить на ' + (item.isSeries ? 'Фильм' : 'Сериал') + '</button>' : '') +
+                '</div>' +
+                (o.continueMode && item.isSeries
+                  ? '<div class="mt-2 p-1.5 rounded-xl bg-[#11141c] border border-[#232838] flex flex-wrap items-center gap-2">' +
+                      '<span class="px-1.5 py-0.5 rounded-md bg-[#ff5500]/15 text-[#ff7b3a] font-mono text-[11px] font-extrabold">S' + s + ' E' + e + '</span>' +
+                      '<div class="flex items-center gap-1">' +
+                        '<span class="text-[11px] text-gray-400">Сез</span>' +
+                        '<div class="inline-flex items-center rounded-lg bg-[#161922] border border-[#232838]">' +
+                          '<button type="button" data-action="step-se" data-id="' + escapeHtml(item.id) + '" data-field="season" data-delta="-1" class="w-8 h-8 font-bold text-white flex items-center justify-center">−</button>' +
+                          '<span class="min-w-[22px] text-center text-xs font-bold">' + s + '</span>' +
+                          '<button type="button" data-action="step-se" data-id="' + escapeHtml(item.id) + '" data-field="season" data-delta="1" class="w-8 h-8 font-bold text-white flex items-center justify-center">+</button>' +
+                        '</div>' +
+                      '</div>' +
+                      '<div class="flex items-center gap-1">' +
+                        '<span class="text-[11px] text-gray-400">Сер</span>' +
+                        '<div class="inline-flex items-center rounded-lg bg-[#161922] border border-[#232838]">' +
+                          '<button type="button" data-action="step-se" data-id="' + escapeHtml(item.id) + '" data-field="episode" data-delta="-1" class="w-8 h-8 font-bold text-white flex items-center justify-center">−</button>' +
+                          '<span class="min-w-[22px] text-center text-xs font-bold">' + e + '</span>' +
+                          '<button type="button" data-action="step-se" data-id="' + escapeHtml(item.id) + '" data-field="episode" data-delta="1" class="w-8 h-8 font-bold text-white flex items-center justify-center">+</button>' +
+                        '</div>' +
+                      '</div>' +
+                    '</div>'
+                  : '') +
+              '</div>' +
+              '<div class="flex items-center gap-1.5">' +
+                '<a href="' + escapeHtml(url) + '" target="' + escapeHtml(state.linkTarget) + '"' + relAttr + ' data-watch-id="' + escapeHtml(item.id) + '" data-watch-series="' + seriesFlag + '" class="flex-1 min-h-[44px] px-3 rounded-xl bg-[#ff5500] hover:bg-[#ff6e24] active:scale-95 transition text-xs sm:text-sm font-bold text-white flex items-center justify-center">' + watchLabel + '</a>' +
+                (o.direct
+                  ? '<button type="button" data-action="open-detail" data-id="' + escapeHtml(item.id) + '" class="min-h-[44px] px-3 rounded-xl bg-[#1d2230] border border-[#232838] text-xs font-bold text-gray-200 active:scale-95 transition">Подробнее</button>'
+                  : '') +
+                '<button type="button" data-action="copy-url" data-copy-id="' + escapeHtml(item.id) + '" data-copy-series="' + seriesFlag + '" data-url="' + escapeHtml(url) + '" class="min-w-[44px] min-h-[44px] rounded-xl bg-[#1d2230] border border-[#232838] flex items-center justify-center text-sm active:scale-95 transition" aria-label="Копировать ссылку">📋</button>' +
+              '</div>' +
+            '</div>' +
+          '</article>'
+        );
+      }
+
+      // Render Genre <select>
+      function renderGenreOptions() {
+        const sel = document.getElementById('filterGenreSelect');
+        if (!sel) return;
+        const prev = sel.value || state.filters.genreId;
+        const sorted = state.genres.slice().sort(function (a, b) {
+          return a.genre.localeCompare(b.genre, 'ru');
+        });
+        sel.innerHTML = '<option value="">Любой жанр</option>' + sorted.map(function (g) {
+          const label = g.genre.charAt(0).toUpperCase() + g.genre.slice(1);
+          return '<option value="' + escapeHtml(g.id) + '">' + escapeHtml(label) + '</option>';
+        }).join('');
+        sel.value = prev;
+      }
+
+      // Render Search History Chips
+      function renderSearchHistoryUI() {
+        const wrap = document.getElementById('searchHistoryWrap');
+        const list = document.getElementById('searchHistoryChips');
+        if (!wrap || !list) return;
+        if (!state.searchHistory.length) {
+          wrap.classList.add('hidden');
+          list.innerHTML = '';
+          return;
+        }
+        wrap.classList.remove('hidden');
+        list.innerHTML = state.searchHistory.map(function (q, idx) {
+          return (
+            '<span class="inline-flex items-center rounded-full bg-[#161922] border border-[#232838] pl-3 pr-1 min-h-[38px]">' +
+              '<button type="button" data-action="run-search-history" data-idx="' + idx + '" class="text-xs font-semibold text-gray-200 pr-1.5 py-1">' + escapeHtml(q) + '</button>' +
+              '<button type="button" data-action="del-search-history" data-idx="' + idx + '" class="w-7 h-7 rounded-full text-gray-400 hover:text-white flex items-center justify-center text-sm" aria-label="Удалить запрос">×</button>' +
+            '</span>'
+          );
+        }).join('');
+      }
+
+      // Smart Direct URL / ID Detection
+      function updateDirectCardFromInput() {
+        const inp = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearSearchBtn');
+        const wrap = document.getElementById('directCardWrap');
+        if (!inp || !wrap) return;
+
+        if (clearBtn) clearBtn.classList.toggle('hidden', !inp.value);
+
+        const parsed = parseDirectInput(inp.value);
+        if (!parsed) {
+          state.directItem = null;
+          wrap.classList.add('hidden');
+          wrap.innerHTML = '';
+          return;
+        }
+
+        const existing = itemRegistry.get(parsed.id);
+        const item = normalizeItem(
+          existing
+            ? Object.assign({}, existing, { isSeries: parsed.isSeries || existing.isSeries })
+            : {
+                id: parsed.id,
+                title: (parsed.isSeries ? 'Сериал #' : 'Фильм #') + parsed.id,
+                isSeries: parsed.isSeries,
+                type: parsed.isSeries ? 'TV_SERIES' : 'FILM',
+                poster: FALLBACK_POSTER
+              }
+        );
+        state.directItem = item;
+        wrap.innerHTML = renderMovieCardHtml(item, { direct: true });
+        wrap.classList.remove('hidden');
+      }
+
+      // Execute Keyword Search
+      async function runKeywordSearch(rawQuery) {
+        const query = String(rawQuery || '').trim();
+        if (!query) return;
+
+        if (parseDirectInput(query)) {
+          updateDirectCardFromInput();
+          showToast('Ссылка распознана — нажмите «Смотреть»', 'ok');
+          return;
+        }
+
+        // Save query to recent searches
+        state.searchHistory = state.searchHistory.filter(function (q) {
+          return q.toLowerCase() !== query.toLowerCase();
+        });
+        state.searchHistory.unshift(query);
+        if (state.searchHistory.length > 10) state.searchHistory = state.searchHistory.slice(0, 10);
+        persistSearchHistory();
+        renderSearchHistoryUI();
+
+        state.searchMode = 'keyword';
+        state.lastSearchKeyword = query;
+        state.searchIds = [];
+        document.getElementById('searchLoadMoreWrap').classList.add('hidden');
+        document.getElementById('searchResultsHead').classList.remove('hidden');
+        document.getElementById('searchResultsTitle').textContent = 'Поиск: «' + query + '»';
+        const container = document.getElementById('searchResultsContainer');
+        container.innerHTML = renderSkeletonCards(4, false);
+
+        try {
+          const data = await apiRequest('/api/v2.1/films/search-by-keyword', { keyword: query, page: 1 }, { useCache: true });
+          const films = Array.isArray(data.films) ? data.films : [];
+          films.forEach(function (raw) {
+            const norm = normalizeItem(raw);
+            if (norm && state.searchIds.indexOf(norm.id) === -1) state.searchIds.push(norm.id);
+          });
+          document.getElementById('searchResultsTitle').textContent = 'Найдено: ' + state.searchIds.length;
+          if (!state.searchIds.length) {
+            container.innerHTML = '<div class="rounded-2xl bg-[#161922] border border-[#232838] p-6 text-center text-xs text-gray-400">Ничего не найдено по запросу «' + escapeHtml(query) + '». Попробуйте другое написание или фильтры.</div>';
+          } else {
+            container.innerHTML = state.searchIds.map(function (id) {
+              return renderMovieCardHtml(itemRegistry.get(id), {});
+            }).join('');
+          }
+        } catch (err) {
+          container.innerHTML = renderApiErrorCard(err, function () { runKeywordSearch(query); });
+        }
+      }
+
+      // Sync Filter UI Buttons
+      function syncFiltersUI() {
+        const f = state.filters;
+        document.querySelectorAll('[data-action="filter-type"]').forEach(function (btn) {
+          const on = btn.getAttribute('data-val') === f.type;
+          btn.className = 'min-h-[44px] px-2 rounded-xl border text-xs font-bold transition ' +
+            (on ? 'bg-[#ff5500] border-[#ff5500] text-white' : 'bg-[#11141c] border-[#232838] text-gray-300');
+        });
+        document.querySelectorAll('[data-action="filter-rating"]').forEach(function (btn) {
+          const on = Number(btn.getAttribute('data-val')) === Number(f.ratingFrom);
+          btn.className = 'min-h-[44px] rounded-xl border text-xs font-bold transition ' +
+            (on ? 'bg-[#ff5500] border-[#ff5500] text-white' : 'bg-[#11141c] border-[#232838] text-gray-300');
+        });
+        document.querySelectorAll('[data-action="filter-sort"]').forEach(function (btn) {
+          const on = btn.getAttribute('data-val') === f.order;
+          btn.className = 'min-h-[44px] px-2 rounded-xl border text-xs font-bold transition ' +
+            (on ? 'bg-[#ff5500] border-[#ff5500] text-white' : 'bg-[#11141c] border-[#232838] text-gray-300');
+        });
+        const gSel = document.getElementById('filterGenreSelect');
+        if (gSel) gSel.value = f.genreId;
+        const yf = document.getElementById('filterYearFrom');
+        if (yf) yf.value = f.yearFrom;
+        const yt = document.getElementById('filterYearTo');
+        if (yt) yt.value = f.yearTo;
+      }
+
+      function readFiltersFromDOM() {
+        state.filters.genreId = document.getElementById('filterGenreSelect').value;
+        state.filters.yearFrom = document.getElementById('filterYearFrom').value.trim();
+        state.filters.yearTo = document.getElementById('filterYearTo').value.trim();
+      }
+
+      function buildFilterApiParams(page) {
+        const f = state.filters;
+        const params = {
+          type: f.type,
+          order: f.order,
+          ratingFrom: f.ratingFrom,
+          ratingTo: 10,
+          page: page || 1
+        };
+        if (f.genreId) params.genres = f.genreId;
+        if (f.yearFrom) params.yearFrom = Number(f.yearFrom);
+        if (f.yearTo) params.yearTo = Number(f.yearTo);
+        const kw = document.getElementById('searchInput').value.trim();
+        if (kw && !parseDirectInput(kw)) params.keyword = kw;
+        return params;
+      }
+
+      async function runFilterSearch(append) {
+        if (state.searchLoading) return;
+        readFiltersFromDOM();
+        state.searchMode = 'filter';
+        state.searchLoading = true;
+        if (!append) {
+          state.searchPage = 1;
+          state.searchIds = [];
+        }
+
+        const container = document.getElementById('searchResultsContainer');
+        const moreWrap = document.getElementById('searchLoadMoreWrap');
+        const moreBtn = document.getElementById('searchLoadMoreBtn');
+        document.getElementById('searchResultsHead').classList.remove('hidden');
+
+        if (!append) {
+          document.getElementById('searchResultsTitle').textContent = 'Подбор по фильтрам...';
+          moreWrap.classList.add('hidden');
+          container.innerHTML = renderSkeletonCards(4, false);
+        } else if (moreBtn) {
+          moreBtn.disabled = true;
+          moreBtn.textContent = 'Загружаем...';
+        }
+
+        try {
+          const data = await apiRequest('/api/v2.2/films', buildFilterApiParams(state.searchPage), { useCache: true });
+          const items = Array.isArray(data.items) ? data.items : [];
+          items.forEach(function (raw) {
+            const norm = normalizeItem(raw);
+            if (norm && state.searchIds.indexOf(norm.id) === -1) state.searchIds.push(norm.id);
+          });
+          state.searchTotalPages = Number(data.totalPages) || 1;
+          document.getElementById('searchResultsTitle').textContent = 'Подобрано: ' + (data.total || state.searchIds.length);
+          if (!state.searchIds.length) {
+            container.innerHTML = '<div class="rounded-2xl bg-[#161922] border border-[#232838] p-6 text-center text-xs text-gray-400">По выбранным фильтрам ничего не найдено. Попробуйте ослабить рейтинг или годы.</div>';
+          } else {
+            container.innerHTML = state.searchIds.map(function (id) {
+              return renderMovieCardHtml(itemRegistry.get(id), {});
+            }).join('');
+          }
+          moreWrap.classList.toggle('hidden', state.searchPage >= state.searchTotalPages);
+        } catch (err) {
+          if (!append) container.innerHTML = renderApiErrorCard(err, function () { runFilterSearch(false); });
+          else showToast(classifyApiError(err).title, 'err');
+        } finally {
+          state.searchLoading = false;
+          if (moreBtn) {
+            moreBtn.disabled = false;
+            moreBtn.textContent = 'Загрузить ещё';
+          }
+        }
+      }
+
+      // ==========================================
+      // COLLECTIONS TAB LOGIC
+      // ==========================================
+      function syncCollectionChipsUI() {
+        document.querySelectorAll('#collectionChips [data-action="select-col"]').forEach(function (btn) {
+          const on = state.colKind === 'collection' && btn.getAttribute('data-col') === state.colKey;
+          btn.className = 'shrink-0 min-h-[44px] px-3.5 rounded-full border text-xs font-bold transition ' +
+            (on ? 'bg-[#ff5500] border-[#ff5500] text-white' : 'bg-[#161922] border-[#232838] text-gray-300');
+        });
+        document.querySelectorAll('#presetChips [data-action="select-preset"]').forEach(function (btn) {
+          const on = state.colKind === 'preset' && btn.getAttribute('data-preset') === state.colKey;
+          btn.className = 'shrink-0 min-h-[42px] px-3 rounded-xl border text-xs font-bold transition ' +
+            (on ? 'bg-[#ff5500]/15 border-[#ff5500] text-[#ff7b3a]' : 'bg-[#161922] border-[#232838] text-gray-300');
+        });
+        document.querySelectorAll('[data-action="set-col-view"]').forEach(function (btn) {
+          const on = btn.getAttribute('data-view') === state.colView;
+          btn.className = 'min-h-[32px] px-2.5 rounded-md text-xs font-bold transition ' +
+            (on ? 'bg-[#ff5500] text-white' : 'text-gray-400');
+        });
+      }
+
+      function renderCollectionCards() {
+        const container = document.getElementById('colContainer');
+        if (!container) return;
+        if (!state.colIds.length) {
+          container.innerHTML = '<div class="rounded-2xl bg-[#161922] border border-[#232838] p-6 text-center text-xs text-gray-400">В этой подборке пока пусто.</div>';
+          return;
+        }
+        const isGrid = state.colView === 'grid';
+        const cardsHtml = state.colIds.map(function (id) {
+          const item = itemRegistry.get(id);
+          return item ? renderMovieCardHtml(item, { grid: isGrid }) : '';
+        }).join('');
+        container.innerHTML = isGrid
+          ? '<div class="grid grid-cols-2 gap-2.5">' + cardsHtml + '</div>'
+          : cardsHtml;
+      }
+
+      async function loadCollection(kind, key, append) {
+        if (state.colLoading) return;
+        state.colInitialized = true;
+        state.colKind = kind;
+        state.colKey = key;
+        state.colLoading = true;
+        if (!append) {
+          state.colPage = 1;
+          state.colIds = [];
+        }
+        syncCollectionChipsUI();
+
+        const heading = kind === 'collection'
+          ? (COLLECTION_LABELS[key] || 'Подборка')
+          : (EVENING_PRESETS[key] ? EVENING_PRESETS[key].label : 'На вечер');
+        document.getElementById('colHeading').textContent = heading;
+
+        const container = document.getElementById('colContainer');
+        const moreWrap = document.getElementById('colLoadMoreWrap');
+        const moreBtn = document.getElementById('colLoadMoreBtn');
+        const metaEl = document.getElementById('colMeta');
+
+        if (!append) {
+          metaEl.textContent = '';
+          moreWrap.classList.add('hidden');
+          container.innerHTML = renderSkeletonCards(4, state.colView === 'grid');
+        } else if (moreBtn) {
+          moreBtn.disabled = true;
+          moreBtn.textContent = 'Загружаем...';
+        }
+
+        try {
+          let data;
+          if (kind === 'collection') {
+            data = await apiRequest('/api/v2.2/films/collections', { type: key, page: state.colPage }, { useCache: true });
+          } else {
+            await ensureGenresLoaded();
+            const preset = EVENING_PRESETS[key];
+            const params = {
+              type: preset.type || 'FILM',
+              order: 'NUM_VOTE',
+              ratingFrom: preset.ratingFrom || 7,
+              ratingTo: 10,
+              page: state.colPage
+            };
+            const gid = findGenreIdByName(preset.genreName);
+            if (gid) params.genres = gid;
+            data = await apiRequest('/api/v2.2/films', params, { useCache: true });
+          }
+
+          const items = Array.isArray(data.items) ? data.items : [];
+          items.forEach(function (raw) {
+            const norm = normalizeItem(raw);
+            if (norm && state.colIds.indexOf(norm.id) === -1) state.colIds.push(norm.id);
+          });
+          state.colTotalPages = Number(data.totalPages) || 1;
+          metaEl.textContent = 'Стр. ' + state.colPage + ' / ' + state.colTotalPages;
+          renderCollectionCards();
+          moreWrap.classList.toggle('hidden', state.colPage >= state.colTotalPages);
+        } catch (err) {
+          if (!append) container.innerHTML = renderApiErrorCard(err, function () { loadCollection(kind, key, false); });
+          else showToast(classifyApiError(err).title, 'err');
+        } finally {
+          state.colLoading = false;
+          if (moreBtn) {
+            moreBtn.disabled = false;
+            moreBtn.textContent = 'Загрузить ещё';
+          }
+        }
+      }
+
+      // ==========================================
+      // MY TAB (HISTORY & BOOKMARKS)
+      // ==========================================
+      function renderHistoryTab() {
+        const listEl = document.getElementById('historyList');
+        const clearBtn = document.getElementById('clearHistoryBtn');
+        if (!listEl) return;
+        if (clearBtn) clearBtn.classList.toggle('hidden', !state.history.length);
+        if (!state.history.length) {
+          listEl.innerHTML =
+            '<div class="rounded-2xl bg-[#161922] border border-[#232838] p-6 text-center space-y-2">' +
+              '<div class="text-3xl">🕒</div>' +
+              '<h3 class="text-sm font-bold text-white">История просмотров пуста</h3>' +
+              '<p class="text-xs text-gray-400">Нажмите «▶ Смотреть» на любом фильме или сериале — он сохранится здесь. Для сериалов появится счётчик сезона и серии.</p>' +
+            '</div>';
+          return;
+        }
+        listEl.innerHTML = state.history.map(function (item) {
+          return renderMovieCardHtml(item, { continueMode: true, removeHistory: true });
+        }).join('');
+      }
+
+      function renderBookmarksTab() {
+        const listEl = document.getElementById('bookmarksList');
+        if (!listEl) return;
+        if (!state.bookmarks.length) {
+          listEl.innerHTML =
+            '<div class="rounded-2xl bg-[#161922] border border-[#232838] p-6 text-center space-y-2">' +
+              '<div class="text-3xl">⭐</div>' +
+              '<h3 class="text-sm font-bold text-white">Список «Буду смотреть» пуст</h3>' +
+              '<p class="text-xs text-gray-400">Нажимайте звёздочку ☆ на карточках, чтобы отложить фильмы на вечер.</p>' +
+            '</div>';
+          return;
+        }
+        listEl.innerHTML = state.bookmarks.map(function (item) {
+          return renderMovieCardHtml(item, { removeBookmark: true });
+        }).join('');
+      }
+
+      function switchMySubTab(sub) {
+        state.mySubTab = sub;
+        document.querySelectorAll('[data-action="my-subtab"]').forEach(function (btn) {
+          const on = btn.getAttribute('data-sub') === sub;
+          btn.className = 'min-h-[44px] rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ' +
+            (on ? 'bg-[#ff5500] text-white' : 'text-gray-400');
+        });
+        document.getElementById('myHistoryWrap').classList.toggle('hidden', sub !== 'history');
+        document.getElementById('myBookmarksWrap').classList.toggle('hidden', sub !== 'bookmarks');
+        if (sub === 'history') renderHistoryTab();
+        else renderBookmarksTab();
+      }
+
+      // ==========================================
+      // MOVIE DETAILS SHEET & ROULETTE
+      // ==========================================
+      function renderDetailSheetContent(item, loadingDetails) {
+        const url = buildMirrorUrl(item.id, item.isSeries);
+        const relAttr = state.linkTarget === '_blank' ? ' rel="noopener noreferrer"' : '';
+        const seriesFlag = item.isSeries ? '1' : '0';
+        const starred = isBookmarked(item.id);
+
+        document.getElementById('detailTypeBadge').textContent = item.isSeries ? 'Сериал' : 'Фильм';
+        document.getElementById('detailIdBadge').textContent = 'ID ' + item.id;
+
+        const simCacheKey = 'sim_' + item.id;
+        const cachedSims = cacheGet(simCacheKey);
+
+        let html = '';
+        if (state.rouletteActive) {
+          html +=
+            '<button type="button" data-action="roulette-again" class="w-full min-h-[44px] rounded-xl bg-[#ff5500]/15 border border-[#ff5500]/50 text-[#ff7b3a] text-xs font-bold active:scale-95 transition">' +
+              '🎲 Крутить ещё случайный' +
+            '</button>';
+        }
+
+        html +=
+          '<div class="flex gap-3.5 items-start">' +
+            '<div class="w-[104px] shrink-0 poster-ratio rounded-xl overflow-hidden bg-[#11141c] border border-[#232838]">' +
+              '<img src="' + escapeHtml(item.poster) + '" data-fallback="' + FALLBACK_POSTER + '" alt="' + escapeHtml(item.title) + '" class="w-full h-full object-cover">' +
+            '</div>' +
+            '<div class="flex-1 min-w-0 space-y-1.5">' +
+              '<h2 class="text-base font-extrabold text-white leading-snug">' + escapeHtml(item.title) + '</h2>' +
+              (item.originalTitle ? '<p class="text-xs text-gray-400">' + escapeHtml(item.originalTitle) + '</p>' : '') +
+              '<div class="flex flex-wrap items-center gap-1.5 pt-0.5">' +
+                (item.rating !== null ? '<span class="px-2 py-0.5 rounded-md text-xs font-extrabold text-white ' + ratingColorClass(item.rating) + '">КП ' + item.rating.toFixed(1) + '</span>' : '') +
+                (item.ratingImdb !== null ? '<span class="px-2 py-0.5 rounded-md text-xs font-bold bg-[#1d2230] text-amber-300">IMDb ' + item.ratingImdb.toFixed(1) + '</span>' : '') +
+                (item.year ? '<span class="px-2 py-0.5 rounded-md text-xs font-semibold bg-[#1d2230] text-gray-200">' + escapeHtml(item.year) + '</span>' : '') +
+                (item.lengthText ? '<span class="px-2 py-0.5 rounded-md text-xs font-semibold bg-[#1d2230] text-gray-300">' + escapeHtml(item.lengthText) + '</span>' : '') +
+              '</div>' +
+              (item.countries.length ? '<p class="text-xs text-gray-400"><span class="text-gray-500">Страна:</span> ' + escapeHtml(item.countries.join(', ')) + '</p>' : '') +
+              (item.genres.length ? '<p class="text-xs text-gray-400"><span class="text-gray-500">Жанры:</span> ' + escapeHtml(item.genres.join(', ')) + '</p>' : '') +
+            '</div>' +
+          '</div>';
+
+        html +=
+          '<div class="space-y-2">' +
+            '<a href="' + escapeHtml(url) + '" target="' + escapeHtml(state.linkTarget) + '"' + relAttr + ' data-watch-id="' + escapeHtml(item.id) + '" data-watch-series="' + seriesFlag + '" data-mirror-label="1" class="w-full min-h-[48px] px-4 rounded-xl bg-[#ff5500] hover:bg-[#ff6e24] active:scale-95 transition text-sm font-extrabold text-white flex items-center justify-center shadow-lg shadow-[#ff5500]/20">' +
+              '▶ Смотреть на ' + escapeHtml(state.mirror) +
+            '</a>' +
+            '<div class="grid grid-cols-2 gap-2">' +
+              '<button type="button" data-action="bookmark" data-id="' + escapeHtml(item.id) + '" data-full-label="1" class="min-h-[44px] px-3 rounded-xl bg-[#1d2230] border ' + (starred ? 'border-amber-400/50 text-amber-300' : 'border-[#232838] text-gray-200') + ' text-xs font-bold active:scale-95 transition">' +
+                (starred ? '★ В закладках' : '⭐ Буду смотреть') +
+              '</button>' +
+              '<button type="button" data-action="copy-url" data-copy-id="' + escapeHtml(item.id) + '" data-copy-series="' + seriesFlag + '" data-url="' + escapeHtml(url) + '" class="min-h-[44px] px-3 rounded-xl bg-[#1d2230] border border-[#232838] text-xs font-bold text-gray-200 active:scale-95 transition">' +
+                '📋 Копировать ссылку' +
+              '</button>' +
+            '</div>' +
+          '</div>';
+
+        html +=
+          '<div class="rounded-2xl bg-[#11141c] border border-[#232838] p-3.5 space-y-1.5">' +
+            '<span class="block text-[11px] font-bold uppercase tracking-wider text-gray-400">Описание</span>' +
+            (loadingDetails
+              ? '<div class="space-y-2 py-1"><div class="h-3 rounded skeleton w-full"></div><div class="h-3 rounded skeleton w-5/6"></div><div class="h-3 rounded skeleton w-2/3"></div></div>'
+              : '<p class="text-xs sm:text-sm text-gray-200 leading-relaxed">' + escapeHtml(item.description || 'Описание отсутствует в базе Кинопоиска.') + '</p>') +
+          '</div>';
+
+        html +=
+          '<div class="space-y-2">' +
+            '<span class="block text-[11px] font-bold uppercase tracking-wider text-gray-400">Похожие фильмы</span>' +
+            '<div id="detailSimilarsWrap">' +
+              (cachedSims
+                ? renderSimilarsRowHtml(cachedSims)
+                : '<button type="button" data-action="load-similars" data-id="' + escapeHtml(item.id) + '" class="w-full min-h-[44px] rounded-xl bg-[#1d2230] border border-[#232838] text-xs font-bold text-gray-200 active:scale-95 transition">Показать похожие</button>') +
+            '</div>' +
+          '</div>';
+
+        document.getElementById('detailModalBody').innerHTML = html;
+      }
+
+      function renderSimilarsRowHtml(ids) {
+        if (!ids || !ids.length) {
+          return '<p class="text-xs text-gray-400">Похожих фильмов не найдено.</p>';
+        }
+        return '<div class="flex gap-2.5 overflow-x-auto no-scrollbar pb-1">' + ids.map(function (sid) {
+          const sf = itemRegistry.get(sid);
+          if (!sf) return '';
+          return (
+            '<button type="button" data-action="open-detail" data-id="' + escapeHtml(sf.id) + '" class="w-[92px] shrink-0 text-left space-y-1.5 active:scale-95 transition">' +
+              '<div class="w-[92px] poster-ratio rounded-xl overflow-hidden bg-[#11141c] border border-[#232838]">' +
+                '<img src="' + escapeHtml(sf.poster) + '" data-fallback="' + FALLBACK_POSTER + '" alt="' + escapeHtml(sf.title) + '" loading="lazy" decoding="async" class="w-full h-full object-cover">' +
+              '</div>' +
+              '<span class="block text-[11px] font-semibold text-gray-200 leading-tight line-clamp-2">' + escapeHtml(sf.title) + '</span>' +
+            '</button>'
+          );
+        }).join('') + '</div>';
+      }
+
+      async function openDetailModal(id, fromRoulette) {
+        const cid = String(id || '').replace(/\D/g, '');
+        if (!cid) return;
+        let item = itemRegistry.get(cid);
+        if (!item) {
+          item = normalizeItem({ id: cid, title: 'Фильм #' + cid });
+        }
+
+        state.detailItemId = cid;
+        state.rouletteActive = Boolean(fromRoulette);
+
+        const detailCacheKey = '/api/v2.2/films/' + cid;
+        const alreadyCached = cacheGet(detailCacheKey);
+        if (alreadyCached) {
+          item = normalizeItem(alreadyCached) || item;
+          renderDetailSheetContent(item, false);
+          openModal('detailModal');
+          return;
+        }
+
+        renderDetailSheetContent(item, true);
+        openModal('detailModal');
+
+        try {
+          const fullRaw = await apiRequest('/api/v2.2/films/' + cid, null, { useCache: true });
+          const fullItem = normalizeItem(fullRaw) || item;
+          if (state.detailItemId === cid && !document.getElementById('detailModal').classList.contains('hidden')) {
+            renderDetailSheetContent(fullItem, false);
+          }
+        } catch (err) {
+          if (state.detailItemId === cid && !document.getElementById('detailModal').classList.contains('hidden')) {
+            renderDetailSheetContent(item, false);
+            const info = classifyApiError(err);
+            showToast(info.title, 'err');
+          }
+        }
+      }
+
+      async function loadSimilarsForDetail(id) {
+        const wrap = document.getElementById('detailSimilarsWrap');
+        if (!wrap) return;
+        wrap.innerHTML = '<div class="flex gap-2.5 overflow-hidden"><div class="w-[92px] shrink-0 poster-ratio rounded-xl skeleton"></div><div class="w-[92px] shrink-0 poster-ratio rounded-xl skeleton"></div><div class="w-[92px] shrink-0 poster-ratio rounded-xl skeleton"></div></div>';
+        try {
+          const data = await apiRequest('/api/v2.2/films/' + id + '/similars', null, { useCache: true });
+          const items = Array.isArray(data.items) ? data.items : [];
+          const ids = [];
+          items.slice(0, 12).forEach(function (r) {
+            const norm = normalizeItem(r);
+            if (norm && ids.indexOf(norm.id) === -1) ids.push(norm.id);
+          });
+          cacheSet('sim_' + id, ids);
+          wrap.innerHTML = renderSimilarsRowHtml(ids);
+        } catch (err) {
+          wrap.innerHTML = renderApiErrorCard(err, function () { loadSimilarsForDetail(id); });
+        }
+      }
+
+      // Roulette: picks a random unseen film from current filters or top movies
+      async function runEveningRoulette(useFilters) {
+        state.rouletteUseFilters = Boolean(useFilters);
+        const watchedIds = new Set(state.history.map(function (h) { return h.id; }));
+
+        function pickRandom(itemsList) {
+          const unseen = itemsList.filter(function (f) {
+            return f && !watchedIds.has(f.id) && f.id !== state.rouletteLastId;
+          });
+          const pool = unseen.length ? unseen : itemsList.filter(function (f) { return f && f.id !== state.rouletteLastId; });
+          const finalPool = pool.length ? pool : itemsList;
+          if (!finalPool.length) {
+            showToast('Нет подходящих фильмов для рулетки', 'err');
+            return;
+          }
+          const picked = finalPool[Math.floor(Math.random() * finalPool.length)];
+          state.rouletteLastId = picked.id;
+          openDetailModal(picked.id, true);
+        }
+
+        // Reuse loaded list if quick roulette and pool already exists
+        if (!useFilters) {
+          const loadedIds = (state.activeTab === 'collections' && state.colIds.length >= 4)
+            ? state.colIds
+            : (state.searchIds.length >= 4 ? state.searchIds : []);
+          if (loadedIds.length >= 4) {
+            const pool = loadedIds.map(function (id) { return itemRegistry.get(id); }).filter(Boolean);
+            pickRandom(pool);
+            return;
+          }
+        }
+
+        showToast('🎲 Подбираем фильм на вечер...');
+        try {
+          let data;
+          if (useFilters) {
+            readFiltersFromDOM();
+            const params = buildFilterApiParams(1);
+            if (!params.ratingFrom || Number(params.ratingFrom) < 6) params.ratingFrom = 7;
+            data = await apiRequest('/api/v2.2/films', params, { useCache: true });
+          } else {
+            const randPage = Math.floor(Math.random() * 5) + 1;
+            data = await apiRequest('/api/v2.2/films/collections', { type: 'TOP_250_MOVIES', page: randPage }, { useCache: true });
+          }
+          const normalized = (Array.isArray(data.items) ? data.items : []).map(normalizeItem).filter(Boolean);
+          pickRandom(normalized);
+        } catch (err) {
+          const info = classifyApiError(err);
+          showToast(info.title, 'err');
+        }
+      }
+
+      // ==========================================
+      // SETTINGS & DIAGNOSTICS UI
+      // ==========================================
+      function updateLiveMirrorPreview(rawCandidate) {
+        const previewEl = document.getElementById('mirrorLivePreview');
+        if (!previewEl) return;
+        const normalized = normalizeMirror(rawCandidate !== undefined ? rawCandidate : state.mirror);
+        const domain = isValidMirror(normalized) ? normalized : state.mirror;
+        previewEl.textContent = 'https://' + domain + '/film/' + SAMPLE_FILM_ID + '/';
+      }
+
+      function updateSettingsUI() {
+        const customMirrorInput = document.getElementById('customMirrorInput');
+        if (customMirrorInput && document.activeElement !== customMirrorInput) {
+          customMirrorInput.value = state.mirror;
+        }
+        updateLiveMirrorPreview(state.mirror);
+
+        // Mirror preset chips highlight
+        document.querySelectorAll('#mirrorChips [data-action="set-mirror-chip"]').forEach(function (btn) {
+          const on = btn.getAttribute('data-mirror') === state.mirror;
+          btn.className = 'min-h-[42px] px-3 rounded-xl border text-xs font-bold transition ' +
+            (on ? 'bg-[#ff5500]/15 border-[#ff5500] text-[#ff7b3a]' : 'bg-[#11141c] border-[#232838] text-gray-300');
+        });
+
+        // API key status
+        const isCustom = Boolean(state.customApiKey);
+        const pill = document.getElementById('apiKeyStatusPill');
+        if (pill) {
+          pill.textContent = isCustom ? 'Свой ключ' : 'Используется встроенный ключ';
+          pill.className = 'text-[11px] font-bold px-2 py-1 rounded-lg border shrink-0 ' +
+            (isCustom ? 'bg-sky-500/15 border-sky-500/35 text-sky-300' : 'bg-emerald-500/15 border-emerald-500/35 text-emerald-400');
+        }
+        const apiKeyInput = document.getElementById('apiKeyInput');
+        if (apiKeyInput && document.activeElement !== apiKeyInput) {
+          apiKeyInput.value = state.customApiKey;
+        }
+
+        // Link target toggle
+        const blankBtn = document.getElementById('targetBlankBtn');
+        const selfBtn = document.getElementById('targetSelfBtn');
+        if (blankBtn && selfBtn) {
+          const isBlank = state.linkTarget === '_blank';
+          blankBtn.className = 'min-h-[44px] px-3 rounded-xl border text-xs font-bold transition ' +
+            (isBlank ? 'bg-[#ff5500]/15 border-[#ff5500] text-[#ff7b3a]' : 'bg-[#11141c] border-[#232838] text-gray-300');
+          selfBtn.className = 'min-h-[44px] px-3 rounded-xl border text-xs font-bold transition ' +
+            (!isBlank ? 'bg-[#ff5500]/15 border-[#ff5500] text-[#ff7b3a]' : 'bg-[#11141c] border-[#232838] text-gray-300');
+        }
+      }
+
+      function updateDiagnosticsUI() {
+        const isIframe = (function () {
+          try { return window.self !== window.top; } catch (_e) { return true; }
+        })();
+        const setTxt = function (id, txt) {
+          const el = document.getElementById(id);
+          if (el) el.textContent = txt;
+        };
+        setTxt('diagEnv', isIframe ? 'Preview iframe' : 'Браузер / PWA');
+        setTxt('diagStorage', localStorageAvailable ? 'localStorage OK' : 'Память (fallback)');
+        setTxt('diagMirror', state.mirror);
+        setTxt('diagSampleUrl', buildMirrorUrl(SAMPLE_FILM_ID, false));
+        setTxt('diagApiStatus', state.lastApiStatus);
+        const errEl = document.getElementById('diagJsError');
+        if (errEl) {
+          errEl.textContent = state.lastJsError || 'Нет';
+          errEl.className = state.lastJsError ? 'text-red-400 text-right break-words' : 'text-emerald-400 text-right break-words';
+        }
+      }
+
+      async function testCurrentApiKey() {
+        const btn = document.getElementById('testApiKeyBtn');
+        const resBox = document.getElementById('apiKeyTestResult');
+        if (!btn || !resBox) return;
+        btn.disabled = true;
+        btn.textContent = '⏳ Проверяем ключ...';
+        resBox.classList.add('hidden');
+
+        try {
+          await apiRequest('/api/v2.2/films/filters', null, { useCache: false, bypassCache: true });
+          resBox.textContent = '✅ Ключ работает! Соединение с API Кинопоиска успешно.';
+          resBox.className = 'rounded-xl px-3 py-2 text-xs font-semibold bg-emerald-500/15 border border-emerald-500/35 text-emerald-300';
+        } catch (err) {
+          const info = classifyApiError(err);
+          resBox.textContent = '❌ ' + info.title + ' — ' + info.message;
+          resBox.className = 'rounded-xl px-3 py-2 text-xs font-semibold bg-red-500/15 border border-red-500/35 text-red-300';
+        } finally {
+          btn.disabled = false;
+          btn.textContent = '🔌 Проверить ключ';
+        }
+      }
+
+      // Tab Navigation
+      function switchTab(tabName) {
+        state.activeTab = tabName;
+        ['search', 'collections', 'my', 'settings'].forEach(function (t) {
+          const sec = document.getElementById('tab-' + t);
+          if (sec) sec.classList.toggle('hidden', t !== tabName);
+        });
+
+        document.querySelectorAll('.nav-item').forEach(function (btn) {
+          const active = btn.getAttribute('data-tab') === tabName;
+          btn.classList.toggle('text-[#ff5500]', active);
+          btn.classList.toggle('font-bold', active);
+          btn.classList.toggle('text-gray-400', !active);
+          btn.classList.toggle('font-semibold', !active);
+          const ind = btn.querySelector('.nav-indicator');
+          if (ind) ind.classList.toggle('hidden', !active);
+        });
+
+        if (tabName === 'collections' && !state.colInitialized) {
+          loadCollection(state.colKind, state.colKey, false);
+        }
+        if (tabName === 'my') {
+          switchMySubTab(state.mySubTab);
+        }
+        if (tabName === 'settings') {
+          updateSettingsUI();
+          updateDiagnosticsUI();
+        }
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      }
+
+      function askConfirmModal(title, text, callback) {
+        state.confirmCallback = callback;
+        document.getElementById('confirmModalTitle').textContent = title;
+        document.getElementById('confirmModalText').textContent = text;
+        openModal('confirmModal');
+      }
+
+      // ==========================================
+      // EVENT DELEGATION & LISTENERS
+      // ==========================================
+      function bindEvents() {
+        // Fallback handler for broken images (no inline onerror)
+        document.addEventListener('error', function (evt) {
+          const target = evt.target;
+          if (target && target.tagName === 'IMG') {
+            const fb = target.getAttribute('data-fallback');
+            if (fb && target.src !== fb) target.src = fb;
+          }
+        }, true);
+
+        // Unified click delegation
+        document.addEventListener('click', function (evt) {
+          // 1. Native watch links: save history in background without EVER blocking navigation
+          const watchAnchor = evt.target.closest('a[data-watch-id]');
+          if (watchAnchor) {
+            recordWatchInBackground(watchAnchor.getAttribute('data-watch-id'));
+            return;
+          }
+
+          // 2. Modal backdrop tap to close
+          const backdropName = evt.target.getAttribute ? evt.target.getAttribute('data-backdrop') : null;
+          if (backdropName) {
+            closeModal(backdropName);
+            return;
+          }
+
+          // 3. Action buttons
+          const actionEl = evt.target.closest('[data-action]');
+          if (!actionEl) return;
+          const action = actionEl.getAttribute('data-action');
+
+          try {
+            switch (action) {
+              case 'close-error-banner':
+                document.getElementById('jsErrorBanner').classList.add('hidden');
+                break;
+
+              case 'nav':
+                switchTab(actionEl.getAttribute('data-tab'));
+                break;
+
+              case 'go-change-api-key':
+                switchTab('settings');
+                setTimeout(function () {
+                  const keyInp = document.getElementById('apiKeyInput');
+                  if (keyInp) {
+                    keyInp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    keyInp.focus();
+                  }
+                }, 80);
+                break;
+
+              case 'retry-last':
+                if (typeof state.retryAction === 'function') state.retryAction();
+                break;
+
+              case 'clear-search-input':
+                document.getElementById('searchInput').value = '';
+                updateDirectCardFromInput();
+                document.getElementById('searchInput').focus();
+                break;
+
+              case 'quick-example': {
+                const q = actionEl.getAttribute('data-q');
+                document.getElementById('searchInput').value = q;
+                updateDirectCardFromInput();
+                runKeywordSearch(q);
+                break;
+              }
+
+              case 'run-search-history': {
+                const idx = Number(actionEl.getAttribute('data-idx'));
+                const q = state.searchHistory[idx];
+                if (q) {
+                  document.getElementById('searchInput').value = q;
+                  updateDirectCardFromInput();
+                  runKeywordSearch(q);
+                }
+                break;
+              }
+
+              case 'del-search-history': {
+                const idx = Number(actionEl.getAttribute('data-idx'));
+                state.searchHistory.splice(idx, 1);
+                persistSearchHistory();
+                renderSearchHistoryUI();
+                break;
+              }
+
+              case 'clear-search-history':
+                state.searchHistory = [];
+                persistSearchHistory();
+                renderSearchHistoryUI();
+                showToast('История поиска очищена');
+                break;
+
+              case 'clear-search-results':
+                state.searchIds = [];
+                state.searchMode = 'idle';
+                document.getElementById('searchResultsHead').classList.add('hidden');
+                document.getElementById('searchLoadMoreWrap').classList.add('hidden');
+                document.getElementById('searchResultsContainer').innerHTML = '';
+                break;
+
+              case 'toggle-direct-type':
+                if (state.directItem) {
+                  state.directItem.isSeries = !state.directItem.isSeries;
+                  state.directItem.type = state.directItem.isSeries ? 'TV_SERIES' : 'FILM';
+                  if (/^(Фильм|Сериал) #\d+$/.test(state.directItem.title)) {
+                    state.directItem.title = (state.directItem.isSeries ? 'Сериал #' : 'Фильм #') + state.directItem.id;
+                  }
+                  itemRegistry.set(state.directItem.id, state.directItem);
+                  document.getElementById('directCardWrap').innerHTML = renderMovieCardHtml(state.directItem, { direct: true });
+                }
+                break;
+
+              case 'toggle-filters': {
+                const body = document.getElementById('filtersBody');
+                const chev = document.getElementById('filtersChevron');
+                const isNowHidden = body.classList.toggle('hidden');
+                if (chev) chev.style.transform = isNowHidden ? 'rotate(0deg)' : 'rotate(180deg)';
+                if (!isNowHidden) ensureGenresLoaded();
+                break;
+              }
+
+              case 'filter-type':
+                state.filters.type = actionEl.getAttribute('data-val');
+                syncFiltersUI();
+                break;
+
+              case 'filter-rating':
+                state.filters.ratingFrom = Number(actionEl.getAttribute('data-val')) || 0;
+                syncFiltersUI();
+                break;
+
+              case 'filter-sort':
+                state.filters.order = actionEl.getAttribute('data-val');
+                syncFiltersUI();
+                break;
+
+              case 'apply-filters':
+                runFilterSearch(false);
+                break;
+
+              case 'search-load-more':
+                if (state.searchPage < state.searchTotalPages) {
+                  state.searchPage += 1;
+                  runFilterSearch(true);
+                }
+                break;
+
+              case 'reset-filters':
+                state.filters = { type: 'ALL', genreId: '', ratingFrom: 0, yearFrom: '', yearTo: '', order: 'NUM_VOTE' };
+                syncFiltersUI();
+                showToast('Фильтры сброшены');
+                break;
+
+              case 'roulette-quick':
+                runEveningRoulette(false);
+                break;
+
+              case 'roulette-filters':
+                runEveningRoulette(true);
+                break;
+
+              case 'roulette-again':
+                runEveningRoulette(state.rouletteUseFilters);
+                break;
+
+              case 'select-col':
+                loadCollection('collection', actionEl.getAttribute('data-col'), false);
+                break;
+
+              case 'select-preset':
+                loadCollection('preset', actionEl.getAttribute('data-preset'), false);
+                break;
+
+              case 'set-col-view':
+                state.colView = actionEl.getAttribute('data-view') === 'grid' ? 'grid' : 'list';
+                storage.set(STORAGE_KEYS.COL_VIEW, state.colView);
+                syncCollectionChipsUI();
+                if (state.colIds.length) renderCollectionCards();
+                break;
+
+              case 'col-load-more':
+                if (state.colPage < state.colTotalPages) {
+                  state.colPage += 1;
+                  loadCollection(state.colKind, state.colKey, true);
+                }
+                break;
+
+              case 'my-subtab':
+                switchMySubTab(actionEl.getAttribute('data-sub'));
+                break;
+
+              case 'remove-history': {
+                const rid = actionEl.getAttribute('data-id');
+                state.history = state.history.filter(function (h) { return h.id !== rid; });
+                persistHistory();
+                renderHistoryTab();
+                showToast('Удалено из истории');
+                break;
+              }
+
+              case 'step-se': {
+                const sid = actionEl.getAttribute('data-id');
+                const field = actionEl.getAttribute('data-field');
+                const delta = Number(actionEl.getAttribute('data-delta'));
+                const targetItem = state.history.find(function (h) { return h.id === sid; });
+                if (targetItem && (field === 'season' || field === 'episode')) {
+                  targetItem[field] = Math.max(1, (Number(targetItem[field]) || 1) + delta);
+                  persistHistory();
+                  renderHistoryTab();
+                }
+                break;
+              }
+
+              case 'ask-clear-history':
+                askConfirmModal('Очистить историю?', 'Все просмотренные фильмы и отметки серий будут удалены без возможности восстановления.', function () {
+                  state.history = [];
+                  persistHistory();
+                  renderHistoryTab();
+                  showToast('История очищена');
+                });
+                break;
+
+              case 'open-detail':
+                openDetailModal(actionEl.getAttribute('data-id'), false);
+                break;
+
+              case 'load-similars':
+                loadSimilarsForDetail(actionEl.getAttribute('data-id'));
+                break;
+
+              case 'bookmark':
+                toggleBookmark(actionEl.getAttribute('data-id'));
+                break;
+
+              case 'copy-url':
+                copyToClipboard(actionEl.getAttribute('data-url'), 'Ссылка скопирована', true);
+                break;
+
+              case 'copy-modal-select':
+                copyToClipboard(document.getElementById('copyModalInput').value, 'Ссылка скопирована', false);
+                break;
+
+              case 'close-modal':
+                closeModal(actionEl.getAttribute('data-modal'));
+                break;
+
+              case 'set-mirror-chip': {
+                const chosen = normalizeMirror(actionEl.getAttribute('data-mirror'));
+                if (isValidMirror(chosen)) {
+                  state.mirror = chosen;
+                  storage.set(STORAGE_KEYS.MIRROR, state.mirror);
+                  document.getElementById('customMirrorInput').value = state.mirror;
+                  syncAllDomWatchLinks();
+                  showToast('Зеркало: ' + state.mirror, 'ok');
+                }
+                break;
+              }
+
+              case 'save-custom-mirror': {
+                const rawVal = document.getElementById('customMirrorInput').value;
+                const normalized = normalizeMirror(rawVal);
+                if (!isValidMirror(normalized)) {
+                  showToast('Введите корректный домен, например www.kinopoisk.cx', 'err');
+                  break;
+                }
+                state.mirror = normalized;
+                storage.set(STORAGE_KEYS.MIRROR, state.mirror);
+                document.getElementById('customMirrorInput').value = state.mirror;
+                syncAllDomWatchLinks();
+                showToast('Зеркало сохранено: ' + state.mirror, 'ok');
+                break;
+              }
+
+              case 'toggle-key-vis': {
+                const inp = document.getElementById('apiKeyInput');
+                if (inp) inp.type = inp.type === 'password' ? 'text' : 'password';
+                break;
+              }
+
+              case 'save-api-key': {
+                const val = document.getElementById('apiKeyInput').value.trim();
+                if (!val) {
+                  state.customApiKey = '';
+                  storage.remove(STORAGE_KEYS.CUSTOM_KEY);
+                  updateSettingsUI();
+                  showToast('Включён встроенный API-ключ', 'ok');
+                } else {
+                  state.customApiKey = (val === DEFAULT_API_KEY) ? '' : val;
+                  if (state.customApiKey) storage.set(STORAGE_KEYS.CUSTOM_KEY, state.customApiKey);
+                  else storage.remove(STORAGE_KEYS.CUSTOM_KEY);
+                  updateSettingsUI();
+                  showToast('API-ключ сохранён', 'ok');
+                }
+                document.getElementById('apiKeyTestResult').classList.add('hidden');
+                break;
+              }
+
+              case 'reset-api-key':
+                state.customApiKey = '';
+                storage.remove(STORAGE_KEYS.CUSTOM_KEY);
+                document.getElementById('apiKeyInput').value = '';
+                document.getElementById('apiKeyTestResult').classList.add('hidden');
+                updateSettingsUI();
+                showToast('Сброшено на встроенный ключ', 'ok');
+                break;
+
+              case 'test-api-key':
+                testCurrentApiKey();
+                break;
+
+              case 'set-target':
+                state.linkTarget = actionEl.getAttribute('data-target') === '_self' ? '_self' : '_blank';
+                storage.set(STORAGE_KEYS.TARGET, state.linkTarget);
+                syncAllDomWatchLinks();
+                showToast(state.linkTarget === '_blank' ? 'Открытие в новой вкладке' : 'Открытие в текущей вкладке', 'ok');
+                break;
+
+              case 'export-copy': {
+                const payload = JSON.stringify({
+                  app: 'KP Watch',
+                  version: APP_VERSION,
+                  mirror: state.mirror,
+                  linkTarget: state.linkTarget,
+                  history: state.history,
+                  bookmarks: state.bookmarks,
+                  searchHistory: state.searchHistory
+                }, null, 2);
+                copyToClipboard(payload, 'Резервная копия скопирована', true);
+                break;
+              }
+
+              case 'export-download': {
+                try {
+                  const payload = JSON.stringify({
+                    app: 'KP Watch',
+                    version: APP_VERSION,
+                    mirror: state.mirror,
+                    linkTarget: state.linkTarget,
+                    history: state.history,
+                    bookmarks: state.bookmarks,
+                    searchHistory: state.searchHistory
+                  }, null, 2);
+                  const blob = new Blob([payload], { type: 'application/json' });
+                  const blobUrl = URL.createObjectURL(blob);
+                  const dlLink = document.createElement('a');
+                  dlLink.href = blobUrl;
+                  dlLink.download = 'kp-watch-v3-backup.json';
+                  document.body.appendChild(dlLink);
+                  dlLink.click();
+                  document.body.removeChild(dlLink);
+                  setTimeout(function () { URL.revokeObjectURL(blobUrl); }, 1000);
+                  showToast('Файл backup скачан', 'ok');
+                } catch (_err) {
+                  showToast('Используйте «Копировать JSON»', 'err');
+                }
+                break;
+              }
+
+              case 'open-import':
+                document.getElementById('importJsonTextarea').value = '';
+                document.getElementById('importFileInput').value = '';
+                openModal('importModal');
+                break;
+
+              case 'confirm-import': {
+                const rawJson = document.getElementById('importJsonTextarea').value.trim();
+                const parsed = safeJsonParse(rawJson, null);
+                if (!parsed || typeof parsed !== 'object') {
+                  showToast('Некорректный формат JSON', 'err');
+                  break;
+                }
+                if (typeof parsed.mirror === 'string') {
+                  const nm = normalizeMirror(parsed.mirror);
+                  if (isValidMirror(nm)) {
+                    state.mirror = nm;
+                    storage.set(STORAGE_KEYS.MIRROR, state.mirror);
+                  }
+                }
+                const importedHist = Array.isArray(parsed.history) ? parsed.history : parsed.watchHistory;
+                if (Array.isArray(importedHist)) {
+                  state.history = importedHist.map(normalizeItem).filter(Boolean);
+                  persistHistory();
+                }
+                const importedBm = Array.isArray(parsed.bookmarks) ? parsed.bookmarks : parsed.watchlist;
+                if (Array.isArray(importedBm)) {
+                  state.bookmarks = importedBm.map(normalizeItem).filter(Boolean);
+                  persistBookmarks();
+                }
+                if (Array.isArray(parsed.searchHistory)) {
+                  state.searchHistory = parsed.searchHistory.filter(function (s) { return typeof s === 'string' && s.trim(); }).slice(0, 10);
+                  persistSearchHistory();
+                  renderSearchHistoryUI();
+                }
+                syncAllDomWatchLinks();
+                closeModal('importModal');
+                showToast('Данные импортированы', 'ok');
+                break;
+              }
+
+              case 'clear-cache':
+                cacheClearAll();
+                state.genresLoadedFromApi = false;
+                showToast('Кэш запросов очищен', 'ok');
+                break;
+
+              case 'confirm-ok':
+                closeModal('confirmModal');
+                if (typeof state.confirmCallback === 'function') {
+                  const fn = state.confirmCallback;
+                  state.confirmCallback = null;
+                  fn();
+                }
+                break;
+            }
+          } catch (err) {
+            captureJsError(err.message || String(err));
+          }
+        });
+
+        // Search Form submit (no per-keystroke API spam)
+        document.getElementById('searchForm').addEventListener('submit', function (evt) {
+          evt.preventDefault();
+          runKeywordSearch(document.getElementById('searchInput').value);
+        });
+
+        // Smart direct URL/ID detection on input
+        document.getElementById('searchInput').addEventListener('input', updateDirectCardFromInput);
+
+        // Live preview while editing custom mirror
+        document.getElementById('customMirrorInput').addEventListener('input', function (evt) {
+          updateLiveMirrorPreview(evt.target.value);
+        });
+
+        // Import file reader
+        document.getElementById('importFileInput').addEventListener('change', function (evt) {
+          const file = evt.target.files && evt.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = function () {
+            document.getElementById('importJsonTextarea').value = String(reader.result || '');
+          };
+          reader.readAsText(file);
+        });
+      }
+
+      // ==========================================
+      // BOOTSTRAP
+      // ==========================================
+      function init() {
+        try { bindEvents(); } catch (err) { captureJsError('bindEvents: ' + err.message); }
+        try { loadAndMigrateStorage(); } catch (err) { captureJsError('storage: ' + err.message); }
+        try {
+          renderGenreOptions();
+          syncFiltersUI();
+          renderSearchHistoryUI();
+          updateMyBadgesUI();
+          syncAllDomWatchLinks();
+          syncCollectionChipsUI();
+        } catch (err) {
+          captureJsError('render: ' + err.message);
+        }
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>
