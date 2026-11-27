@@ -1,0 +1,3975 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0e14">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="KP Watch">
+  <title>KP Watch v3.1 — Поиск и просмотр кино</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff5a1f'/%3E%3Cpolygon points='24,18 48,32 24,46' fill='%23ffffff'/%3E%3C/svg%3E">
+  <style>
+    /* =========================================================================
+       1. DESIGN TOKENS & RESET
+       ========================================================================= */
+    :root {
+      --bg: #0b0e14;
+      --card: #151923;
+      --surface: #1c2230;
+      --surface-hover: #232b3d;
+      --border: #262e40;
+      --accent: #ff5a1f;
+      --accent-hover: #ff703c;
+      --accent-soft: rgba(255, 90, 31, 0.14);
+      --accent-border: rgba(255, 90, 31, 0.42);
+      --text: #f3f5f8;
+      --text-sec: #9aa4b8;
+      --text-muted: #6f7a90;
+      --ok: #22c55e;
+      --ok-soft: rgba(34, 197, 94, 0.14);
+      --ok-border: rgba(34, 197, 94, 0.36);
+      --warn: #f59e0b;
+      --err: #ef4444;
+      --err-soft: rgba(239, 68, 68, 0.14);
+      --err-border: rgba(239, 68, 68, 0.4);
+      --radius-sm: 10px;
+      --radius-md: 14px;
+      --radius-lg: 18px;
+      --radius-pill: 999px;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --nav-height: 64px;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, "Helvetica Neue", Arial, sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      color-scheme: dark;
+      overflow-x: hidden;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      margin: 0;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      overflow-x: hidden;
+      line-height: 1.45;
+      font-size: 15px;
+    }
+
+    body.modal-open {
+      overflow: hidden;
+    }
+
+    h1, h2, h3, p {
+      margin: 0;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button, input, select, textarea {
+      font-family: inherit;
+      color: inherit;
+    }
+
+    /* Prevent iOS auto-zoom on form controls */
+    input, select, textarea {
+      font-size: 16px;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      background: none;
+      padding: 0;
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .hidden {
+      display: none !important;
+      pointer-events: none !important;
+    }
+
+    /* =========================================================================
+       2. LAYOUT SHELL (HEADER, MAIN, BOTTOM NAV)
+       ========================================================================= */
+    .error-banner {
+      position: sticky;
+      top: 0;
+      z-index: 90;
+      background: #3a1218;
+      border-bottom: 1px solid var(--err-border);
+      padding: calc(8px + var(--safe-top)) 12px 8px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 12px;
+      color: #fecaca;
+    }
+
+    .error-banner-text {
+      flex: 1;
+      min-width: 0;
+      font-family: var(--mono);
+      word-break: break-word;
+      padding-top: 8px;
+    }
+
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(11, 14, 20, 0.94);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding-top: var(--safe-top);
+    }
+
+    .header-inner {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), #ff7f36);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      font-weight: 800;
+      color: #fff;
+      flex-shrink: 0;
+      box-shadow: 0 6px 18px rgba(255, 90, 31, 0.28);
+    }
+
+    .brand-meta {
+      min-width: 0;
+    }
+
+    .brand-title-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+    }
+
+    .version-pill {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-sec);
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: var(--text-sec);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .mirror-badge-btn {
+      min-height: 44px;
+      padding: 0 10px;
+      border-radius: 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      max-width: 155px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .mirror-badge-btn:active {
+      transform: scale(0.97);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--ok);
+      flex-shrink: 0;
+    }
+
+    .mirror-badge-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .roulette-mini-btn {
+      min-width: 44px;
+      min-height: 44px;
+      padding: 0 10px;
+      border-radius: 12px;
+      background: var(--accent-soft);
+      border: 1px solid var(--accent-border);
+      color: #ff8557;
+      font-size: 13px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: transform 0.12s, background 0.15s;
+    }
+
+    .roulette-mini-btn:active {
+      transform: scale(0.96);
+    }
+
+    .roulette-mini-label {
+      display: none;
+    }
+
+    @media (min-width: 520px) {
+      .roulette-mini-label {
+        display: inline;
+      }
+    }
+
+    .app-main {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 12px 12px calc(var(--nav-height) + var(--safe-bottom) + 22px);
+    }
+
+    .tab-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Bottom Navigation */
+    .bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 45;
+      background: rgba(17, 21, 30, 0.96);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      padding-bottom: var(--safe-bottom);
+    }
+
+    .bottom-nav-inner {
+      max-width: 680px;
+      margin: 0 auto;
+      height: var(--nav-height);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .nav-btn {
+      position: relative;
+      min-height: 44px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-sec);
+      transition: color 0.15s;
+    }
+
+    .nav-btn.active {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .nav-btn.active::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      width: 36px;
+      height: 3px;
+      border-radius: 0 0 4px 4px;
+      background: var(--accent);
+    }
+
+    .nav-icon {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .nav-badge {
+      position: absolute;
+      top: 6px;
+      right: calc(50% - 24px);
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      border-radius: var(--radius-pill);
+      background: var(--accent);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* =========================================================================
+       3. FORMS, BUTTONS, CARDS & CHIPS
+       ========================================================================= */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 14px;
+    }
+
+    .stack-sm {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .stack-md {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .row-between {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .label-caps {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-sec);
+    }
+
+    .input-field,
+    .select-field,
+    .textarea-field {
+      width: 100%;
+      min-height: 46px;
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .input-field::placeholder,
+    .textarea-field::placeholder {
+      color: var(--text-muted);
+    }
+
+    .input-field:focus,
+    .select-field:focus,
+    .textarea-field:focus {
+      border-color: var(--accent);
+    }
+
+    .textarea-field {
+      min-height: 110px;
+      resize: vertical;
+      font-family: var(--mono);
+      font-size: 16px;
+    }
+
+    .btn {
+      min-height: 44px;
+      padding: 0 14px;
+      border-radius: var(--radius-md);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      transition: transform 0.12s, background 0.15s, border-color 0.15s;
+      user-select: none;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-secondary {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .btn-secondary:hover {
+      background: var(--surface-hover);
+    }
+
+    .btn-accent-soft {
+      background: var(--accent-soft);
+      border: 1px solid var(--accent-border);
+      color: #ff8557;
+    }
+
+    .btn-danger-soft {
+      background: var(--err-soft);
+      border: 1px solid var(--err-border);
+      color: #fca5a5;
+    }
+
+    .btn-danger {
+      background: #dc2626;
+      color: #ffffff;
+    }
+
+    .btn-icon {
+      min-width: 44px;
+      min-height: 44px;
+      padding: 0;
+      border-radius: var(--radius-md);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+      transition: transform 0.12s, background 0.15s;
+    }
+
+    .btn-icon:active {
+      transform: scale(0.95);
+    }
+
+    .btn-text {
+      min-height: 44px;
+      padding: 0 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-sec);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-full {
+      width: 100%;
+    }
+
+    /* Search Bar */
+    .search-form {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .search-input-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .search-input-wrap .input-field {
+      background: var(--card);
+      padding-right: 44px;
+    }
+
+    .search-clear-btn {
+      position: absolute;
+      right: 2px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-sec);
+      font-size: 15px;
+    }
+
+    .search-submit-btn {
+      min-width: 82px;
+      min-height: 46px;
+      flex-shrink: 0;
+    }
+
+    /* Collapsible Filter Panel */
+    .filter-panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .filter-toggle-btn {
+      width: 100%;
+      min-height: 46px;
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .filter-chevron {
+      font-size: 11px;
+      color: var(--text-sec);
+      transition: transform 0.2s;
+    }
+
+    .filter-panel.open .filter-chevron {
+      transform: rotate(180deg);
+    }
+
+    .filter-body {
+      border-top: 1px solid var(--border);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .seg-btn {
+      min-height: 44px;
+      padding: 0 8px;
+      border-radius: 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text-sec);
+      font-size: 12px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+
+    .seg-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #ffffff;
+    }
+
+    /* Start Screen Welcome Card & Dynamic Popular Chips */
+    .welcome-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .welcome-head {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .welcome-emoji {
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .welcome-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .welcome-sub {
+      font-size: 12px;
+      color: var(--text-sec);
+      max-width: 440px;
+      line-height: 1.5;
+    }
+
+    .welcome-mirror-highlight {
+      color: #ff8557;
+      font-weight: 700;
+    }
+
+    .popular-block {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .popular-meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .popular-cache-note {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .popular-chips-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 96px;
+    }
+
+    .pop-chip {
+      min-height: 44px;
+      max-width: 100%;
+      padding: 6px 12px;
+      border-radius: var(--radius-pill);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: border-color 0.15s, background 0.15s, transform 0.12s;
+    }
+
+    .pop-chip:hover {
+      border-color: var(--accent-border);
+      background: var(--surface-hover);
+    }
+
+    .pop-chip:active {
+      transform: scale(0.97);
+    }
+
+    .pop-chip-title {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 210px;
+    }
+
+    .pop-chip-rating {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: 6px;
+      background: rgba(34, 197, 94, 0.18);
+      color: #86efac;
+      flex-shrink: 0;
+    }
+
+    .pop-chip-rating.mid {
+      background: rgba(245, 158, 11, 0.18);
+      color: #fcd34d;
+    }
+
+    .pop-chip-type {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 5px;
+      background: var(--accent-soft);
+      color: #ff8557;
+      flex-shrink: 0;
+    }
+
+    /* Shimmer Skeletons */
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    .skeleton {
+      background: linear-gradient(90deg, var(--surface) 25%, #273044 50%, var(--surface) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.35s infinite linear;
+    }
+
+    .pop-chip-skeleton {
+      height: 44px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border);
+      flex: 1 1 120px;
+      min-width: 108px;
+      max-width: 190px;
+    }
+
+    /* Horizontal Scroll Rail */
+    .chip-rail {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      max-width: 100%;
+    }
+
+    .chip-rail::-webkit-scrollbar {
+      display: none;
+    }
+
+    .cat-chip {
+      flex-shrink: 0;
+      min-height: 44px;
+      padding: 0 14px;
+      border-radius: var(--radius-pill);
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text-sec);
+      font-size: 13px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+
+    .cat-chip.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #ffffff;
+    }
+
+    /* =========================================================================
+       4. MOVIE CARDS (LIST & GRID)
+       ========================================================================= */
+    .cards-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .movie-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 10px;
+      display: flex;
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .movie-card.direct {
+      border-color: var(--accent-border);
+    }
+
+    .poster-btn {
+      position: relative;
+      width: 80px;
+      flex-shrink: 0;
+      aspect-ratio: 2 / 3;
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--bg);
+      align-self: flex-start;
+      display: block;
+    }
+
+    .poster-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .rating-pill {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      color: #fff;
+      background: #4b5563;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+    }
+
+    .rating-pill.high { background: #16a34a; }
+    .rating-pill.mid { background: #d97706; }
+    .rating-pill.low { background: #dc2626; }
+
+    .movie-body {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .movie-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 4px;
+    }
+
+    .movie-title-wrap {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .direct-tag {
+      font-size: 11px;
+      font-weight: 700;
+      color: #ff8557;
+      margin-bottom: 2px;
+    }
+
+    .movie-title-btn {
+      text-align: left;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .movie-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      margin-top: 4px;
+      font-size: 12px;
+      color: var(--text-sec);
+    }
+
+    .type-pill {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--text-sec);
+    }
+
+    .type-pill.series {
+      background: var(--accent-soft);
+      color: #ff8557;
+    }
+
+    .card-corner-btn {
+      min-width: 44px;
+      min-height: 44px;
+      margin: -8px -8px 0 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: var(--text-sec);
+      flex-shrink: 0;
+    }
+
+    .card-corner-btn.starred {
+      color: #fbbf24;
+    }
+
+    .card-corner-btn.remove {
+      font-size: 14px;
+    }
+
+    .card-corner-btn.remove:hover {
+      color: #f87171;
+    }
+
+    .card-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .watch-link {
+      flex: 1;
+      min-width: 0;
+      min-height: 44px;
+      padding: 0 12px;
+      border-radius: 12px;
+      background: var(--accent);
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: background 0.15s, transform 0.12s;
+    }
+
+    .watch-link:hover {
+      background: var(--accent-hover);
+    }
+
+    .watch-link:active {
+      transform: scale(0.98);
+    }
+
+    /* Series Inline Tracker in History/My */
+    .tracker-box {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+    }
+
+    .tracker-badge {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 7px;
+      border-radius: 6px;
+      background: var(--accent-soft);
+      color: #ff8557;
+    }
+
+    .stepper-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--text-sec);
+    }
+
+    .stepper {
+      display: inline-flex;
+      align-items: center;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .stepper-btn {
+      min-width: 44px;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .stepper-btn:active {
+      background: var(--surface);
+    }
+
+    .stepper-val {
+      min-width: 24px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    /* Segmented Switch (My Tab) */
+    .segmented-switch {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 4px;
+      padding: 4px;
+      border-radius: 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+    }
+
+    .segmented-tab {
+      min-height: 44px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-sec);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .segmented-tab.active {
+      background: var(--accent);
+      color: #ffffff;
+    }
+
+    .count-pill {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.25);
+    }
+
+    /* Empty & Error States */
+    .state-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 22px 16px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .state-box.error {
+      background: rgba(69, 18, 24, 0.45);
+      border-color: var(--err-border);
+    }
+
+    .state-emoji {
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .state-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .state-text {
+      font-size: 12.5px;
+      color: var(--text-sec);
+      max-width: 420px;
+      line-height: 1.5;
+    }
+
+    /* Settings & Diagnostics */
+    .preset-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .preset-btn {
+      min-height: 44px;
+      padding: 0 12px;
+      border-radius: 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text-sec);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .preset-btn.active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: #ff8557;
+    }
+
+    .preview-box {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: var(--bg);
+      border: 1px dashed var(--border);
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-sec);
+      word-break: break-all;
+    }
+
+    .preview-box strong {
+      color: #ff8557;
+    }
+
+    .status-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 8px;
+      background: var(--ok-soft);
+      border: 1px solid var(--ok-border);
+      color: #86efac;
+      white-space: nowrap;
+    }
+
+    .status-pill.custom {
+      background: rgba(56, 189, 248, 0.14);
+      border-color: rgba(56, 189, 248, 0.36);
+      color: #7dd3fc;
+    }
+
+    .test-result-box {
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 12.5px;
+      font-weight: 600;
+      line-height: 1.45;
+    }
+
+    .test-result-box.ok {
+      background: var(--ok-soft);
+      border: 1px solid var(--ok-border);
+      color: #86efac;
+    }
+
+    .test-result-box.err {
+      background: var(--err-soft);
+      border: 1px solid var(--err-border);
+      color: #fca5a5;
+    }
+
+    .diag-list {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      font-family: var(--mono);
+      font-size: 11.5px;
+    }
+
+    .diag-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .diag-key {
+      color: var(--text-sec);
+      flex-shrink: 0;
+    }
+
+    .diag-val {
+      color: var(--text);
+      text-align: right;
+      word-break: break-word;
+    }
+
+    .diag-val.accent { color: #ff8557; }
+    .diag-val.ok { color: #86efac; }
+    .diag-val.err { color: #fca5a5; }
+
+    /* =========================================================================
+       5. MODALS & TOAST
+       ========================================================================= */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(4, 6, 10, 0.82);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 0;
+    }
+
+    @media (min-width: 560px) {
+      .modal-backdrop {
+        align-items: center;
+        padding: 16px;
+      }
+    }
+
+    .modal-sheet {
+      width: 100%;
+      max-width: 560px;
+      max-height: 90dvh;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 22px 22px 0 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding-bottom: var(--safe-bottom);
+    }
+
+    @media (min-width: 560px) {
+      .modal-sheet {
+        border-radius: 20px;
+        padding-bottom: 0;
+      }
+    }
+
+    .modal-header {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .modal-body {
+      padding: 14px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .detail-hero {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .detail-poster {
+      width: 104px;
+      flex-shrink: 0;
+      aspect-ratio: 2 / 3;
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--bg);
+      border: 1px solid var(--border);
+    }
+
+    .detail-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .detail-title {
+      font-size: 17px;
+      font-weight: 800;
+      line-height: 1.25;
+      color: var(--text);
+    }
+
+    .detail-orig {
+      font-size: 12px;
+      color: var(--text-sec);
+    }
+
+    .detail-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .info-chip {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 7px;
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .info-chip.kp-high { background: #16a34a; color: #fff; }
+    .info-chip.kp-mid { background: #d97706; color: #fff; }
+    .info-chip.kp-low { background: #dc2626; color: #fff; }
+
+    .detail-meta-line {
+      font-size: 12px;
+      color: var(--text-sec);
+      line-height: 1.45;
+    }
+
+    .detail-meta-line span {
+      color: var(--text-muted);
+    }
+
+    .detail-desc-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .detail-desc-text {
+      font-size: 13.5px;
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    .watch-cta-lg {
+      width: 100%;
+      min-height: 48px;
+      padding: 0 16px;
+      border-radius: 14px;
+      background: var(--accent);
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 8px 20px rgba(255, 90, 31, 0.25);
+    }
+
+    .watch-cta-lg:hover {
+      background: var(--accent-hover);
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(var(--nav-height) + var(--safe-bottom) + 14px);
+      transform: translateX(-50%);
+      z-index: 160;
+      max-width: calc(100vw - 24px);
+      padding: 10px 16px;
+      border-radius: var(--radius-pill);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 12.5px;
+      font-weight: 700;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      pointer-events: none;
+    }
+
+    .toast.ok { border-color: var(--ok-border); }
+    .toast.err { border-color: var(--err-border); background: #3a1218; }
+  </style>
+</head>
+<body>
+
+  <!-- Runtime Error Banner -->
+  <div id="jsErrorBanner" class="error-banner hidden" role="alert">
+    <div id="jsErrorText" class="error-banner-text"></div>
+    <button type="button" class="btn-icon" data-action="close-error-banner" aria-label="Закрыть предупреждение">✕</button>
+  </div>
+
+  <!-- Sticky Header -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">▶</div>
+        <div class="brand-meta">
+          <div class="brand-title-row">
+            <span class="brand-title">KP Watch</span>
+            <span class="version-pill">v3.1</span>
+          </div>
+          <p class="brand-sub">КиноПоиск → Зеркало</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button type="button" class="mirror-badge-btn" data-action="nav" data-tab="settings" title="Изменить зеркало">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span id="headerMirrorLabel" class="mirror-badge-text">www.kinopoisk.cx</span>
+        </button>
+        <button type="button" class="roulette-mini-btn" data-action="roulette-open" title="Случайный на вечер">
+          <span>🎲</span>
+          <span class="roulette-mini-label">На вечер</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="app-main">
+
+    <!-- =======================================================================
+         TAB 1: ПОИСК (DEFAULT)
+         ======================================================================= -->
+    <section id="tab-search" class="tab-section">
+      <!-- Search Bar -->
+      <form id="searchForm" class="search-form" autocomplete="off">
+        <div class="search-input-wrap">
+          <input
+            type="text"
+            id="searchInput"
+            class="input-field"
+            placeholder="Название, ID или ссылка kinopoisk.ru..."
+            enterkeyhint="search"
+            aria-label="Поиск фильма или сериала"
+          >
+          <button type="button" id="clearSearchBtn" class="search-clear-btn hidden" data-action="clear-search-input" aria-label="Очистить поле поиска">✕</button>
+        </div>
+        <button type="submit" class="btn btn-primary search-submit-btn">Найти</button>
+      </form>
+
+      <!-- Direct Kinopoisk URL / Numeric ID Card -->
+      <div id="directCardWrap" class="hidden"></div>
+
+      <!-- Collapsible Compact Filter Panel -->
+      <div id="filterPanel" class="filter-panel">
+        <button type="button" class="filter-toggle-btn" data-action="toggle-filters" aria-expanded="false">
+          <span>🎛 Фильтры поиска</span>
+          <span class="filter-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div id="filterBody" class="filter-body hidden">
+          <!-- Type -->
+          <div class="stack-sm">
+            <span class="label-caps">Тип</span>
+            <div class="grid-3">
+              <button type="button" class="seg-btn active" data-action="filter-type" data-val="ALL">Все</button>
+              <button type="button" class="seg-btn" data-action="filter-type" data-val="FILM">Фильм</button>
+              <button type="button" class="seg-btn" data-action="filter-type" data-val="TV_SERIES">Сериал</button>
+            </div>
+          </div>
+
+          <!-- Min Rating -->
+          <div class="stack-sm">
+            <span class="label-caps">Рейтинг от</span>
+            <div class="grid-4">
+              <button type="button" class="seg-btn active" data-action="filter-rating" data-val="0">Любой</button>
+              <button type="button" class="seg-btn" data-action="filter-rating" data-val="6">6+</button>
+              <button type="button" class="seg-btn" data-action="filter-rating" data-val="7">7+</button>
+              <button type="button" class="seg-btn" data-action="filter-rating" data-val="8">8+</button>
+            </div>
+          </div>
+
+          <!-- Year Range -->
+          <div class="grid-2">
+            <div class="stack-sm">
+              <label for="filterYearFrom" class="label-caps">Год от</label>
+              <input type="number" id="filterYearFrom" class="input-field" min="1900" max="2030" placeholder="1990">
+            </div>
+            <div class="stack-sm">
+              <label for="filterYearTo" class="label-caps">Год до</label>
+              <input type="number" id="filterYearTo" class="input-field" min="1900" max="2030" placeholder="2026">
+            </div>
+          </div>
+
+          <!-- Genre -->
+          <div class="stack-sm">
+            <label for="filterGenreSelect" class="label-caps">Жанр</label>
+            <select id="filterGenreSelect" class="select-field">
+              <option value="">Любой жанр</option>
+            </select>
+          </div>
+
+          <div class="grid-2">
+            <button type="button" class="btn btn-primary" data-action="apply-filters">Показать</button>
+            <button type="button" class="btn btn-secondary" data-action="reset-filters">Сбросить</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search Results Header -->
+      <div id="searchResultsHeader" class="row-between hidden">
+        <h2 id="searchResultsTitle" style="font-size:14px;font-weight:700;">Результаты</h2>
+        <button type="button" class="btn-text" data-action="reset-search-view">На главный</button>
+      </div>
+
+      <!-- Compact Start Card (Empty / Home State with Dynamic 6 Popular Chips) -->
+      <div id="startStateCard" class="welcome-card">
+        <div class="welcome-head">
+          <div class="welcome-emoji" aria-hidden="true">🎬</div>
+          <h1 class="welcome-title">Найдите фильм или сериал</h1>
+          <p class="welcome-sub">
+            Введите название, ID или вставьте ссылку с kinopoisk.ru — сразу откроется просмотр на
+            <span id="welcomeMirrorName" class="welcome-mirror-highlight">www.kinopoisk.cx</span>.
+          </p>
+        </div>
+
+        <!-- Dynamic 6 Popular Movies & Series Chips -->
+        <div class="popular-block">
+          <div class="popular-meta-row">
+            <span class="label-caps">Популярное сейчас</span>
+            <span id="popularCacheNote" class="popular-cache-note">загрузка…</span>
+          </div>
+          <div id="popularChipsWrap" class="popular-chips-grid">
+            <div class="pop-chip-skeleton skeleton"></div>
+            <div class="pop-chip-skeleton skeleton"></div>
+            <div class="pop-chip-skeleton skeleton"></div>
+            <div class="pop-chip-skeleton skeleton"></div>
+            <div class="pop-chip-skeleton skeleton"></div>
+            <div class="pop-chip-skeleton skeleton"></div>
+          </div>
+        </div>
+
+        <!-- Prominent Action Buttons -->
+        <div class="grid-2">
+          <button type="button" class="btn btn-secondary" data-action="nav" data-tab="collections">🔥 Открыть подборки</button>
+          <button type="button" class="btn btn-accent-soft" data-action="roulette-open">🎲 Случайный на вечер</button>
+        </div>
+      </div>
+
+      <!-- Search Results Container -->
+      <div id="searchResultsList" class="cards-list hidden"></div>
+
+      <!-- Search Pagination (Filter mode) -->
+      <div id="searchLoadMoreWrap" class="hidden">
+        <button type="button" id="searchLoadMoreBtn" class="btn btn-secondary btn-full" data-action="search-load-more">Загрузить ещё</button>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         TAB 2: ПОДБОРКИ
+         ======================================================================= -->
+    <section id="tab-collections" class="tab-section hidden">
+      <div class="stack-sm">
+        <span class="label-caps">Категории</span>
+        <div id="collectionChipsRail" class="chip-rail">
+          <button type="button" class="cat-chip active" data-action="select-col" data-col="TOP_POPULAR_ALL">🔥 Популярное</button>
+          <button type="button" class="cat-chip" data-action="select-col" data-col="TOP_250_MOVIES">🏆 Топ-250 фильмов</button>
+          <button type="button" class="cat-chip" data-action="select-col" data-col="TOP_POPULAR_SERIES">📺 Популярные сериалы</button>
+          <button type="button" class="cat-chip" data-action="select-col" data-col="TOP_250_TV_SHOWS">⭐ Топ сериалов</button>
+          <button type="button" class="cat-chip" data-action="select-col" data-col="GENRE_SCIFI">🚀 Фантастика</button>
+          <button type="button" class="cat-chip" data-action="select-col" data-col="GENRE_COMEDY">😂 Комедии</button>
+        </div>
+      </div>
+
+      <div class="row-between">
+        <h2 id="colHeading" style="font-size:14px;font-weight:700;">🔥 Популярное</h2>
+        <span id="colMeta" style="font-size:12px;color:var(--text-sec);"></span>
+      </div>
+
+      <div id="colList" class="cards-list"></div>
+
+      <div id="colLoadMoreWrap" class="hidden">
+        <button type="button" id="colLoadMoreBtn" class="btn btn-secondary btn-full" data-action="col-load-more">Загрузить ещё</button>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         TAB 3: МОЁ (ЗАКЛАДКИ / ИСТОРИЯ)
+         ======================================================================= -->
+    <section id="tab-my" class="tab-section hidden">
+      <div class="segmented-switch">
+        <button type="button" class="segmented-tab active" data-action="my-subtab" data-sub="bookmarks">
+          <span>⭐ Закладки</span>
+          <span id="bookmarksCountPill" class="count-pill">0</span>
+        </button>
+        <button type="button" class="segmented-tab" data-action="my-subtab" data-sub="history">
+          <span>🕒 История</span>
+          <span id="historyCountPill" class="count-pill">0</span>
+        </button>
+      </div>
+
+      <!-- Bookmarks Subtab -->
+      <div id="myBookmarksWrap" class="stack-md">
+        <div id="bookmarksList" class="cards-list"></div>
+      </div>
+
+      <!-- History Subtab -->
+      <div id="myHistoryWrap" class="stack-md hidden">
+        <div class="row-between">
+          <span class="label-caps">Недавно открытые</span>
+          <button type="button" id="clearHistoryBtn" class="btn btn-danger-soft hidden" data-action="ask-clear-history" style="min-height:44px;padding:0 12px;">Очистить</button>
+        </div>
+        <div id="historyList" class="cards-list"></div>
+      </div>
+
+      <!-- Backup Export / Import -->
+      <div class="card stack-sm">
+        <span class="label-caps">Резервная копия</span>
+        <p style="font-size:12px;color:var(--text-sec);">Перенесите закладки, историю и отметки серий на другое устройство.</p>
+        <div class="grid-2">
+          <button type="button" class="btn btn-secondary" data-action="export-json">⬇ Экспорт JSON</button>
+          <button type="button" class="btn btn-secondary" data-action="open-import">📥 Импорт JSON</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         TAB 4: НАСТРОЙКИ
+         ======================================================================= -->
+    <section id="tab-settings" class="tab-section hidden">
+      <!-- Mirror Settings -->
+      <div class="card stack-md">
+        <div class="stack-sm">
+          <h2 style="font-size:15px;font-weight:800;">🌐 Зеркало для просмотра</h2>
+          <p style="font-size:12px;color:var(--text-sec);">Приставка <code>www.</code> сохраняется точно как указана. Все ссылки на сайте обновляются сразу.</p>
+        </div>
+
+        <div id="mirrorPresets" class="preset-chips">
+          <button type="button" class="preset-btn active" data-action="preset-mirror" data-mirror="www.kinopoisk.cx">www.kinopoisk.cx</button>
+          <button type="button" class="preset-btn" data-action="preset-mirror" data-mirror="kinopoisk.vip">kinopoisk.vip</button>
+          <button type="button" class="preset-btn" data-action="preset-mirror" data-mirror="sspoisk.ru">sspoisk.ru</button>
+          <button type="button" class="preset-btn" data-action="preset-mirror" data-mirror="ggpoisk.ru">ggpoisk.ru</button>
+        </div>
+
+        <div class="row">
+          <input
+            type="text"
+            id="mirrorInput"
+            class="input-field"
+            placeholder="www.kinopoisk.cx"
+            autocomplete="off"
+            autocapitalize="none"
+            spellcheck="false"
+            aria-label="Домен зеркала"
+          >
+          <button type="button" class="btn btn-primary" data-action="save-mirror" style="flex-shrink:0;">Сохранить</button>
+        </div>
+
+        <div class="preview-box">
+          Ссылка: <strong id="mirrorLivePreview">https://www.kinopoisk.cx/film/258687/</strong>
+        </div>
+      </div>
+
+      <!-- API Key Settings -->
+      <div class="card stack-md">
+        <div class="row-between" style="flex-wrap:wrap;">
+          <h2 style="font-size:15px;font-weight:800;">🔑 API-ключ Кинопоиска</h2>
+          <span id="apiKeyStatusPill" class="status-pill">Встроенный ключ</span>
+        </div>
+        <p style="font-size:12px;color:var(--text-sec);line-height:1.5;">
+          Работает сразу из коробки. Если дневной лимит (500 запросов/день) закончится, возьмите бесплатный ключ на
+          <a href="https://kinopoiskapiunofficial.tech/" target="_blank" rel="noopener noreferrer" style="color:#ff8557;text-decoration:underline;">kinopoiskapiunofficial.tech</a>.
+        </p>
+
+        <div class="row">
+          <input
+            type="password"
+            id="apiKeyInput"
+            class="input-field"
+            placeholder="Введите свой X-API-KEY..."
+            autocomplete="off"
+            autocapitalize="none"
+            spellcheck="false"
+            aria-label="API-ключ"
+          >
+          <button type="button" class="btn-icon" data-action="toggle-api-key-vis" aria-label="Показать или скрыть ключ">👁</button>
+        </div>
+
+        <div class="grid-2">
+          <button type="button" class="btn btn-primary" data-action="save-api-key">Сохранить ключ</button>
+          <button type="button" class="btn btn-secondary" data-action="reset-api-key">Сбросить на встроенный</button>
+        </div>
+
+        <button type="button" id="testApiKeyBtn" class="btn btn-secondary btn-full" data-action="test-api-key">🔌 Проверить ключ</button>
+        <div id="apiKeyTestBox" class="test-result-box hidden"></div>
+      </div>
+
+      <!-- Diagnostics Card -->
+      <div class="card stack-md">
+        <h2 style="font-size:15px;font-weight:800;">🛠 Диагностика</h2>
+        <div class="diag-list">
+          <div class="diag-row"><span class="diag-key">Версия:</span><span class="diag-val">v3.1</span></div>
+          <div class="diag-row"><span class="diag-key">Среда:</span><span id="diagEnv" class="diag-val">—</span></div>
+          <div class="diag-row"><span class="diag-key">Активное зеркало:</span><span id="diagMirror" class="diag-val accent">—</span></div>
+          <div class="diag-row"><span class="diag-key">Хранилище:</span><span id="diagStorage" class="diag-val">—</span></div>
+          <div class="diag-row"><span class="diag-key">Кэш «Популярное»:</span><span id="diagPopularCache" class="diag-val">—</span></div>
+          <div class="diag-row"><span class="diag-key">Последний API URL:</span><span id="diagLastApiUrl" class="diag-val">Нет запросов</span></div>
+          <div class="diag-row"><span class="diag-key">Последняя ошибка:</span><span id="diagLastError" class="diag-val ok">Нет</span></div>
+        </div>
+        <button type="button" class="btn btn-secondary btn-full" data-action="clear-cache">🧹 Очистить кэш</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Fixed Bottom Navigation (4 Tabs) -->
+  <nav class="bottom-nav" aria-label="Основная навигация">
+    <div class="bottom-nav-inner">
+      <button type="button" class="nav-btn active" data-action="nav" data-tab="search">
+        <span class="nav-icon" aria-hidden="true">🔍</span>
+        <span>Поиск</span>
+      </button>
+      <button type="button" class="nav-btn" data-action="nav" data-tab="collections">
+        <span class="nav-icon" aria-hidden="true">🎬</span>
+        <span>Подборки</span>
+      </button>
+      <button type="button" class="nav-btn" data-action="nav" data-tab="my">
+        <span class="nav-icon" aria-hidden="true">🔖</span>
+        <span>Моё</span>
+        <span id="myNavBadge" class="nav-badge hidden">0</span>
+      </button>
+      <button type="button" class="nav-btn" data-action="nav" data-tab="settings">
+        <span class="nav-icon" aria-hidden="true">⚙️</span>
+        <span>Настройки</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Toast -->
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+  <!-- =========================================================================
+       MODAL: MOVIE DETAIL
+       ========================================================================= -->
+  <div id="detailModal" class="modal-backdrop hidden" data-backdrop="detailModal" role="dialog" aria-modal="true" aria-label="Карточка фильма">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <div class="row">
+          <span id="detailTypeBadge" class="type-pill">Фильм</span>
+          <span id="detailIdBadge" style="font-family:var(--mono);font-size:12px;color:var(--text-sec);"></span>
+        </div>
+        <button type="button" class="btn-icon" data-action="close-modal" data-modal="detailModal" aria-label="Закрыть карточку">✕</button>
+      </div>
+      <div id="detailModalBody" class="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL: COPY FALLBACK
+       ========================================================================= -->
+  <div id="copyModal" class="modal-backdrop hidden" data-backdrop="copyModal" role="dialog" aria-modal="true" aria-label="Копирование ссылки">
+    <div class="modal-sheet" style="max-width:440px;">
+      <div class="modal-header">
+        <strong style="font-size:14px;">Ссылка на просмотр</strong>
+        <button type="button" class="btn-icon" data-action="close-modal" data-modal="copyModal" aria-label="Закрыть">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:12.5px;color:var(--text-sec);">Скопируйте ссылку вручную или откройте напрямую:</p>
+        <input type="text" id="copyModalInput" class="input-field" readonly style="font-family:var(--mono);">
+        <div class="grid-2">
+          <button type="button" class="btn btn-secondary" data-action="copy-modal-btn">📋 Копировать</button>
+          <a id="copyModalOpenLink" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-primary">▶ Открыть ↗</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL: IMPORT JSON
+       ========================================================================= -->
+  <div id="importModal" class="modal-backdrop hidden" data-backdrop="importModal" role="dialog" aria-modal="true" aria-label="Импорт резервной копии">
+    <div class="modal-sheet" style="max-width:460px;">
+      <div class="modal-header">
+        <strong style="font-size:14px;">Импорт JSON</strong>
+        <button type="button" class="btn-icon" data-action="close-modal" data-modal="importModal" aria-label="Закрыть">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="file" id="importFileInput" accept=".json,application/json" style="font-size:13px;color:var(--text-sec);">
+        <textarea id="importJsonTextarea" class="textarea-field" placeholder='{"mirror":"www.kinopoisk.cx","bookmarks":[],"history":[]}'></textarea>
+        <div class="grid-2">
+          <button type="button" class="btn btn-secondary" data-action="close-modal" data-modal="importModal">Отмена</button>
+          <button type="button" class="btn btn-primary" data-action="confirm-import">Импортировать</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL: CONFIRMATION (NO window.confirm)
+       ========================================================================= -->
+  <div id="confirmModal" class="modal-backdrop hidden" data-backdrop="confirmModal" role="dialog" aria-modal="true" aria-label="Подтверждение действия">
+    <div class="modal-sheet" style="max-width:400px;">
+      <div class="modal-header">
+        <strong id="confirmModalTitle" style="font-size:14px;">Подтверждение</strong>
+        <button type="button" class="btn-icon" data-action="close-modal" data-modal="confirmModal" aria-label="Закрыть">✕</button>
+      </div>
+      <div class="modal-body">
+        <p id="confirmModalText" style="font-size:13px;color:var(--text-sec);line-height:1.5;"></p>
+        <div class="grid-2">
+          <button type="button" class="btn btn-secondary" data-action="close-modal" data-modal="confirmModal">Отмена</button>
+          <button type="button" class="btn btn-danger" data-action="confirm-ok">Подтвердить</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* =======================================================================
+         1. CONSTANTS, FALLBACKS & STATE
+         ======================================================================= */
+      const APP_VERSION = 'v3.1';
+      const API_BASE = 'https://kinopoiskapiunofficial.tech';
+      const DEFAULT_API_KEY = '5cc47542-dd60-4a48-a3bd-7c36ab9c6b35';
+      const DEFAULT_MIRROR = 'www.kinopoisk.cx';
+      const POPULAR_CACHE_TTL_MS = 60 * 60 * 1000; // 60 minutes
+      const COLLECTION_CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes
+      const GENRES_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+      const FALLBACK_POSTER = 'https://placehold.co/240x360/151923/9aa4b8?text=KP';
+      const SERIES_TYPES = ['TV_SERIES', 'MINI_SERIES', 'TV_SHOW'];
+
+      const STORAGE_KEYS = {
+        SCHEMA: 'kpwatch_v31_schema',
+        MIRROR: 'kpwatch_v31_mirror',
+        CUSTOM_KEY: 'kpwatch_v31_custom_api_key',
+        HISTORY: 'kpwatch_v31_history',
+        BOOKMARKS: 'kpwatch_v31_bookmarks',
+        POPULAR_CACHE: 'kpwatch_v31_popular_cache',
+        GENRES_CACHE: 'kpwatch_v31_genres_cache'
+      };
+
+      // Clean offline/first-launch fallback with real Kinopoisk IDs
+      const FALLBACK_POPULAR_ITEMS = [
+        { id: '258687', title: 'Интерстеллар', originalTitle: 'Interstellar', year: '2014', type: 'FILM', isSeries: false, rating: 8.6, genres: ['фантастика', 'драма'], countries: ['США'], poster: FALLBACK_POSTER },
+        { id: '404900', title: 'Во все тяжкие', originalTitle: 'Breaking Bad', year: '2008', type: 'TV_SERIES', isSeries: true, rating: 8.9, genres: ['криминал', 'драма'], countries: ['США'], poster: FALLBACK_POSTER },
+        { id: '1188529', title: 'Достать ножи', originalTitle: 'Knives Out', year: '2019', type: 'FILM', isSeries: false, rating: 8.1, genres: ['детектив', 'комедия'], countries: ['США'], poster: FALLBACK_POSTER },
+        { id: '447301', title: 'Начало', originalTitle: 'Inception', year: '2010', type: 'FILM', isSeries: false, rating: 8.7, genres: ['фантастика', 'боевик'], countries: ['США'], poster: FALLBACK_POSTER },
+        { id: '464963', title: 'Игра престолов', originalTitle: 'Game of Thrones', year: '2011', type: 'TV_SERIES', isSeries: true, rating: 9.0, genres: ['фэнтези', 'драма'], countries: ['США'], poster: FALLBACK_POSTER },
+        { id: '535341', title: '1+1', originalTitle: 'Intouchables', year: '2011', type: 'FILM', isSeries: false, rating: 8.8, genres: ['драма', 'комедия'], countries: ['Франция'], poster: FALLBACK_POSTER }
+      ];
+
+      const FALLBACK_GENRES = [
+        { id: 1, genre: 'триллер' },
+        { id: 2, genre: 'драма' },
+        { id: 3, genre: 'криминал' },
+        { id: 4, genre: 'мелодрама' },
+        { id: 5, genre: 'детектив' },
+        { id: 6, genre: 'фантастика' },
+        { id: 7, genre: 'приключения' },
+        { id: 11, genre: 'боевик' },
+        { id: 12, genre: 'фэнтези' },
+        { id: 13, genre: 'комедия' },
+        { id: 17, genre: 'ужасы' },
+        { id: 18, genre: 'мультфильм' },
+        { id: 19, genre: 'семейный' },
+        { id: 24, genre: 'аниме' }
+      ];
+
+      const COLLECTION_CONFIG = {
+        TOP_POPULAR_ALL: { label: '🔥 Популярное', kind: 'collection', apiType: 'TOP_POPULAR_ALL' },
+        TOP_250_MOVIES: { label: '🏆 Топ-250 фильмов', kind: 'collection', apiType: 'TOP_250_MOVIES' },
+        TOP_POPULAR_SERIES: { label: '📺 Популярные сериалы', kind: 'collection', apiType: 'TOP_POPULAR_SERIES', fallbackApiType: 'POPULAR_SERIES' },
+        TOP_250_TV_SHOWS: { label: '⭐ Топ сериалов', kind: 'collection', apiType: 'TOP_250_TV_SHOWS' },
+        GENRE_SCIFI: { label: '🚀 Фантастика', kind: 'genre', genreName: 'фантастика', fallbackGenreId: 6 },
+        GENRE_COMEDY: { label: '😂 Комедии', kind: 'genre', genreName: 'комедия', fallbackGenreId: 13 }
+      };
+
+      // Central normalized item registry (ID -> movie/series object)
+      const itemRegistry = new Map();
+
+      // Short-lived in-memory cache for collections, searches, and details
+      const runtimeCache = new Map();
+
+      const state = {
+        activeTab: 'search',
+        mySubTab: 'bookmarks',
+        mirror: DEFAULT_MIRROR,
+        customApiKey: '',
+        bookmarks: [],
+        history: [],
+        genres: FALLBACK_GENRES.slice(),
+        genresLoaded: false,
+
+        // Popular 6 chips on Start screen
+        popularIds: [],
+        popularPoolIds: [],
+        popularCacheSource: 'инициализация',
+        popularCacheTimestamp: 0,
+
+        // Search tab state
+        directItem: null,
+        searchMode: 'idle', // 'idle' | 'keyword' | 'filter'
+        searchIds: [],
+        searchPage: 1,
+        searchTotalPages: 1,
+        searchLoading: false,
+        filters: {
+          type: 'ALL',
+          ratingFrom: 0,
+          yearFrom: '',
+          yearTo: '',
+          genreId: ''
+        },
+
+        // Collections tab state
+        colInitialized: false,
+        colKey: 'TOP_POPULAR_ALL',
+        colIds: [],
+        colPage: 1,
+        colTotalPages: 1,
+        colLoading: false,
+
+        // Modals & Roulette
+        detailItemId: null,
+        rouletteMode: false,
+        rouletteLastId: '',
+        confirmCallback: null,
+        retryCallback: null,
+
+        // Diagnostics
+        lastApiUrl: 'Нет запросов',
+        lastError: ''
+      };
+
+      /* =======================================================================
+         2. SECURITY, VALIDATION & SAFE STORAGE
+         ======================================================================= */
+      function escapeHtml(value) {
+        if (value === null || value === undefined) return '';
+        return String(value)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      /** Validates external / image URLs — only http:// or https:// allowed. */
+      function safeHttpUrl(url, fallback) {
+        if (typeof url === 'string') {
+          const trimmed = url.trim();
+          if (/^https?:\/\/[^\s<>"']+$/i.test(trimmed)) {
+            return trimmed;
+          }
+        }
+        return fallback || '';
+      }
+
+      /**
+       * CRITICAL MIRROR NORMALIZER:
+       * Strictly preserves "www." prefix!
+       * Only trims whitespace, lowercases, removes leading http(s)://,
+       * and strips trailing paths, queries, hashes, or slashes.
+       */
+      function normalizeMirror(raw) {
+        if (typeof raw !== 'string') return '';
+        return raw
+          .trim()
+          .toLowerCase()
+          .replace(/^https?:\/\//i, '')
+          .split(/[/?#]/)[0]
+          .replace(/\/+$/g, '')
+          .replace(/\s+/g, '');
+      }
+
+      function isValidMirror(domain) {
+        return Boolean(domain && domain.indexOf('.') !== -1 && /^[a-z0-9.-]+$/i.test(domain));
+      }
+
+      function buildWatchUrl(id) {
+        const cleanId = String(id || '').replace(/\D/g, '');
+        const normalized = normalizeMirror(state.mirror);
+        const safeMirror = isValidMirror(normalized) ? normalized : DEFAULT_MIRROR;
+        return 'https://' + safeMirror + '/film/' + cleanId + '/';
+      }
+
+      function getActiveApiKey() {
+        return state.customApiKey ? state.customApiKey : DEFAULT_API_KEY;
+      }
+
+      // Safe localStorage wrapper with automatic in-memory fallback
+      const memoryStorage = new Map();
+      let storagePersistent = false;
+      try {
+        localStorage.setItem('__kpw31_test__', '1');
+        localStorage.removeItem('__kpw31_test__');
+        storagePersistent = true;
+      } catch (_err) {
+        storagePersistent = false;
+      }
+
+      const safeStorage = {
+        get(key) {
+          try {
+            if (storagePersistent) {
+              return localStorage.getItem(key);
+            }
+          } catch (_err) {
+            storagePersistent = false;
+          }
+          return memoryStorage.has(key) ? memoryStorage.get(key) : null;
+        },
+        set(key, val) {
+          const s = String(val);
+          memoryStorage.set(key, s);
+          try {
+            if (storagePersistent) {
+              localStorage.setItem(key, s);
+            }
+          } catch (_err) {
+            storagePersistent = false;
+          }
+        },
+        remove(key) {
+          memoryStorage.delete(key);
+          try {
+            if (storagePersistent) {
+              localStorage.removeItem(key);
+            }
+          } catch (_err) {
+            storagePersistent = false;
+          }
+        }
+      };
+
+      function safeJsonParse(raw, fallback) {
+        if (!raw) return fallback;
+        try {
+          return JSON.parse(raw);
+        } catch (_err) {
+          return fallback;
+        }
+      }
+
+      // Global Error Capture -> Diagnostics + Banner
+      function recordError(msg) {
+        const text = String(msg || 'Неизвестная ошибка');
+        state.lastError = text;
+        const banner = document.getElementById('jsErrorBanner');
+        const textEl = document.getElementById('jsErrorText');
+        if (banner && textEl) {
+          textEl.textContent = text;
+          banner.classList.remove('hidden');
+        }
+        updateDiagnosticsUI();
+      }
+
+      window.onerror = function (message, _source, lineno) {
+        recordError('JS: ' + message + (lineno ? ' (стр. ' + lineno + ')' : ''));
+        return false;
+      };
+
+      window.onunhandledrejection = function (event) {
+        const reason = event && event.reason ? (event.reason.message || String(event.reason)) : 'Promise rejected';
+        recordError('Async: ' + reason);
+      };
+
+      /* =======================================================================
+         3. NORMALIZATION & BACKWARD-COMPATIBLE MIGRATION
+         ======================================================================= */
+      function parseRating(val) {
+        if (val === null || val === undefined) return null;
+        const s = String(val).trim();
+        if (!s || s === 'null' || s.indexOf('%') !== -1) return null;
+        const n = parseFloat(s.replace(',', '.'));
+        if (!isFinite(n) || n <= 0 || n > 10) return null;
+        return Math.round(n * 10) / 10;
+      }
+
+      function isSeriesType(typeOrFlag) {
+        if (typeof typeOrFlag === 'boolean') return typeOrFlag;
+        if (typeof typeOrFlag === 'string') {
+          const u = typeOrFlag.toUpperCase();
+          return u === 'SERIES' || SERIES_TYPES.indexOf(u) !== -1;
+        }
+        return false;
+      }
+
+      function normalizeItem(raw) {
+        if (!raw || typeof raw !== 'object') return null;
+        const rawId = raw.kinopoiskId !== undefined && raw.kinopoiskId !== null
+          ? raw.kinopoiskId
+          : (raw.filmId !== undefined && raw.filmId !== null ? raw.filmId : raw.id);
+        const id = String(rawId || '').replace(/\D/g, '');
+        if (!id) return null;
+
+        const prev = itemRegistry.get(id) || {};
+        const rawType = raw.type || prev.type || (raw.isSeries ? 'TV_SERIES' : 'FILM');
+        const isSeries = raw.isSeries !== undefined ? Boolean(raw.isSeries) : isSeriesType(rawType);
+
+        const title = raw.title || raw.nameRu || raw.nameOriginal || raw.nameEn || prev.title || ((isSeries ? 'Сериал #' : 'Фильм #') + id);
+        const origCandidate = raw.originalTitle || raw.nameOriginal || raw.nameEn || prev.originalTitle || '';
+        const originalTitle = (origCandidate && origCandidate !== title) ? String(origCandidate) : '';
+
+        const ratingSrc = raw.ratingKinopoisk !== undefined && raw.ratingKinopoisk !== null
+          ? raw.ratingKinopoisk
+          : (raw.rating !== undefined && raw.rating !== null ? raw.rating : prev.rating);
+
+        const yearVal = raw.year !== undefined && raw.year !== null && String(raw.year) !== 'null'
+          ? String(raw.year)
+          : (prev.year || '');
+
+        const genres = Array.isArray(raw.genres)
+          ? raw.genres.map(function (g) { return typeof g === 'string' ? g : (g && g.genre ? g.genre : ''); }).filter(Boolean)
+          : (prev.genres || []);
+
+        const countries = Array.isArray(raw.countries)
+          ? raw.countries.map(function (c) { return typeof c === 'string' ? c : (c && c.country ? c.country : ''); }).filter(Boolean)
+          : (prev.countries || []);
+
+        const rawPoster = raw.poster || raw.posterUrlPreview || raw.posterUrl || prev.poster || '';
+        const poster = safeHttpUrl(rawPoster, FALLBACK_POSTER);
+
+        const normalized = {
+          id: id,
+          title: String(title),
+          originalTitle: originalTitle,
+          year: yearVal,
+          type: String(rawType),
+          isSeries: isSeries,
+          rating: parseRating(ratingSrc),
+          ratingImdb: parseRating(raw.ratingImdb !== undefined ? raw.ratingImdb : prev.ratingImdb),
+          poster: poster,
+          genres: genres,
+          countries: countries,
+          description: raw.description ? String(raw.description) : (prev.description || ''),
+          season: Math.max(1, Number(raw.season || prev.season) || 1),
+          episode: Math.max(1, Number(raw.episode || prev.episode) || 1),
+          lastWatched: Number(raw.lastWatched || prev.lastWatched) || 0
+        };
+
+        itemRegistry.set(id, normalized);
+        return normalized;
+      }
+
+      function loadAndMigrateStorage() {
+        const legacySettingsObj = safeJsonParse(safeStorage.get('kpw_settings'), null)
+          || safeJsonParse(safeStorage.get('kp_watch_state'), null)
+          || {};
+
+        // 1. Mirror migration (automatically upgrades bare "kinopoisk.cx" -> "www.kinopoisk.cx")
+        const mirrorSources = [
+          safeStorage.get(STORAGE_KEYS.MIRROR),
+          safeStorage.get('kpwatch_v3_mirror'),
+          safeStorage.get('kp_mirror'),
+          legacySettingsObj.mirror,
+          safeStorage.get('kpwatch_v21_mirror'),
+          safeStorage.get('kpwatch_v2_mirror'),
+          safeStorage.get('kpwatch_mirror')
+        ];
+        let foundMirror = '';
+        for (let i = 0; i < mirrorSources.length; i++) {
+          const m = normalizeMirror(mirrorSources[i] || '');
+          if (isValidMirror(m)) {
+            foundMirror = m;
+            break;
+          }
+        }
+        if (foundMirror === 'kinopoisk.cx') {
+          foundMirror = DEFAULT_MIRROR;
+        }
+        state.mirror = isValidMirror(foundMirror) ? foundMirror : DEFAULT_MIRROR;
+
+        // 2. Custom API key migration
+        const keySources = [
+          safeStorage.get(STORAGE_KEYS.CUSTOM_KEY),
+          safeStorage.get('kpwatch_v3_custom_api_key'),
+          safeStorage.get('kp_api_key'),
+          legacySettingsObj.apiKey,
+          safeStorage.get('kpwatch_v21_api_key'),
+          safeStorage.get('kpwatch_v2_api_key')
+        ];
+        for (let i = 0; i < keySources.length; i++) {
+          const k = typeof keySources[i] === 'string' ? keySources[i].trim() : '';
+          if (k.length >= 8) {
+            state.customApiKey = (k === DEFAULT_API_KEY) ? '' : k;
+            break;
+          }
+        }
+
+        // 3. History migration
+        const historySources = [
+          safeStorage.get(STORAGE_KEYS.HISTORY),
+          safeStorage.get('kpwatch_v3_history'),
+          safeStorage.get('kpw_history'),
+          safeStorage.get('kp_history'),
+          safeStorage.get('kpwatch_v21_history'),
+          safeStorage.get('kpwatch_v2_watch_history')
+        ];
+        for (let i = 0; i < historySources.length; i++) {
+          const arr = safeJsonParse(historySources[i], null);
+          if (Array.isArray(arr) && arr.length > 0) {
+            state.history = arr.map(normalizeItem).filter(Boolean);
+            break;
+          }
+        }
+        if (!state.history.length && Array.isArray(legacySettingsObj.history)) {
+          state.history = legacySettingsObj.history.map(normalizeItem).filter(Boolean);
+        }
+
+        // 4. Bookmarks migration
+        const bookmarkSources = [
+          safeStorage.get(STORAGE_KEYS.BOOKMARKS),
+          safeStorage.get('kpwatch_v3_bookmarks'),
+          safeStorage.get('kpw_bookmarks'),
+          safeStorage.get('kp_bookmarks'),
+          safeStorage.get('kpwatch_v21_watchlist'),
+          safeStorage.get('kpwatch_v2_watchlist')
+        ];
+        for (let i = 0; i < bookmarkSources.length; i++) {
+          const arr = safeJsonParse(bookmarkSources[i], null);
+          if (Array.isArray(arr) && arr.length > 0) {
+            state.bookmarks = arr.map(normalizeItem).filter(Boolean);
+            break;
+          }
+        }
+
+        // 5. Cached genres (24h TTL)
+        const cachedGenres = safeJsonParse(safeStorage.get(STORAGE_KEYS.GENRES_CACHE), null);
+        if (cachedGenres && Array.isArray(cachedGenres.items) && cachedGenres.items.length > 0) {
+          state.genres = cachedGenres.items;
+          if (Date.now() - Number(cachedGenres.timestamp || 0) < GENRES_CACHE_TTL_MS) {
+            state.genresLoaded = true;
+          }
+        }
+
+        // Persist canonical v3.1 keys
+        safeStorage.set(STORAGE_KEYS.SCHEMA, '3.1');
+        safeStorage.set(STORAGE_KEYS.MIRROR, state.mirror);
+        if (state.customApiKey) safeStorage.set(STORAGE_KEYS.CUSTOM_KEY, state.customApiKey);
+        if (state.history.length) safeStorage.set(STORAGE_KEYS.HISTORY, JSON.stringify(state.history));
+        if (state.bookmarks.length) safeStorage.set(STORAGE_KEYS.BOOKMARKS, JSON.stringify(state.bookmarks));
+      }
+
+      function persistHistory() {
+        safeStorage.set(STORAGE_KEYS.HISTORY, JSON.stringify(state.history));
+        updateMyBadgesUI();
+      }
+
+      function persistBookmarks() {
+        safeStorage.set(STORAGE_KEYS.BOOKMARKS, JSON.stringify(state.bookmarks));
+        updateMyBadgesUI();
+      }
+
+      /* =======================================================================
+         4. API LAYER, CACHING & UNIFIED ERROR HANDLING
+         ======================================================================= */
+      function cacheGet(key) {
+        const entry = runtimeCache.get(key);
+        if (!entry) return null;
+        if (Date.now() < entry.expires) return entry.data;
+        runtimeCache.delete(key);
+        return null;
+      }
+
+      function cacheSet(key, data, ttlMs) {
+        runtimeCache.set(key, {
+          data: data,
+          expires: Date.now() + (ttlMs || COLLECTION_CACHE_TTL_MS)
+        });
+      }
+
+      function classifyApiError(err) {
+        const status = err && err.status ? err.status : 0;
+        if (status === 401 || status === 403) {
+          return {
+            status: status,
+            isKeyIssue: true,
+            title: 'Неверный API-ключ (' + status + ')',
+            message: 'Сервер отклонил текущий ключ. Укажите другой ключ в Настройках или сбросьте на встроенный.'
+          };
+        }
+        if (status === 402 || status === 429) {
+          return {
+            status: status,
+            isKeyIssue: true,
+            title: 'Исчерпан дневной лимит API (' + status + ')',
+            message: 'Достигнут лимит 500 запросов в сутки на текущий ключ. Вставьте свой бесплатный ключ с kinopoiskapiunofficial.tech.'
+          };
+        }
+        if (status === 404) {
+          return {
+            status: 404,
+            isKeyIssue: false,
+            title: 'Ничего не найдено (404)',
+            message: 'Фильм, сериал или раздел не найден в базе API.'
+          };
+        }
+        return {
+          status: status,
+          isKeyIssue: false,
+          title: status ? ('Ошибка сервера (' + status + ')') : 'Ошибка сети или CORS',
+          message: 'Не удалось получить ответ от kinopoiskapiunofficial.tech. Проверьте интернет, VPN или повторите позже.'
+        };
+      }
+
+      async function apiRequest(path, params, options) {
+        const opts = options || {};
+        const url = new URL(API_BASE + path);
+        if (params) {
+          Object.keys(params).forEach(function (k) {
+            const v = params[k];
+            if (v !== '' && v !== null && v !== undefined) {
+              url.searchParams.set(k, String(v));
+            }
+          });
+        }
+
+        const fullUrl = url.toString();
+        const cacheKey = url.pathname + url.search;
+        if (opts.cacheTtl && !opts.bypassCache) {
+          const hit = cacheGet(cacheKey);
+          if (hit !== null) {
+            state.lastApiUrl = fullUrl + ' (кэш)';
+            updateDiagnosticsUI();
+            return hit;
+          }
+        }
+
+        state.lastApiUrl = fullUrl;
+        updateDiagnosticsUI();
+
+        let response;
+        try {
+          response = await fetch(fullUrl, {
+            method: 'GET',
+            headers: {
+              'X-API-KEY': getActiveApiKey(),
+              'Content-Type': 'application/json'
+            }
+          });
+        } catch (_networkErr) {
+          state.lastError = 'API Network/CORS: ' + path;
+          updateDiagnosticsUI();
+          const e = new Error('NETWORK_OR_CORS');
+          e.status = 0;
+          throw e;
+        }
+
+        if (!response.ok) {
+          state.lastError = 'API HTTP ' + response.status + ': ' + path;
+          updateDiagnosticsUI();
+          const e = new Error('HTTP_' + response.status);
+          e.status = response.status;
+          throw e;
+        }
+
+        const data = await response.json();
+        if (opts.cacheTtl) {
+          cacheSet(cacheKey, data, opts.cacheTtl);
+        }
+        return data;
+      }
+
+      async function ensureGenresLoaded() {
+        if (state.genresLoaded) return state.genres;
+        try {
+          const data = await apiRequest('/api/v2.2/films/filters', null, { cacheTtl: GENRES_CACHE_TTL_MS });
+          if (data && Array.isArray(data.genres) && data.genres.length > 0) {
+            const cleaned = data.genres
+              .filter(function (g) { return g && g.id && g.genre; })
+              .map(function (g) { return { id: Number(g.id), genre: String(g.genre) }; });
+            if (cleaned.length > 0) {
+              state.genres = cleaned;
+              state.genresLoaded = true;
+              safeStorage.set(STORAGE_KEYS.GENRES_CACHE, JSON.stringify({
+                timestamp: Date.now(),
+                items: cleaned
+              }));
+              renderGenreSelect();
+            }
+          }
+        } catch (_err) {
+          // Silently keep fallback genres so filters stay functional
+        }
+        return state.genres;
+      }
+
+      function findGenreId(name, fallbackId) {
+        const lower = String(name || '').toLowerCase();
+        const found = state.genres.find(function (g) { return g.genre.toLowerCase() === lower; });
+        return found ? found.id : fallbackId;
+      }
+
+      /* =======================================================================
+         5. DYNAMIC 6 POPULAR CHIPS (60-MIN CACHE + GRACEFUL FALLBACK)
+         ======================================================================= */
+      function formatCacheAge(ts) {
+        if (!ts) return '';
+        const diffMin = Math.max(0, Math.floor((Date.now() - ts) / 60000));
+        if (diffMin < 1) return 'обновлено только что';
+        if (diffMin < 60) return 'из кэша · ' + diffMin + ' мин назад';
+        const hrs = Math.floor(diffMin / 60);
+        return 'из кэша · ' + hrs + ' ч назад';
+      }
+
+      function renderPopularChipsUI() {
+        const wrap = document.getElementById('popularChipsWrap');
+        const noteEl = document.getElementById('popularCacheNote');
+        if (!wrap || !noteEl) return;
+
+        if (state.popularCacheSource === 'fresh') {
+          noteEl.textContent = 'обновлено только что · кэш 60 мин';
+        } else if (state.popularCacheSource === 'cache') {
+          noteEl.textContent = formatCacheAge(state.popularCacheTimestamp);
+        } else if (state.popularCacheSource === 'stale') {
+          noteEl.textContent = 'офлайн · ' + formatCacheAge(state.popularCacheTimestamp);
+        } else if (state.popularCacheSource === 'fallback') {
+          noteEl.textContent = 'резервный список';
+        } else {
+          noteEl.textContent = '';
+        }
+
+        const chipsHtml = state.popularIds.slice(0, 6).map(function (id) {
+          const item = itemRegistry.get(id);
+          if (!item) return '';
+          const ratingHtml = item.rating !== null
+            ? '<span class="pop-chip-rating' + (item.rating < 7 ? ' mid' : '') + '">' + item.rating.toFixed(1) + '</span>'
+            : '';
+          const seriesTag = item.isSeries ? '<span class="pop-chip-type">Сериал</span>' : '';
+          return (
+            '<button type="button" class="pop-chip" data-action="open-detail" data-id="' + escapeHtml(item.id) + '">' +
+              '<span class="pop-chip-title">' + escapeHtml(item.title) + '</span>' +
+              seriesTag +
+              ratingHtml +
+            '</button>'
+          );
+        }).join('');
+
+        wrap.innerHTML = chipsHtml;
+        updateDiagnosticsUI();
+      }
+
+      function applyPopularItems(itemsArray, source, timestamp) {
+        const normalizedList = itemsArray.map(normalizeItem).filter(Boolean);
+        state.popularPoolIds = normalizedList.map(function (it) { return it.id; });
+        state.popularIds = state.popularPoolIds.slice(0, 6);
+        state.popularCacheSource = source;
+        state.popularCacheTimestamp = timestamp || 0;
+        renderPopularChipsUI();
+      }
+
+      async function loadDynamicPopularChips(forceRefresh) {
+        const cached = safeJsonParse(safeStorage.get(STORAGE_KEYS.POPULAR_CACHE), null);
+        const hasValidCacheArray = Boolean(cached && Array.isArray(cached.items) && cached.items.length > 0);
+        const cacheAgeMs = hasValidCacheArray ? (Date.now() - Number(cached.timestamp || 0)) : Infinity;
+
+        // 1. Fresh 60-min cache -> render immediately with ZERO API calls
+        if (!forceRefresh && hasValidCacheArray && cacheAgeMs < POPULAR_CACHE_TTL_MS) {
+          applyPopularItems(cached.items, 'cache', Number(cached.timestamp));
+          return;
+        }
+
+        // 2. Otherwise fetch page 1 of TOP_POPULAR_ALL (natural popularity order, no shuffling)
+        try {
+          const data = await apiRequest(
+            '/api/v2.2/films/collections',
+            { type: 'TOP_POPULAR_ALL', page: 1 },
+            { cacheTtl: COLLECTION_CACHE_TTL_MS, bypassCache: Boolean(forceRefresh) }
+          );
+          const rawItems = Array.isArray(data.items) ? data.items : [];
+          const normalized = rawItems.map(normalizeItem).filter(Boolean);
+          if (normalized.length > 0) {
+            const now = Date.now();
+            safeStorage.set(STORAGE_KEYS.POPULAR_CACHE, JSON.stringify({
+              timestamp: now,
+              items: normalized
+            }));
+            applyPopularItems(normalized, 'fresh', now);
+            return;
+          }
+          throw new Error('EMPTY_POPULAR');
+        } catch (_err) {
+          // 3. Graceful fallback: use expired cache if available
+          if (hasValidCacheArray) {
+            applyPopularItems(cached.items, 'stale', Number(cached.timestamp || 0));
+            return;
+          }
+          // 4. First launch with no cache & offline/quota error -> 6 classic fallback films
+          applyPopularItems(FALLBACK_POPULAR_ITEMS, 'fallback', 0);
+        }
+      }
+
+      /* =======================================================================
+         6. UI HELPERS, SYNC & COMPONENT RENDERERS
+         ======================================================================= */
+      let toastTimer = null;
+      function showToast(message, type) {
+        const el = document.getElementById('toast');
+        if (!el) return;
+        clearTimeout(toastTimer);
+        el.textContent = message;
+        el.className = 'toast' + (type === 'ok' ? ' ok' : (type === 'err' ? ' err' : ''));
+        toastTimer = setTimeout(function () {
+          el.classList.add('hidden');
+        }, 2500);
+      }
+
+      function updateBodyModalLock() {
+        const modals = ['detailModal', 'copyModal', 'importModal', 'confirmModal'];
+        const anyOpen = modals.some(function (id) {
+          const el = document.getElementById(id);
+          return el && !el.classList.contains('hidden');
+        });
+        document.body.classList.toggle('modal-open', anyOpen);
+      }
+
+      function openModal(id) {
+        const el = document.getElementById(id);
+        if (el) {
+          el.classList.remove('hidden');
+          updateBodyModalLock();
+        }
+      }
+
+      function closeModal(id) {
+        const el = document.getElementById(id);
+        if (el) {
+          el.classList.add('hidden');
+          updateBodyModalLock();
+        }
+      }
+
+      function closeTopModal() {
+        const order = ['confirmModal', 'importModal', 'copyModal', 'detailModal'];
+        for (let i = 0; i < order.length; i++) {
+          const el = document.getElementById(order[i]);
+          if (el && !el.classList.contains('hidden')) {
+            closeModal(order[i]);
+            return;
+          }
+        }
+      }
+
+      function openCopyFallback(url) {
+        const inp = document.getElementById('copyModalInput');
+        const link = document.getElementById('copyModalOpenLink');
+        if (inp) inp.value = url;
+        if (link) link.href = safeHttpUrl(url, 'https://' + DEFAULT_MIRROR + '/');
+        openModal('copyModal');
+        setTimeout(function () {
+          try { inp.focus(); inp.select(); } catch (_e) {}
+        }, 40);
+      }
+
+      function copyText(text, okMsg, useFallbackModal) {
+        if (!text) return;
+        let copied = false;
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.setAttribute('readonly', '');
+          ta.style.position = 'fixed';
+          ta.style.left = '-9999px';
+          document.body.appendChild(ta);
+          ta.focus();
+          ta.select();
+          copied = document.execCommand('copy');
+          document.body.removeChild(ta);
+        } catch (_err) {
+          copied = false;
+        }
+
+        if (copied) {
+          showToast(okMsg || 'Ссылка скопирована', 'ok');
+          return;
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(function () {
+            showToast(okMsg || 'Ссылка скопирована', 'ok');
+          }).catch(function () {
+            if (useFallbackModal !== false) openCopyFallback(text);
+            else showToast('Скопируйте ссылку вручную', 'err');
+          });
+        } else if (useFallbackModal !== false) {
+          openCopyFallback(text);
+        } else {
+          showToast('Скопируйте ссылку вручную', 'err');
+        }
+      }
+
+      function ratingClass(rating) {
+        if (rating === null) return '';
+        if (rating >= 7.0) return 'high';
+        if (rating >= 5.0) return 'mid';
+        return 'low';
+      }
+
+      function formatRelativeTime(ts) {
+        if (!ts) return '';
+        const sec = Math.max(0, Math.floor((Date.now() - ts) / 1000));
+        if (sec < 60) return 'только что';
+        const min = Math.floor(sec / 60);
+        if (min < 60) return min + ' мин назад';
+        const hr = Math.floor(min / 60);
+        if (hr < 24) return hr + ' ч назад';
+        return new Date(ts).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+      }
+
+      function isBookmarked(id) {
+        return state.bookmarks.some(function (b) { return b.id === String(id); });
+      }
+
+      /** Immediately updates all rendered watch links & copy buttons when mirror changes */
+      function syncAllWatchLinks() {
+        const anchors = document.querySelectorAll('a[data-watch-id]');
+        for (let i = 0; i < anchors.length; i++) {
+          const a = anchors[i];
+          const id = a.getAttribute('data-watch-id');
+          a.href = buildWatchUrl(id);
+          if (a.getAttribute('data-mirror-cta') === '1') {
+            a.textContent = '▶ Смотреть на ' + state.mirror;
+          }
+        }
+
+        const copyBtns = document.querySelectorAll('button[data-copy-id]');
+        for (let i = 0; i < copyBtns.length; i++) {
+          const btn = copyBtns[i];
+          btn.setAttribute('data-url', buildWatchUrl(btn.getAttribute('data-copy-id')));
+        }
+
+        const headerMirror = document.getElementById('headerMirrorLabel');
+        if (headerMirror) headerMirror.textContent = state.mirror;
+
+        const welcomeMirror = document.getElementById('welcomeMirrorName');
+        if (welcomeMirror) welcomeMirror.textContent = state.mirror;
+
+        updateSettingsUI();
+        updateDiagnosticsUI();
+      }
+
+      /** Silently records watch into History without blocking native <a> navigation */
+      function recordWatchSilently(id) {
+        try {
+          const cid = String(id || '').replace(/\D/g, '');
+          if (!cid) return;
+          const idx = state.history.findIndex(function (h) { return h.id === cid; });
+          if (idx !== -1) {
+            const existing = state.history[idx];
+            existing.lastWatched = Date.now();
+            state.history.splice(idx, 1);
+            state.history.unshift(existing);
+          } else {
+            const reg = itemRegistry.get(cid);
+            if (reg) {
+              state.history.unshift(Object.assign({}, reg, { lastWatched: Date.now() }));
+            }
+          }
+          if (state.history.length > 100) state.history = state.history.slice(0, 100);
+          persistHistory();
+        } catch (err) {
+          recordError('History: ' + err.message);
+        }
+      }
+
+      function toggleBookmark(id) {
+        const cid = String(id || '').replace(/\D/g, '');
+        if (!cid) return;
+        const idx = state.bookmarks.findIndex(function (b) { return b.id === cid; });
+        if (idx !== -1) {
+          state.bookmarks.splice(idx, 1);
+          showToast('Убрано из закладок');
+        } else {
+          const item = itemRegistry.get(cid);
+          if (item) {
+            state.bookmarks.unshift(Object.assign({}, item));
+            showToast('Добавлено в закладки ⭐', 'ok');
+          }
+        }
+        persistBookmarks();
+        syncBookmarkButtonsUI(cid);
+        if (state.activeTab === 'my' && state.mySubTab === 'bookmarks') {
+          renderBookmarksTab();
+        }
+      }
+
+      function syncBookmarkButtonsUI(id) {
+        const active = isBookmarked(id);
+        const btns = document.querySelectorAll('button[data-action="toggle-bookmark"][data-id="' + id + '"]');
+        for (let i = 0; i < btns.length; i++) {
+          const b = btns[i];
+          if (b.getAttribute('data-full-label') === '1') {
+            b.textContent = active ? '★ В закладках' : '⭐ В закладки';
+            b.classList.toggle('btn-accent-soft', active);
+            b.classList.toggle('btn-secondary', !active);
+          } else {
+            b.textContent = active ? '★' : '☆';
+            b.classList.toggle('starred', active);
+          }
+        }
+      }
+
+      function updateMyBadgesUI() {
+        const bPill = document.getElementById('bookmarksCountPill');
+        const hPill = document.getElementById('historyCountPill');
+        const navBadge = document.getElementById('myNavBadge');
+        if (bPill) bPill.textContent = String(state.bookmarks.length);
+        if (hPill) hPill.textContent = String(state.history.length);
+        const total = state.bookmarks.length + state.history.length;
+        if (navBadge) {
+          navBadge.textContent = total > 99 ? '99+' : String(total);
+          navBadge.classList.toggle('hidden', total === 0);
+        }
+      }
+
+      function renderCardSkeletons(count) {
+        const out = [];
+        for (let i = 0; i < count; i++) {
+          out.push(
+            '<div class="movie-card">' +
+              '<div class="poster-btn skeleton"></div>' +
+              '<div class="movie-body">' +
+                '<div class="stack-sm">' +
+                  '<div class="skeleton" style="height:16px;width:72%;border-radius:6px;"></div>' +
+                  '<div class="skeleton" style="height:12px;width:45%;border-radius:6px;"></div>' +
+                '</div>' +
+                '<div class="skeleton" style="height:44px;width:100%;border-radius:12px;"></div>' +
+              '</div>' +
+            '</div>'
+          );
+        }
+        return out.join('');
+      }
+
+      function renderErrorCard(err, retryFn) {
+        const info = classifyApiError(err);
+        state.retryCallback = retryFn || null;
+        return (
+          '<div class="state-box error">' +
+            '<div class="state-emoji" aria-hidden="true">' + (info.isKeyIssue ? '🔑' : '⚠️') + '</div>' +
+            '<div class="state-title">' + escapeHtml(info.title) + '</div>' +
+            '<p class="state-text">' + escapeHtml(info.message) + '</p>' +
+            '<div class="row" style="flex-wrap:wrap;justify-content:center;margin-top:4px;">' +
+              (info.isKeyIssue
+                ? '<button type="button" class="btn btn-primary" data-action="go-change-api-key">Сменить API-ключ</button>'
+                : '') +
+              (retryFn
+                ? '<button type="button" class="btn btn-secondary" data-action="retry-last">Повторить</button>'
+                : '') +
+            '</div>' +
+          '</div>'
+        );
+      }
+
+      function renderMovieCard(item, opts) {
+        const o = opts || {};
+        const url = buildWatchUrl(item.id);
+        const starred = isBookmarked(item.id);
+        const genresText = item.genres.slice(0, 2).join(', ');
+        const ctaLabel = o.continueMode ? '▶ Продолжить' : '▶ Смотреть';
+        const showTracker = Boolean(o.showTracker && item.isSeries);
+        const s = item.season || 1;
+        const e = item.episode || 1;
+
+        let cornerBtnHtml = '';
+        if (o.removeHistory) {
+          cornerBtnHtml = '<button type="button" class="card-corner-btn remove" data-action="remove-history" data-id="' + escapeHtml(item.id) + '" aria-label="Удалить из истории">✕</button>';
+        } else if (o.removeBookmark) {
+          cornerBtnHtml = '<button type="button" class="card-corner-btn remove" data-action="toggle-bookmark" data-id="' + escapeHtml(item.id) + '" aria-label="Удалить из закладок">✕</button>';
+        } else {
+          cornerBtnHtml = '<button type="button" class="card-corner-btn' + (starred ? ' starred' : '') + '" data-action="toggle-bookmark" data-id="' + escapeHtml(item.id) + '" aria-label="В закладки">' + (starred ? '★' : '☆') + '</button>';
+        }
+
+        const trackerHtml = showTracker
+          ? '<div class="tracker-box">' +
+              '<span class="tracker-badge">S' + s + ' E' + e + '</span>' +
+              '<div class="stepper-group">' +
+                '<span>Сезон</span>' +
+                '<div class="stepper">' +
+                  '<button type="button" class="stepper-btn" data-action="step-tracker" data-id="' + escapeHtml(item.id) + '" data-list="' + escapeHtml(o.trackerList || 'history') + '" data-field="season" data-delta="-1" aria-label="Уменьшить сезон">−</button>' +
+                  '<span class="stepper-val">' + s + '</span>' +
+                  '<button type="button" class="stepper-btn" data-action="step-tracker" data-id="' + escapeHtml(item.id) + '" data-list="' + escapeHtml(o.trackerList || 'history') + '" data-field="season" data-delta="1" aria-label="Увеличить сезон">+</button>' +
+                '</div>' +
+              '</div>' +
+              '<div class="stepper-group">' +
+                '<span>Серия</span>' +
+                '<div class="stepper">' +
+                  '<button type="button" class="stepper-btn" data-action="step-tracker" data-id="' + escapeHtml(item.id) + '" data-list="' + escapeHtml(o.trackerList || 'history') + '" data-field="episode" data-delta="-1" aria-label="Уменьшить серию">−</button>' +
+                  '<span class="stepper-val">' + e + '</span>' +
+                  '<button type="button" class="stepper-btn" data-action="step-tracker" data-id="' + escapeHtml(item.id) + '" data-list="' + escapeHtml(o.trackerList || 'history') + '" data-field="episode" data-delta="1" aria-label="Увеличить серию">+</button>' +
+                '</div>' +
+              '</div>' +
+            '</div>'
+          : '';
+
+        return (
+          '<article class="movie-card' + (o.direct ? ' direct' : '') + '">' +
+            '<button type="button" class="poster-btn" data-action="open-detail" data-id="' + escapeHtml(item.id) + '" aria-label="Открыть ' + escapeHtml(item.title) + '">' +
+              '<img class="poster-img" src="' + escapeHtml(safeHttpUrl(item.poster, FALLBACK_POSTER)) + '" data-fallback="' + FALLBACK_POSTER + '" alt="' + escapeHtml(item.title) + '" loading="lazy" decoding="async">' +
+              (item.rating !== null ? '<span class="rating-pill ' + ratingClass(item.rating) + '">' + item.rating.toFixed(1) + '</span>' : '') +
+            '</button>' +
+            '<div class="movie-body">' +
+              '<div>' +
+                '<div class="movie-head">' +
+                  '<div class="movie-title-wrap">' +
+                    (o.direct ? '<div class="direct-tag">⚡ Прямой переход · ID ' + escapeHtml(item.id) + '</div>' : '') +
+                    '<button type="button" class="movie-title-btn" data-action="open-detail" data-id="' + escapeHtml(item.id) + '">' + escapeHtml(item.title) + '</button>' +
+                  '</div>' +
+                  cornerBtnHtml +
+                '</div>' +
+                '<div class="movie-meta">' +
+                  (item.year ? '<span>' + escapeHtml(item.year) + '</span>' : '') +
+                  '<span class="type-pill' + (item.isSeries ? ' series' : '') + '">' + (item.isSeries ? 'Сериал' : 'Фильм') + '</span>' +
+                  (genresText ? '<span>' + escapeHtml(genresText) + '</span>' : '') +
+                  (o.continueMode && item.lastWatched ? '<span>· ' + escapeHtml(formatRelativeTime(item.lastWatched)) + '</span>' : '') +
+                '</div>' +
+              '</div>' +
+              trackerHtml +
+              '<div class="card-actions">' +
+                '<a class="watch-link" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer" data-watch-id="' + escapeHtml(item.id) + '">' + ctaLabel + '</a>' +
+                '<button type="button" class="btn-icon" data-action="copy-url" data-copy-id="' + escapeHtml(item.id) + '" data-url="' + escapeHtml(url) + '" aria-label="Копировать ссылку">📋</button>' +
+              '</div>' +
+            '</div>' +
+          '</article>'
+        );
+      }
+
+      /* =======================================================================
+         7. TAB 1: SEARCH & FILTERS
+         ======================================================================= */
+      function parseDirectIdInput(raw) {
+        const s = String(raw || '').trim();
+        if (!s) return null;
+        if (/^\d{3,10}$/.test(s)) {
+          return { id: s, isSeries: false };
+        }
+        const match = s.match(/(?:film|series)\/(\d{3,10})/i);
+        if (match) {
+          return { id: match[1], isSeries: /series\/\d+/i.test(s) };
+        }
+        return null;
+      }
+
+      function updateDirectCardPreview() {
+        const inp = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearSearchBtn');
+        const wrap = document.getElementById('directCardWrap');
+        if (!inp || !wrap) return;
+
+        if (clearBtn) clearBtn.classList.toggle('hidden', !inp.value);
+
+        const parsed = parseDirectIdInput(inp.value);
+        if (!parsed) {
+          state.directItem = null;
+          wrap.classList.add('hidden');
+          wrap.innerHTML = '';
+          return;
+        }
+
+        const prev = itemRegistry.get(parsed.id);
+        const item = normalizeItem(
+          prev
+            ? Object.assign({}, prev, { isSeries: parsed.isSeries || prev.isSeries })
+            : {
+                id: parsed.id,
+                title: (parsed.isSeries ? 'Сериал #' : 'Фильм #') + parsed.id,
+                isSeries: parsed.isSeries,
+                type: parsed.isSeries ? 'TV_SERIES' : 'FILM',
+                poster: FALLBACK_POSTER
+              }
+        );
+        state.directItem = item;
+        wrap.innerHTML = renderMovieCard(item, { direct: true });
+        wrap.classList.remove('hidden');
+      }
+
+      function showSearchHomeState() {
+        state.searchMode = 'idle';
+        state.searchIds = [];
+        document.getElementById('searchResultsHeader').classList.add('hidden');
+        document.getElementById('searchResultsList').classList.add('hidden');
+        document.getElementById('searchLoadMoreWrap').classList.add('hidden');
+        document.getElementById('startStateCard').classList.remove('hidden');
+      }
+
+      async function runKeywordSearch(rawQuery) {
+        const q = String(rawQuery || '').trim();
+        if (!q) {
+          showSearchHomeState();
+          return;
+        }
+
+        const direct = parseDirectIdInput(q);
+        if (direct) {
+          updateDirectCardPreview();
+          openDetailModal(direct.id, false);
+          return;
+        }
+
+        state.searchMode = 'keyword';
+        state.searchIds = [];
+        document.getElementById('startStateCard').classList.add('hidden');
+        document.getElementById('searchLoadMoreWrap').classList.add('hidden');
+        document.getElementById('searchResultsHeader').classList.remove('hidden');
+        document.getElementById('searchResultsTitle').textContent = 'Поиск: «' + q + '»';
+
+        const listEl = document.getElementById('searchResultsList');
+        listEl.classList.remove('hidden');
+        listEl.innerHTML = renderCardSkeletons(4);
+
+        try {
+          const data = await apiRequest(
+            '/api/v2.1/films/search-by-keyword',
+            { keyword: q, page: 1 },
+            { cacheTtl: COLLECTION_CACHE_TTL_MS }
+          );
+          const films = Array.isArray(data.films) ? data.films : [];
+          films.forEach(function (raw) {
+            const norm = normalizeItem(raw);
+            if (norm && state.searchIds.indexOf(norm.id) === -1) state.searchIds.push(norm.id);
+          });
+
+          document.getElementById('searchResultsTitle').textContent = 'Найдено: ' + state.searchIds.length;
+          if (!state.searchIds.length) {
+            listEl.innerHTML =
+              '<div class="state-box">' +
+                '<div class="state-emoji" aria-hidden="true">🔎</div>' +
+                '<div class="state-title">Ничего не найдено</div>' +
+                '<p class="state-text">По запросу «' + escapeHtml(q) + '» результатов нет. Проверьте название или используйте фильтры.</p>' +
+              '</div>';
+          } else {
+            listEl.innerHTML = state.searchIds.map(function (id) {
+              return renderMovieCard(itemRegistry.get(id), {});
+            }).join('');
+          }
+        } catch (err) {
+          listEl.innerHTML = renderErrorCard(err, function () { runKeywordSearch(q); });
+        }
+      }
+
+      function renderGenreSelect() {
+        const sel = document.getElementById('filterGenreSelect');
+        if (!sel) return;
+        const current = sel.value || state.filters.genreId;
+        const sorted = state.genres.slice().sort(function (a, b) {
+          return a.genre.localeCompare(b.genre, 'ru');
+        });
+        sel.innerHTML = '<option value="">Любой жанр</option>' + sorted.map(function (g) {
+          const label = g.genre.charAt(0).toUpperCase() + g.genre.slice(1);
+          return '<option value="' + escapeHtml(g.id) + '">' + escapeHtml(label) + '</option>';
+        }).join('');
+        sel.value = current;
+      }
+
+      function syncFilterButtonsUI() {
+        document.querySelectorAll('[data-action="filter-type"]').forEach(function (btn) {
+          btn.classList.toggle('active', btn.getAttribute('data-val') === state.filters.type);
+        });
+        document.querySelectorAll('[data-action="filter-rating"]').forEach(function (btn) {
+          btn.classList.toggle('active', Number(btn.getAttribute('data-val')) === Number(state.filters.ratingFrom));
+        });
+        const yf = document.getElementById('filterYearFrom');
+        const yt = document.getElementById('filterYearTo');
+        const gs = document.getElementById('filterGenreSelect');
+        if (yf) yf.value = state.filters.yearFrom;
+        if (yt) yt.value = state.filters.yearTo;
+        if (gs) gs.value = state.filters.genreId;
+      }
+
+      function readFilterInputs() {
+        state.filters.yearFrom = document.getElementById('filterYearFrom').value.trim();
+        state.filters.yearTo = document.getElementById('filterYearTo').value.trim();
+        state.filters.genreId = document.getElementById('filterGenreSelect').value;
+      }
+
+      async function runFilterSearch(append) {
+        if (state.searchLoading) return;
+        readFilterInputs();
+        state.searchMode = 'filter';
+        state.searchLoading = true;
+        if (!append) {
+          state.searchPage = 1;
+          state.searchIds = [];
+        }
+
+        document.getElementById('startStateCard').classList.add('hidden');
+        document.getElementById('searchResultsHeader').classList.remove('hidden');
+        const listEl = document.getElementById('searchResultsList');
+        const moreWrap = document.getElementById('searchLoadMoreWrap');
+        const moreBtn = document.getElementById('searchLoadMoreBtn');
+        listEl.classList.remove('hidden');
+
+        if (!append) {
+          document.getElementById('searchResultsTitle').textContent = 'Подбор по фильтрам…';
+          moreWrap.classList.add('hidden');
+          listEl.innerHTML = renderCardSkeletons(4);
+        } else if (moreBtn) {
+          moreBtn.disabled = true;
+          moreBtn.textContent = 'Загружаем…';
+        }
+
+        const params = {
+          type: state.filters.type,
+          order: 'NUM_VOTE',
+          ratingFrom: state.filters.ratingFrom,
+          ratingTo: 10,
+          page: state.searchPage
+        };
+        if (state.filters.genreId) params.genres = state.filters.genreId;
+        if (state.filters.yearFrom) params.yearFrom = Number(state.filters.yearFrom);
+        if (state.filters.yearTo) params.yearTo = Number(state.filters.yearTo);
+        const kw = document.getElementById('searchInput').value.trim();
+        if (kw && !parseDirectIdInput(kw)) params.keyword = kw;
+
+        try {
+          const data = await apiRequest('/api/v2.2/films', params, { cacheTtl: COLLECTION_CACHE_TTL_MS });
+          const items = Array.isArray(data.items) ? data.items : [];
+          items.forEach(function (raw) {
+            const norm = normalizeItem(raw);
+            if (norm && state.searchIds.indexOf(norm.id) === -1) state.searchIds.push(norm.id);
+          });
+          state.searchTotalPages = Number(data.totalPages) || 1;
+          document.getElementById('searchResultsTitle').textContent = 'Подобрано: ' + (data.total || state.searchIds.length);
+
+          if (!state.searchIds.length) {
+            listEl.innerHTML =
+              '<div class="state-box">' +
+                '<div class="state-emoji" aria-hidden="true">🎛</div>' +
+                '<div class="state-title">По фильтрам ничего не найдено</div>' +
+                '<p class="state-text">Попробуйте снизить минимальный рейтинг или расширить годы.</p>' +
+              '</div>';
+          } else {
+            listEl.innerHTML = state.searchIds.map(function (id) {
+              return renderMovieCard(itemRegistry.get(id), {});
+            }).join('');
+          }
+          moreWrap.classList.toggle('hidden', state.searchPage >= state.searchTotalPages);
+        } catch (err) {
+          if (!append) listEl.innerHTML = renderErrorCard(err, function () { runFilterSearch(false); });
+          else showToast(classifyApiError(err).title, 'err');
+        } finally {
+          state.searchLoading = false;
+          if (moreBtn) {
+            moreBtn.disabled = false;
+            moreBtn.textContent = 'Загрузить ещё';
+          }
+        }
+      }
+
+      /* =======================================================================
+         8. TAB 2: COLLECTIONS
+         ======================================================================= */
+      function syncCollectionChipsUI() {
+        document.querySelectorAll('#collectionChipsRail [data-action="select-col"]').forEach(function (btn) {
+          btn.classList.toggle('active', btn.getAttribute('data-col') === state.colKey);
+        });
+      }
+
+      async function loadCollection(colKey, append) {
+        if (state.colLoading) return;
+        const cfg = COLLECTION_CONFIG[colKey] || COLLECTION_CONFIG.TOP_POPULAR_ALL;
+        state.colInitialized = true;
+        state.colKey = colKey;
+        state.colLoading = true;
+        if (!append) {
+          state.colPage = 1;
+          state.colIds = [];
+        }
+        syncCollectionChipsUI();
+
+        document.getElementById('colHeading').textContent = cfg.label;
+        const metaEl = document.getElementById('colMeta');
+        const listEl = document.getElementById('colList');
+        const moreWrap = document.getElementById('colLoadMoreWrap');
+        const moreBtn = document.getElementById('colLoadMoreBtn');
+
+        if (!append) {
+          metaEl.textContent = '';
+          moreWrap.classList.add('hidden');
+          listEl.innerHTML = renderCardSkeletons(4);
+        } else if (moreBtn) {
+          moreBtn.disabled = true;
+          moreBtn.textContent = 'Загружаем…';
+        }
+
+        try {
+          let data;
+          if (cfg.kind === 'collection') {
+            try {
+              data = await apiRequest(
+                '/api/v2.2/films/collections',
+                { type: cfg.apiType, page: state.colPage },
+                { cacheTtl: COLLECTION_CACHE_TTL_MS }
+              );
+            } catch (colErr) {
+              // Automatic fallback if API expects POPULAR_SERIES instead of TOP_POPULAR_SERIES
+              if (cfg.fallbackApiType && colErr && colErr.status === 400) {
+                data = await apiRequest(
+                  '/api/v2.2/films/collections',
+                  { type: cfg.fallbackApiType, page: state.colPage },
+                  { cacheTtl: COLLECTION_CACHE_TTL_MS }
+                );
+              } else {
+                throw colErr;
+              }
+            }
+          } else {
+            await ensureGenresLoaded();
+            const gid = findGenreId(cfg.genreName, cfg.fallbackGenreId);
+            data = await apiRequest(
+              '/api/v2.2/films',
+              { type: 'FILM', genres: gid, order: 'NUM_VOTE', ratingFrom: 6, ratingTo: 10, page: state.colPage },
+              { cacheTtl: COLLECTION_CACHE_TTL_MS }
+            );
+          }
+
+          const items = Array.isArray(data.items) ? data.items : [];
+          items.forEach(function (raw) {
+            const norm = normalizeItem(raw);
+            if (norm && state.colIds.indexOf(norm.id) === -1) state.colIds.push(norm.id);
+          });
+          state.colTotalPages = Number(data.totalPages) || 1;
+          metaEl.textContent = 'Стр. ' + state.colPage + ' / ' + state.colTotalPages;
+
+          if (!state.colIds.length) {
+            listEl.innerHTML = '<div class="state-box"><div class="state-title">В подборке пока пусто</div></div>';
+          } else {
+            listEl.innerHTML = state.colIds.map(function (id) {
+              return renderMovieCard(itemRegistry.get(id), {});
+            }).join('');
+          }
+          moreWrap.classList.toggle('hidden', state.colPage >= state.colTotalPages);
+        } catch (err) {
+          if (!append) listEl.innerHTML = renderErrorCard(err, function () { loadCollection(colKey, false); });
+          else showToast(classifyApiError(err).title, 'err');
+        } finally {
+          state.colLoading = false;
+          if (moreBtn) {
+            moreBtn.disabled = false;
+            moreBtn.textContent = 'Загрузить ещё';
+          }
+        }
+      }
+
+      /* =======================================================================
+         9. TAB 3: MY (BOOKMARKS & HISTORY + INLINE SERIES TRACKER)
+         ======================================================================= */
+      function renderBookmarksTab() {
+        const listEl = document.getElementById('bookmarksList');
+        if (!listEl) return;
+        if (!state.bookmarks.length) {
+          listEl.innerHTML =
+            '<div class="state-box">' +
+              '<div class="state-emoji" aria-hidden="true">⭐</div>' +
+              '<div class="state-title">Закладок пока нет</div>' +
+              '<p class="state-text">Нажимайте звёздочку ☆ на карточках, чтобы отложить фильмы и сериалы на потом.</p>' +
+            '</div>';
+          return;
+        }
+        listEl.innerHTML = state.bookmarks.map(function (item) {
+          return renderMovieCard(item, {
+            removeBookmark: true,
+            showTracker: item.isSeries,
+            trackerList: 'bookmarks'
+          });
+        }).join('');
+      }
+
+      function renderHistoryTab() {
+        const listEl = document.getElementById('historyList');
+        const clearBtn = document.getElementById('clearHistoryBtn');
+        if (!listEl) return;
+        if (clearBtn) clearBtn.classList.toggle('hidden', !state.history.length);
+
+        if (!state.history.length) {
+          listEl.innerHTML =
+            '<div class="state-box">' +
+              '<div class="state-emoji" aria-hidden="true">🕒</div>' +
+              '<div class="state-title">История просмотров пуста</div>' +
+              '<p class="state-text">После нажатия «▶ Смотреть» фильм или сериал автоматически сохранится здесь.</p>' +
+            '</div>';
+          return;
+        }
+        listEl.innerHTML = state.history.map(function (item) {
+          return renderMovieCard(item, {
+            continueMode: true,
+            removeHistory: true,
+            showTracker: item.isSeries,
+            trackerList: 'history'
+          });
+        }).join('');
+      }
+
+      function switchMySubTab(sub) {
+        state.mySubTab = sub === 'history' ? 'history' : 'bookmarks';
+        document.querySelectorAll('[data-action="my-subtab"]').forEach(function (btn) {
+          btn.classList.toggle('active', btn.getAttribute('data-sub') === state.mySubTab);
+        });
+        document.getElementById('myBookmarksWrap').classList.toggle('hidden', state.mySubTab !== 'bookmarks');
+        document.getElementById('myHistoryWrap').classList.toggle('hidden', state.mySubTab !== 'history');
+        if (state.mySubTab === 'bookmarks') renderBookmarksTab();
+        else renderHistoryTab();
+      }
+
+      function stepSeriesTracker(id, listName, field, delta) {
+        const cid = String(id || '').replace(/\D/g, '');
+        if (field !== 'season' && field !== 'episode') return;
+        let updatedVal = null;
+
+        // Sync across both history and bookmarks if the series exists in both
+        const hItem = state.history.find(function (x) { return x.id === cid; });
+        const bItem = state.bookmarks.find(function (x) { return x.id === cid; });
+        const primary = listName === 'bookmarks' ? (bItem || hItem) : (hItem || bItem);
+        if (!primary) return;
+
+        updatedVal = Math.max(1, (Number(primary[field]) || 1) + delta);
+        if (hItem) {
+          hItem[field] = updatedVal;
+          persistHistory();
+        }
+        if (bItem) {
+          bItem[field] = updatedVal;
+          persistBookmarks();
+        }
+        const reg = itemRegistry.get(cid);
+        if (reg) reg[field] = updatedVal;
+
+        if (state.mySubTab === 'history') renderHistoryTab();
+        else renderBookmarksTab();
+      }
+
+      /* =======================================================================
+         10. MOVIE DETAIL MODAL & EVENING ROULETTE
+         ======================================================================= */
+      function renderDetailModal(item, loadingDesc) {
+        const url = buildWatchUrl(item.id);
+        const starred = isBookmarked(item.id);
+
+        document.getElementById('detailTypeBadge').textContent = item.isSeries ? 'Сериал' : 'Фильм';
+        document.getElementById('detailTypeBadge').className = 'type-pill' + (item.isSeries ? ' series' : '');
+        document.getElementById('detailIdBadge').textContent = 'ID ' + item.id;
+
+        const kpClass = item.rating !== null ? ('kp-' + ratingClass(item.rating)) : '';
+        let html = '';
+
+        if (state.rouletteMode) {
+          html +=
+            '<button type="button" class="btn btn-accent-soft btn-full" data-action="roulette-another">' +
+              '🎲 Другой вариант' +
+            '</button>';
+        }
+
+        html +=
+          '<div class="detail-hero">' +
+            '<div class="detail-poster">' +
+              '<img class="poster-img" src="' + escapeHtml(safeHttpUrl(item.poster, FALLBACK_POSTER)) + '" data-fallback="' + FALLBACK_POSTER + '" alt="' + escapeHtml(item.title) + '">' +
+            '</div>' +
+            '<div class="detail-info">' +
+              '<h2 class="detail-title">' + escapeHtml(item.title) + '</h2>' +
+              (item.originalTitle ? '<p class="detail-orig">' + escapeHtml(item.originalTitle) + '</p>' : '') +
+              '<div class="detail-badges">' +
+                (item.rating !== null ? '<span class="info-chip ' + kpClass + '">КП ' + item.rating.toFixed(1) + '</span>' : '') +
+                (item.ratingImdb !== null ? '<span class="info-chip">IMDb ' + item.ratingImdb.toFixed(1) + '</span>' : '') +
+                (item.year ? '<span class="info-chip">' + escapeHtml(item.year) + '</span>' : '') +
+              '</div>' +
+              (item.countries.length ? '<p class="detail-meta-line"><span>Страна:</span> ' + escapeHtml(item.countries.join(', ')) + '</p>' : '') +
+              (item.genres.length ? '<p class="detail-meta-line"><span>Жанры:</span> ' + escapeHtml(item.genres.join(', ')) + '</p>' : '') +
+            '</div>' +
+          '</div>';
+
+        // Primary native watch CTA + secondary actions
+        html +=
+          '<div class="stack-sm">' +
+            '<a class="watch-cta-lg" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer" data-watch-id="' + escapeHtml(item.id) + '" data-mirror-cta="1">' +
+              '▶ Смотреть на ' + escapeHtml(state.mirror) +
+            '</a>' +
+            '<div class="grid-2">' +
+              '<button type="button" class="btn ' + (starred ? 'btn-accent-soft' : 'btn-secondary') + '" data-action="toggle-bookmark" data-id="' + escapeHtml(item.id) + '" data-full-label="1">' +
+                (starred ? '★ В закладках' : '⭐ В закладки') +
+              '</button>' +
+              '<button type="button" class="btn btn-secondary" data-action="copy-url" data-copy-id="' + escapeHtml(item.id) + '" data-url="' + escapeHtml(url) + '">' +
+                '📋 Копировать ссылку' +
+              '</button>' +
+            '</div>' +
+          '</div>';
+
+        // On-demand description block (0 extra API calls unless requested)
+        html += '<div class="detail-desc-box"><span class="label-caps">Описание</span>';
+        if (loadingDesc) {
+          html +=
+            '<div class="stack-sm">' +
+              '<div class="skeleton" style="height:12px;width:100%;border-radius:6px;"></div>' +
+              '<div class="skeleton" style="height:12px;width:85%;border-radius:6px;"></div>' +
+              '<div class="skeleton" style="height:12px;width:60%;border-radius:6px;"></div>' +
+            '</div>';
+        } else if (item.description) {
+          html += '<p class="detail-desc-text">' + escapeHtml(item.description) + '</p>';
+        } else {
+          html +=
+            '<p style="font-size:12.5px;color:var(--text-sec);">Описание не загружалось, чтобы экономить лимит API.</p>' +
+            '<button type="button" class="btn btn-secondary btn-full" data-action="load-description" data-id="' + escapeHtml(item.id) + '">Загрузить описание</button>';
+        }
+        html += '</div>';
+
+        document.getElementById('detailModalBody').innerHTML = html;
+      }
+
+      /** Opens modal IMMEDIATELY from cached itemRegistry — ZERO extra API requests! */
+      function openDetailModal(id, fromRoulette) {
+        const cid = String(id || '').replace(/\D/g, '');
+        if (!cid) return;
+        let item = itemRegistry.get(cid);
+        if (!item) {
+          item = normalizeItem({ id: cid, title: 'Фильм #' + cid });
+        }
+        // Check if full detail was previously cached in runtimeCache
+        const cachedFull = cacheGet('/api/v2.2/films/' + cid);
+        if (cachedFull) {
+          item = normalizeItem(cachedFull) || item;
+        }
+
+        state.detailItemId = cid;
+        state.rouletteMode = Boolean(fromRoulette);
+        renderDetailModal(item, false);
+        openModal('detailModal');
+      }
+
+      async function loadOnDemandDescription(id) {
+        const cid = String(id || '').replace(/\D/g, '');
+        const item = itemRegistry.get(cid);
+        if (!item) return;
+
+        renderDetailModal(item, true);
+        try {
+          const fullData = await apiRequest('/api/v2.2/films/' + cid, null, { cacheTtl: POPULAR_CACHE_TTL_MS });
+          const updated = normalizeItem(fullData) || item;
+          if (!updated.description) {
+            updated.description = 'Описание отсутствует в базе Кинопоиска.';
+          }
+          if (state.detailItemId === cid) {
+            renderDetailModal(updated, false);
+          }
+        } catch (err) {
+          if (state.detailItemId === cid) {
+            const box = document.getElementById('detailModalBody');
+            if (box) {
+              renderDetailModal(item, false);
+              const errWrap = document.createElement('div');
+              errWrap.innerHTML = renderErrorCard(err, function () { loadOnDemandDescription(cid); });
+              box.appendChild(errWrap.firstChild);
+            }
+          }
+        }
+      }
+
+      async function openEveningRoulette() {
+        const watchedIds = new Set(state.history.map(function (h) { return h.id; }));
+
+        function pickFromPool(ids) {
+          const unique = Array.from(new Set(ids)).filter(function (id) { return itemRegistry.has(id); });
+          if (!unique.length) return false;
+          const unseen = unique.filter(function (id) { return !watchedIds.has(id) && id !== state.rouletteLastId; });
+          const notPrev = unique.filter(function (id) { return id !== state.rouletteLastId; });
+          const pool = unseen.length ? unseen : (notPrev.length ? notPrev : unique);
+          const pickedId = pool[Math.floor(Math.random() * pool.length)];
+          state.rouletteLastId = pickedId;
+          openDetailModal(pickedId, true);
+          return true;
+        }
+
+        // Gather already cached items from TOP_POPULAR_ALL & TOP_250_MOVIES first (0 API calls)
+        let poolIds = state.popularPoolIds.slice();
+        const cachedTop250 = cacheGet('/api/v2.2/films/collections?type=TOP_250_MOVIES&page=1');
+        if (cachedTop250 && Array.isArray(cachedTop250.items)) {
+          cachedTop250.items.forEach(function (raw) {
+            const norm = normalizeItem(raw);
+            if (norm) poolIds.push(norm.id);
+          });
+        }
+
+        if (poolIds.length >= 4 && pickFromPool(poolIds)) {
+          return;
+        }
+
+        // Fetch TOP_250_MOVIES only if not cached yet
+        showToast('🎲 Подбираем фильм на вечер…');
+        try {
+          const data = await apiRequest(
+            '/api/v2.2/films/collections',
+            { type: 'TOP_250_MOVIES', page: 1 },
+            { cacheTtl: COLLECTION_CACHE_TTL_MS }
+          );
+          const items = Array.isArray(data.items) ? data.items : [];
+          items.forEach(function (raw) {
+            const norm = normalizeItem(raw);
+            if (norm) poolIds.push(norm.id);
+          });
+          if (!pickFromPool(poolIds)) {
+            showToast('Не удалось подобрать фильм', 'err');
+          }
+        } catch (err) {
+          // Fallback to whatever is in pool/fallback items
+          if (!pickFromPool(poolIds)) {
+            const fbIds = FALLBACK_POPULAR_ITEMS.map(function (x) { return normalizeItem(x).id; });
+            pickFromPool(fbIds);
+          }
+          showToast(classifyApiError(err).title, 'err');
+        }
+      }
+
+      /* =======================================================================
+         11. SETTINGS, DIAGNOSTICS & NAVIGATION
+         ======================================================================= */
+      function updateMirrorPreview(rawCandidate) {
+        const el = document.getElementById('mirrorLivePreview');
+        if (!el) return;
+        const n = normalizeMirror(rawCandidate !== undefined ? rawCandidate : state.mirror);
+        const domain = isValidMirror(n) ? n : state.mirror;
+        el.textContent = 'https://' + domain + '/film/258687/';
+      }
+
+      function updateSettingsUI() {
+        const mInp = document.getElementById('mirrorInput');
+        if (mInp && document.activeElement !== mInp) mInp.value = state.mirror;
+        updateMirrorPreview(state.mirror);
+
+        document.querySelectorAll('#mirrorPresets [data-action="preset-mirror"]').forEach(function (btn) {
+          btn.classList.toggle('active', btn.getAttribute('data-mirror') === state.mirror);
+        });
+
+        const isCustom = Boolean(state.customApiKey);
+        const pill = document.getElementById('apiKeyStatusPill');
+        if (pill) {
+          pill.textContent = isCustom ? 'Свой ключ' : 'Встроенный ключ';
+          pill.className = 'status-pill' + (isCustom ? ' custom' : '');
+        }
+        const kInp = document.getElementById('apiKeyInput');
+        if (kInp && document.activeElement !== kInp) {
+          kInp.value = state.customApiKey ? state.customApiKey : DEFAULT_API_KEY;
+        }
+      }
+
+      function detectRuntimeEnv() {
+        try {
+          if (window.self !== window.top) return 'iframe';
+        } catch (_e) {
+          return 'iframe';
+        }
+        const standalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+        if (standalone || window.navigator.standalone === true) return 'PWA';
+        return 'браузер';
+      }
+
+      function updateDiagnosticsUI() {
+        const setTxt = function (id, txt) {
+          const el = document.getElementById(id);
+          if (el) el.textContent = txt;
+        };
+
+        setTxt('diagEnv', detectRuntimeEnv());
+        setTxt('diagMirror', state.mirror);
+
+        const stEl = document.getElementById('diagStorage');
+        if (stEl) {
+          stEl.textContent = storagePersistent ? 'OK (localStorage)' : 'резерв в памяти';
+          stEl.className = 'diag-val ' + (storagePersistent ? 'ok' : 'accent');
+        }
+
+        let popStatus = '—';
+        if (state.popularCacheSource === 'fresh') popStatus = 'API · свежий (0 мин)';
+        else if (state.popularCacheSource === 'cache') popStatus = 'localStorage · ' + formatCacheAge(state.popularCacheTimestamp);
+        else if (state.popularCacheSource === 'stale') popStatus = 'устаревший кэш · ' + formatCacheAge(state.popularCacheTimestamp);
+        else if (state.popularCacheSource === 'fallback') popStatus = 'резервный список (офлайн)';
+        setTxt('diagPopularCache', popStatus);
+
+        setTxt('diagLastApiUrl', state.lastApiUrl);
+
+        const errEl = document.getElementById('diagLastError');
+        if (errEl) {
+          errEl.textContent = state.lastError || 'Нет';
+          errEl.className = 'diag-val ' + (state.lastError ? 'err' : 'ok');
+        }
+      }
+
+      async function testApiKeyConnection() {
+        const btn = document.getElementById('testApiKeyBtn');
+        const box = document.getElementById('apiKeyTestBox');
+        if (!btn || !box) return;
+        btn.disabled = true;
+        btn.textContent = '⏳ Проверяем ключ…';
+        box.classList.add('hidden');
+
+        try {
+          await apiRequest('/api/v2.2/films/filters', null, { bypassCache: true });
+          box.textContent = '✅ Ключ работает! Соединение с API Кинопоиска успешно.';
+          box.className = 'test-result-box ok';
+        } catch (err) {
+          const info = classifyApiError(err);
+          box.textContent = '❌ ' + info.title + ' — ' + info.message;
+          box.className = 'test-result-box err';
+        } finally {
+          btn.disabled = false;
+          btn.textContent = '🔌 Проверить ключ';
+        }
+      }
+
+      function switchTab(tab) {
+        state.activeTab = tab;
+        ['search', 'collections', 'my', 'settings'].forEach(function (t) {
+          const el = document.getElementById('tab-' + t);
+          if (el) el.classList.toggle('hidden', t !== tab);
+        });
+        document.querySelectorAll('.nav-btn').forEach(function (btn) {
+          btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
+        });
+
+        if (tab === 'collections' && !state.colInitialized) {
+          loadCollection(state.colKey, false);
+        }
+        if (tab === 'my') {
+          switchMySubTab(state.mySubTab);
+        }
+        if (tab === 'settings') {
+          updateSettingsUI();
+          updateDiagnosticsUI();
+        }
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      }
+
+      function openConfirmModal(title, text, onConfirm) {
+        state.confirmCallback = onConfirm;
+        document.getElementById('confirmModalTitle').textContent = title;
+        document.getElementById('confirmModalText').textContent = text;
+        openModal('confirmModal');
+      }
+
+      /* =======================================================================
+         12. EVENT DELEGATION & BOOTSTRAP
+         ======================================================================= */
+      function bindEvents() {
+        // Image error fallback (no inline onerror)
+        document.addEventListener('error', function (evt) {
+          const target = evt.target;
+          if (target && target.tagName === 'IMG') {
+            const fb = target.getAttribute('data-fallback');
+            if (fb && target.src !== fb) target.src = fb;
+          }
+        }, true);
+
+        // Escape key closes top modal
+        document.addEventListener('keydown', function (evt) {
+          if (evt.key === 'Escape') closeTopModal();
+        });
+
+        // Unified click delegation
+        document.addEventListener('click', function (evt) {
+          // 1. Native watch links: record to history silently, NEVER block navigation
+          const watchAnchor = evt.target.closest('a[data-watch-id]');
+          if (watchAnchor) {
+            recordWatchSilently(watchAnchor.getAttribute('data-watch-id'));
+            return;
+          }
+
+          // 2. Backdrop tap closes modal
+          const backdropId = evt.target.getAttribute ? evt.target.getAttribute('data-backdrop') : null;
+          if (backdropId) {
+            closeModal(backdropId);
+            return;
+          }
+
+          // 3. Delegated actions
+          const el = evt.target.closest('[data-action]');
+          if (!el) return;
+          const action = el.getAttribute('data-action');
+
+          try {
+            switch (action) {
+              case 'close-error-banner':
+                document.getElementById('jsErrorBanner').classList.add('hidden');
+                break;
+
+              case 'nav':
+                switchTab(el.getAttribute('data-tab'));
+                break;
+
+              case 'go-change-api-key':
+                switchTab('settings');
+                setTimeout(function () {
+                  const inp = document.getElementById('apiKeyInput');
+                  if (inp) {
+                    inp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    inp.focus();
+                    inp.select();
+                  }
+                }, 80);
+                break;
+
+              case 'retry-last':
+                if (typeof state.retryCallback === 'function') state.retryCallback();
+                break;
+
+              case 'clear-search-input':
+                document.getElementById('searchInput').value = '';
+                updateDirectCardPreview();
+                showSearchHomeState();
+                document.getElementById('searchInput').focus();
+                break;
+
+              case 'reset-search-view':
+                document.getElementById('searchInput').value = '';
+                updateDirectCardPreview();
+                showSearchHomeState();
+                break;
+
+              case 'toggle-filters': {
+                const panel = document.getElementById('filterPanel');
+                const body = document.getElementById('filterBody');
+                const isOpen = !body.classList.toggle('hidden');
+                panel.classList.toggle('open', isOpen);
+                el.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                if (isOpen) ensureGenresLoaded();
+                break;
+              }
+
+              case 'filter-type':
+                state.filters.type = el.getAttribute('data-val');
+                syncFilterButtonsUI();
+                break;
+
+              case 'filter-rating':
+                state.filters.ratingFrom = Number(el.getAttribute('data-val')) || 0;
+                syncFilterButtonsUI();
+                break;
+
+              case 'apply-filters':
+                runFilterSearch(false);
+                break;
+
+              case 'reset-filters':
+                state.filters = { type: 'ALL', ratingFrom: 0, yearFrom: '', yearTo: '', genreId: '' };
+                syncFilterButtonsUI();
+                showToast('Фильтры сброшены');
+                break;
+
+              case 'search-load-more':
+                if (state.searchPage < state.searchTotalPages) {
+                  state.searchPage += 1;
+                  runFilterSearch(true);
+                }
+                break;
+
+              case 'select-col':
+                loadCollection(el.getAttribute('data-col'), false);
+                break;
+
+              case 'col-load-more':
+                if (state.colPage < state.colTotalPages) {
+                  state.colPage += 1;
+                  loadCollection(state.colKey, true);
+                }
+                break;
+
+              case 'my-subtab':
+                switchMySubTab(el.getAttribute('data-sub'));
+                break;
+
+              case 'toggle-bookmark':
+                toggleBookmark(el.getAttribute('data-id'));
+                break;
+
+              case 'remove-history': {
+                const rid = el.getAttribute('data-id');
+                state.history = state.history.filter(function (h) { return h.id !== rid; });
+                persistHistory();
+                renderHistoryTab();
+                showToast('Удалено из истории');
+                break;
+              }
+
+              case 'step-tracker':
+                stepSeriesTracker(
+                  el.getAttribute('data-id'),
+                  el.getAttribute('data-list'),
+                  el.getAttribute('data-field'),
+                  Number(el.getAttribute('data-delta'))
+                );
+                break;
+
+              case 'ask-clear-history':
+                openConfirmModal('Очистить историю?', 'Все записи просмотров будут удалены без возможности восстановления.', function () {
+                  state.history = [];
+                  persistHistory();
+                  renderHistoryTab();
+                  showToast('История очищена');
+                });
+                break;
+
+              case 'open-detail':
+                openDetailModal(el.getAttribute('data-id'), false);
+                break;
+
+              case 'load-description':
+                loadOnDemandDescription(el.getAttribute('data-id'));
+                break;
+
+              case 'roulette-open':
+              case 'roulette-another':
+                openEveningRoulette();
+                break;
+
+              case 'copy-url':
+                copyText(el.getAttribute('data-url'), 'Ссылка скопирована', true);
+                break;
+
+              case 'copy-modal-btn':
+                copyText(document.getElementById('copyModalInput').value, 'Ссылка скопирована', false);
+                break;
+
+              case 'close-modal':
+                closeModal(el.getAttribute('data-modal'));
+                break;
+
+              case 'preset-mirror': {
+                const m = normalizeMirror(el.getAttribute('data-mirror'));
+                if (isValidMirror(m)) {
+                  state.mirror = m;
+                  safeStorage.set(STORAGE_KEYS.MIRROR, state.mirror);
+                  document.getElementById('mirrorInput').value = state.mirror;
+                  syncAllWatchLinks();
+                  showToast('Зеркало: ' + state.mirror, 'ok');
+                }
+                break;
+              }
+
+              case 'save-mirror': {
+                const raw = document.getElementById('mirrorInput').value;
+                const m = normalizeMirror(raw);
+                if (!isValidMirror(m)) {
+                  showToast('Введите домен, например www.kinopoisk.cx', 'err');
+                  break;
+                }
+                state.mirror = m;
+                safeStorage.set(STORAGE_KEYS.MIRROR, state.mirror);
+                document.getElementById('mirrorInput').value = state.mirror;
+                syncAllWatchLinks();
+                showToast('Зеркало сохранено: ' + state.mirror, 'ok');
+                break;
+              }
+
+              case 'toggle-api-key-vis': {
+                const inp = document.getElementById('apiKeyInput');
+                if (inp) inp.type = inp.type === 'password' ? 'text' : 'password';
+                break;
+              }
+
+              case 'save-api-key': {
+                const val = document.getElementById('apiKeyInput').value.trim();
+                if (!val || val === DEFAULT_API_KEY) {
+                  state.customApiKey = '';
+                  safeStorage.remove(STORAGE_KEYS.CUSTOM_KEY);
+                  updateSettingsUI();
+                  showToast('Используется встроенный ключ', 'ok');
+                } else {
+                  state.customApiKey = val;
+                  safeStorage.set(STORAGE_KEYS.CUSTOM_KEY, state.customApiKey);
+                  updateSettingsUI();
+                  showToast('Свой API-ключ сохранён', 'ok');
+                }
+                document.getElementById('apiKeyTestBox').classList.add('hidden');
+                break;
+              }
+
+              case 'reset-api-key':
+                state.customApiKey = '';
+                safeStorage.remove(STORAGE_KEYS.CUSTOM_KEY);
+                document.getElementById('apiKeyInput').value = DEFAULT_API_KEY;
+                document.getElementById('apiKeyTestBox').classList.add('hidden');
+                updateSettingsUI();
+                showToast('Сброшено на встроенный ключ', 'ok');
+                break;
+
+              case 'test-api-key':
+                testApiKeyConnection();
+                break;
+
+              case 'clear-cache':
+                runtimeCache.clear();
+                safeStorage.remove(STORAGE_KEYS.POPULAR_CACHE);
+                safeStorage.remove(STORAGE_KEYS.GENRES_CACHE);
+                state.genresLoaded = false;
+                state.colInitialized = false;
+                showToast('Кэш очищен, обновляем популярное…', 'ok');
+                loadDynamicPopularChips(true);
+                break;
+
+              case 'export-json': {
+                const payload = JSON.stringify({
+                  app: 'KP Watch',
+                  version: APP_VERSION,
+                  mirror: state.mirror,
+                  bookmarks: state.bookmarks,
+                  history: state.history
+                }, null, 2);
+                try {
+                  const blob = new Blob([payload], { type: 'application/json' });
+                  const blobUrl = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = blobUrl;
+                  a.download = 'kp-watch-v31-backup.json';
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  setTimeout(function () { URL.revokeObjectURL(blobUrl); }, 1000);
+                  showToast('Файл резервной копии скачан', 'ok');
+                } catch (_err) {
+                  copyText(payload, 'JSON скопирован в буфер', true);
+                }
+                break;
+              }
+
+              case 'open-import':
+                document.getElementById('importJsonTextarea').value = '';
+                document.getElementById('importFileInput').value = '';
+                openModal('importModal');
+                break;
+
+              case 'confirm-import': {
+                const rawJson = document.getElementById('importJsonTextarea').value.trim();
+                const parsed = safeJsonParse(rawJson, null);
+                if (!parsed || typeof parsed !== 'object') {
+                  showToast('Некорректный JSON', 'err');
+                  break;
+                }
+                if (typeof parsed.mirror === 'string') {
+                  const nm = normalizeMirror(parsed.mirror);
+                  if (isValidMirror(nm)) {
+                    state.mirror = (nm === 'kinopoisk.cx') ? DEFAULT_MIRROR : nm;
+                    safeStorage.set(STORAGE_KEYS.MIRROR, state.mirror);
+                  }
+                }
+                const importedBookmarks = Array.isArray(parsed.bookmarks) ? parsed.bookmarks : parsed.watchlist;
+                if (Array.isArray(importedBookmarks)) {
+                  state.bookmarks = importedBookmarks.map(normalizeItem).filter(Boolean);
+                  persistBookmarks();
+                }
+                const importedHistory = Array.isArray(parsed.history) ? parsed.history : parsed.watchHistory;
+                if (Array.isArray(importedHistory)) {
+                  state.history = importedHistory.map(normalizeItem).filter(Boolean);
+                  persistHistory();
+                }
+                syncAllWatchLinks();
+                if (state.activeTab === 'my') switchMySubTab(state.mySubTab);
+                closeModal('importModal');
+                showToast('Данные импортированы', 'ok');
+                break;
+              }
+
+              case 'confirm-ok':
+                closeModal('confirmModal');
+                if (typeof state.confirmCallback === 'function') {
+                  const cb = state.confirmCallback;
+                  state.confirmCallback = null;
+                  cb();
+                }
+                break;
+            }
+          } catch (err) {
+            recordError(err.message || String(err));
+          }
+        });
+
+        // Search Form submit (ONLY on Найти / Enter, never per keystroke)
+        document.getElementById('searchForm').addEventListener('submit', function (evt) {
+          evt.preventDefault();
+          runKeywordSearch(document.getElementById('searchInput').value);
+        });
+
+        // Local-only direct URL/ID preview (0 API requests)
+        document.getElementById('searchInput').addEventListener('input', updateDirectCardPreview);
+
+        // Live preview while typing mirror
+        document.getElementById('mirrorInput').addEventListener('input', function (evt) {
+          updateMirrorPreview(evt.target.value);
+        });
+
+        // File import reader
+        document.getElementById('importFileInput').addEventListener('change', function (evt) {
+          const file = evt.target.files && evt.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = function () {
+            document.getElementById('importJsonTextarea').value = String(reader.result || '');
+          };
+          reader.readAsText(file);
+        });
+      }
+
+      function init() {
+        try { bindEvents(); } catch (err) { recordError('bindEvents: ' + err.message); }
+        try { loadAndMigrateStorage(); } catch (err) { recordError('storage: ' + err.message); }
+        try {
+          renderGenreSelect();
+          syncFilterButtonsUI();
+          updateMyBadgesUI();
+          syncAllWatchLinks();
+          loadDynamicPopularChips(false);
+        } catch (err) {
+          recordError('init: ' + err.message);
+        }
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>
